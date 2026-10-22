@@ -1,0 +1,22 @@
+rules_version = '2';
+
+// Default-deny posture (planning/architecture/DataContracts.md §5, SecurityAndSecrets.md §6).
+// Every collection is opened explicitly by the feature story that owns it; nothing is readable
+// or writable until a rule below says so. Anonymous Firebase sessions count as signed in (ADR-0018).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    // Catch-all: deny. Add collection rules ABOVE this block, never loosen it.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,4 @@
+node_modules/
+# Compiled output only (anchored: src/lib/ holds source).
+/lib/
+*.log

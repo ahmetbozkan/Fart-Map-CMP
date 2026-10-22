@@ -2,6 +2,61 @@
 
 Tracks structural and governance changes to the planning system itself.
 
+## 2026-10-21 (session 13 — STORY-01-01-01 implemented)
+
+### Context
+- Owner said "go" for STORY-01-01-01 and commits the changes himself; the agent implemented TASK-01-01-01-03 → 02 → 01 → 04 → 06 → 05 and validated on both platforms and the Firestore emulator. Nothing committed or pushed by the agent.
+- Result: both Android flavors and both iOS schemes build and launch to the placeholder (environment + Firebase project) on the emulator and the iPhone 17 simulator, each bundle with exactly one Firebase config; shared tests pass on the Android host and the iOS simulator; lint has 0 errors; backend lint/unit/rules tests pass. CI workflows exist but have not run (first push pending).
+
+### Decisions recorded
+- ADR-0021 (Accepted): three Kotlin modules — `shared` without Firebase types, `firebaseData` with the GitLive adapters, `umbrella` producing the iOS framework — so shared tests never load Firebase and the iOS link is explicit (resolves the PoC's `FirebaseCore not found` failure by construction).
+- Crashlytics Gradle plugin 3.0.8 applied to `androidApp` (required once the Crashlytics SDK is on the classpath).
+- Toolchain baseline recorded in `TechStack.md` §3.1: Kotlin 2.4.21, Compose Multiplatform 1.12.2 (Material3 1.12.0-alpha03, no stable exists), AGP 9.4.1 / Gradle 9.8.2 (raised from the template's 9.1.1 / 9.5.1 on day one), Koin 4.2.2, Navigation 2.9.2, Lifecycle 2.11.0, GitLive 2.7.0, Firebase BOM 35.0.2, Firebase iOS SDK 13.0.1, Node 22 / firebase-tools 15.
+- `AppEnvironment` is parsed in `shared` from a string the shells supply (`BuildConfig.APP_ENV`, `Info.plist` `APP_ENV`) instead of `expect`/`actual` (TASK-01 deviation, recorded in the task).
+
+### Added
+- `planning/meta/decisions/ADR-0021-shared-module-layout-for-firebase-isolation.md`
+- Repository: `firebaseData/` (with Android/iOS actuals for the project id), `umbrella/`, `scripts/inject-config.sh`, `scripts/check-no-secrets.sh`, `.gitleaks.toml`, config templates (`google-services.json.template` ×2, `GoogleService-Info-{dev,prod}.plist.template`, `secrets.properties.template`, `local.properties.example`), `iosApp/Configuration/{Dev,Prod}.xcconfig`, shared schemes `FartMap Dev` / `FartMap Prod`, `iosApp/iosApp/AppDelegate.swift`, `backend/` (rules, indexes, `firebase.json`, `.firebaserc`, functions project with tests), `.github/workflows/ci.yml` and `deploy-backend.yml`, `shared/.../core/platform/AppEnvironment.kt` with its test
+
+### Changed
+- `planning/architecture/Architecture.md` — §6 module layout and paths (ADR-0021), §11 row
+- `planning/architecture/TechStack.md` — §3.1 baseline table filled with notes; §6.2 references ADR-0021
+- `planning/roadmap/stories/STORY-01-01-01.md` — Review; acceptance criterion 1 named by the real modules; completion evidence; defects found and fixed
+- `planning/roadmap/tasks/TASK-01-01-01-01…06.md` — Review with completion evidence (TASK-05 explicitly unverified until CI runs)
+- `planning/roadmap/epics/EPIC-01-01.md` — story status, module names in scope and acceptance condition 1
+- `planning/roadmap/STATE.md` — snapshot, matrix, locked decisions (ADR-0021, baseline), owner items regrouped (CI/deploy gates, local toolchain, later epics), next authorized work (owner commit + CI, then Mode 4 and the next stories)
+- Root `CLAUDE.md` and `README.md` — modules, toolchain, commands, config injection
+
+### Defects found while validating (all fixed, none committed)
+- AGP 9 disables `buildFeatures.resValues`; flavor `resValue` calls failed configuration.
+- Kotlin cannot infer the framework build type from the custom Xcode configuration names; `KOTLIN_FRAMEWORK_BUILD_TYPE` now set per configuration in `Config.xcconfig`.
+- An Xcode membership exception on the `Configuration` folder bundled both environment plists into every app; removed, each bundle carries one config.
+- `backend/functions/.gitignore` ignored `src/lib/` through an unanchored `lib/`; anchored to `/lib/`.
+- Both Android flavors aborted at start in `FirebaseInitProvider` ("The Crashlytics build ID is missing") because `:firebaseData` brings the Crashlytics SDK without its Gradle plugin; `com.google.firebase.crashlytics` 3.0.8 applied to `androidApp` (catalog `firebaseCrashlytics`), verified by launching both flavors side by side on the emulator (dev → `fart-map-dev`, prod → `fart-map-1a558`).
+- iOS crashed at first composition with `kotlin.NullPointerException` in GitLive 2.7.0 `FirebaseApp.options` (Apple implementation force-unwraps `databaseURL`, which projects without Realtime Database do not have). `FirebaseProjectInfo` now uses platform actuals (`FIRApp.defaultApp()?.options?.projectID` through the FirebaseCore cinterop on iOS; GitLive on Android); both schemes relaunched on the simulator and stay alive. Noted in `TechStack.md` §3.1.
+
+### Not verified
+- Acceptance criterion 4 (CI within one workflow) and the dev deploy job: need the owner's push, the GitHub secrets and the Blaze plan.
+- Nothing else: the manual launch checks (side-by-side Android flavors on the emulator; both iOS schemes on the simulator) were run by the agent and are recorded in TASK-01-01-01-01/04.
+
+## 2026-10-18 (session 12 — new repository, bootstrap planning)
+
+### Context
+- Owner created `github.com/ahmetbozkan/Fart-Map-CMP` from the current Kotlin Multiplatform template (Kotlin 2.4.20, Compose Multiplatform 1.12.1, AGP 9.1.1, Gradle 9.5.1 with a Java 21 daemon JVM), created Firebase projects `fart-map-dev` and `fart-map-1a558`, registered `com.ahmetbozkan.fartmap` and `com.ahmetbozkan.fartmap.dev` on both platforms, and copied `planning/` unchanged.
+- The four Firebase config files were found staged (not committed, not pushed); they were unstaged, kept on disk, and `.gitignore` rules were added. Recorded in STORY-01-01-01.
+
+### Added
+- Repository root `CLAUDE.md` (thin entrypoint: pointer to `planning/CLAUDE.md`, toolchain, commands, non-negotiables)
+- `planning/roadmap/tasks/TASK-01-01-01-01` … `-06` (environment model, toolchain baseline, secrets hygiene, iOS Firebase linking, CI, backend scaffold)
+
+### Changed
+- `planning/roadmap/stories/STORY-01-01-01.md` — Ready; dependencies met; task list and recommended order; incident note
+- `planning/roadmap/epics/EPIC-01-01.md` — Active; module names and package root settled (`shared`/`androidApp`/`iosApp`, `com.ahmetbozkan.fartmap`)
+- `planning/roadmap/phases/PHASE-01.md` — Entry Gate 1 marked met for bootstrap; remaining owner items listed per epic
+- `planning/roadmap/STATE.md` — snapshot, open items (owner to-dos), next authorized work (Mode 3 on "go")
+
+### Notes
+- Baseline build of the untouched template was run with JDK 17 launcher; result recorded in the session report and to be captured in `TechStack.md` §3.1 by TASK-02.
 ## 2026-10-14 (session 11 — planning closeout)
 
 ### Decisions recorded (owner answers to the closeout questions)

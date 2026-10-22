@@ -1,5 +1,6 @@
 [versions]
-agp = "9.1.1"
+# Baseline chosen 2026-10-21 (planning/architecture/TechStack.md §3.1). Latest stable on Maven Central / Google Maven unless noted.
+agp = "9.4.1"
 android-compileSdk = "37"
 android-minSdk = "24"
 android-targetSdk = "37"
@@ -9,10 +10,33 @@ androidx-core = "1.19.1"
 androidx-espresso = "3.7.0"
 androidx-lifecycle = "2.11.0"
 androidx-testExt = "1.3.0"
-composeMultiplatform = "1.12.1"
+composeMultiplatform = "1.12.2"
 junit = "4.13.2"
-kotlin = "2.4.20"
+kotlin = "2.4.21"
+# No stable Compose Material3 exists after 1.9.0; 1.12.0-alpha03 is the line paired with Compose Multiplatform 1.12.x by the JetBrains wizard.
 material3 = "1.12.0-alpha03"
+compose-navigation = "2.9.2"
+koin = "4.2.2"
+kotlinx-serialization = "1.12.0"
+kotlinx-datetime = "0.8.0"
+kotlinx-coroutines = "1.11.0"
+datastore = "1.3.0"
+# Catalog-only until the story that uses them (Room/KSP: STORY-01-01-03; GitLive: TASK-01-01-01-04; the rest: Phase 1 feature epics).
+room = "2.8.5"
+sqlite = "2.7.1"
+ksp = "2.3.12"
+gitlive = "2.7.0"
+firebase-bom = "35.0.2"
+google-services = "4.5.0"
+firebase-crashlytics-plugin = "3.0.8"
+firebase-appcheck = "20.0.0"
+coil = "3.6.3"
+revenuecat = "3.14.0"
+play-services-ads = "25.5.0"
+ump = "4.0.0"
+play-services-location = "21.4.0"
+androidx-credentials = "1.6.0"
+googleid = "1.2.1"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -32,6 +56,41 @@ compose-material3 = { module = "org.jetbrains.compose.material3:material3", vers
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeMultiplatform" }
 compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
 compose-uiToolingPreview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "composeMultiplatform" }
+compose-navigation = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "compose-navigation" }
+
+koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
+koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
+koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin" }
+koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
+
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
+
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
+
+gitlive-firebase-auth = { module = "dev.gitlive:firebase-auth", version.ref = "gitlive" }
+gitlive-firebase-firestore = { module = "dev.gitlive:firebase-firestore", version.ref = "gitlive" }
+gitlive-firebase-storage = { module = "dev.gitlive:firebase-storage", version.ref = "gitlive" }
+gitlive-firebase-analytics = { module = "dev.gitlive:firebase-analytics", version.ref = "gitlive" }
+gitlive-firebase-crashlytics = { module = "dev.gitlive:firebase-crashlytics", version.ref = "gitlive" }
+gitlive-firebase-messaging = { module = "dev.gitlive:firebase-messaging", version.ref = "gitlive" }
+android-firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
+android-firebase-appcheck-playintegrity = { module = "com.google.firebase:firebase-appcheck-playintegrity", version.ref = "firebase-appcheck" }
+
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
+revenuecat-purchases-core = { module = "com.revenuecat.purchases:purchases-kmp-core", version.ref = "revenuecat" }
+play-services-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "play-services-ads" }
+ump = { module = "com.google.android.ump:user-messaging-platform", version.ref = "ump" }
+play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "play-services-location" }
+androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "androidx-credentials" }
+androidx-credentials-playServicesAuth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "androidx-credentials" }
+googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -39,3 +98,8 @@ androidMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library",
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+room = { id = "androidx.room", version.ref = "room" }
+googleServices = { id = "com.google.gms.google-services", version.ref = "google-services" }
+firebaseCrashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebase-crashlytics-plugin" }

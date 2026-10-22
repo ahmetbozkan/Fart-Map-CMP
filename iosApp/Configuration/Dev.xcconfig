@@ -1,0 +1,6 @@
+// Development environment: Firebase project fart-map-dev. Selected by the Debug-dev / Release-dev configurations.
+#include "Config.xcconfig"
+
+APP_ENV = dev
+PRODUCT_BUNDLE_IDENTIFIER = com.ahmetbozkan.fartmap.dev
+INFOPLIST_KEY_CFBundleDisplayName = Fart Map Dev

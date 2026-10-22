@@ -414,9 +414,9 @@ Dependencies point downward. No arrow may be reversed. No layer imports from a l
 
 ## 6) Module Strategy
 
-### Starting structure: single shared module
+### Starting structure: one shared codebase in three Gradle modules
 
-The new project starts as a single shared Kotlin/Compose Multiplatform module plus two minimal platform-specific application shells. This matches the PoC structure and is appropriate for Phase 1–2.
+The new project starts as one shared Kotlin/Compose Multiplatform codebase plus two minimal platform shells. The shared code is split into three Gradle modules for one reason only, Firebase isolation (ADR-0021): `shared` (features, `core/*`, repository interfaces, sync engine, Compose UI; no Firebase SDK types), `firebaseData` (GitLive-based implementations of the `shared` contracts) and `umbrella` (iOS-only; depends on both and produces the `Shared` framework consumed by `iosApp`). `androidApp` depends on `shared` and `firebaseData`. Everything below describes the package layout inside `shared`; `firebaseData` mirrors the `core/data` and feature `data` packages it implements.
 
 The justification for single-module start:
 - AI agents work more efficiently in a coherent codebase without multi-module navigation overhead
@@ -431,7 +431,7 @@ The multi-module evolution trigger is defined in §12 (Deferred Decisions).
 Within the single shared module, code is organized into two top-level categories: **feature packages** and **core packages**. The division is: if code is specific to one product feature, it belongs in that feature's package. If code is shared across two or more features, it belongs in a core package.
 
 ```
-commonMain/kotlin/com/fartmap/
+shared/src/commonMain/kotlin/com/ahmetbozkan/fartmap/
 │
 ├── feature/                        ← feature-first grouping
 │   ├── map/                        ← MAP-01 through MAP-05 (Features.md)
@@ -487,11 +487,14 @@ commonMain/kotlin/com/fartmap/
 Platform-specific modules:
 
 ```
-androidMain/kotlin/com/fartmap/
+shared/src/androidMain/kotlin/com/ahmetbozkan/fartmap/
 └── platform/                       ← Android actual implementations
 
-iosMain/kotlin/com/fartmap/
+shared/src/iosMain/kotlin/com/ahmetbozkan/fartmap/
 └── platform/                       ← iOS actual implementations
+
+firebaseData/src/{commonMain,androidMain,iosMain}/kotlin/com/ahmetbozkan/fartmap/firebase/   ← GitLive adapters (ADR-0021)
+umbrella/src/iosMain/kotlin/com/ahmetbozkan/fartmap/                                    ← MainViewController, iOS Koin composition
 ```
 
 ### Cross-feature dependency rule
@@ -851,7 +854,7 @@ These decisions are settled. They are not re-evaluated without a new ADR present
 | expect/actual for all platform-specific code | Explicit boundary; shared module never imports platform SDK types | ADR-0008 |
 | Local-first reads with remote backfill | Offline resilience; perceived performance; user trust | ADR-0007 |
 | Offline write queueing | User action must never fail because of network state | ADR-0007; this document §9 |
-| Single shared module for Phase 1–2 | Agent coherence; appropriate complexity for phase count | This document (§6); ArchitecturePrinciples.md §9 |
+| One shared codebase in three Gradle modules (`shared`, `firebaseData`, `umbrella`) for Phase 1–2 | Agent coherence plus Firebase isolation so shared tests never link Firebase | This document (§6); ADR-0021 |
 | Privacy by default | Architectural enforcement of product principle | ArchitecturePrinciples.md §11; ContentSafety.md |
 | No secrets in version control | PoC failure; non-negotiable security | ArchitecturePrinciples.md §11; SecurityAndSecrets.md |
 | Cloud Functions as backend compute; FCM, Crashlytics, App Check in scope | Server authority for counters, fan-out, entitlements, caps | ADR-0015 |

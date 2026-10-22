@@ -1,0 +1,6 @@
+// Production environment: Firebase project fart-map-1a558. Selected by the Debug-prod / Release-prod configurations.
+#include "Config.xcconfig"
+
+APP_ENV = prod
+PRODUCT_BUNDLE_IDENTIFIER = com.ahmetbozkan.fartmap
+INFOPLIST_KEY_CFBundleDisplayName = Fart Map

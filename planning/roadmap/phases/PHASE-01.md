@@ -22,8 +22,8 @@
 - Success metrics: first-session loop completion ≥ 60%; median time-to-first-log < 60 s; first social touch ≥ 40%; log abandonment < 30%; safety baseline met; monetization integrity (`ReleaseStrategy.md` §6 Gate 1)
 
 ## Entry Gates
-- Gate 1: owner deliverables exist — new repository, `dev` and `prod` Firebase projects with App Check, RevenueCat project, AdMob app and test ad units, App Store Connect and Play Console apps with the chosen bundle id / applicationId, store products for the Phase 1 catalog.
-- Gate 2: `planning/` copied into the new repository; `TechStack.md` §3.1 baseline filled by the bootstrap story; validation commands documented in the repository README.
+- Gate 1 (met for bootstrap on 2026-10-17): new repository `github.com/ahmetbozkan/Fart-Map-CMP`, Firebase projects `fart-map-dev` and `fart-map-1a558`, app ids `com.ahmetbozkan.fartmap` / `.dev`, `planning/` copied. Still owed before the named epics: Blaze plan + Firestore/Storage enabled (EPIC-01-01 TASK-06), Auth providers and App Check registration (EPIC-01-02), RevenueCat project and AdMob app with test units (EPIC-01-06), App Store Connect and Play Console apps and store products (EPIC-01-06).
+- Gate 2: `TechStack.md` §3.1 baseline filled by the bootstrap story; validation commands documented in the repository README.
 
 ## Exit Gates
 - Exit criterion 1: all Gate 1 criteria in `ReleaseStrategy.md` §6 measurably passing on production analytics.

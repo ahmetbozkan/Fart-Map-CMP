@@ -1,0 +1,2 @@
+# Copy to local.properties (never tracked). Gradle needs the Android SDK location.
+sdk.dir=/Users/<you>/Library/Android/sdk

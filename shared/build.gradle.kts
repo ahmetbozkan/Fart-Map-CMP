@@ -5,18 +5,13 @@ plugins {
     alias(libs.plugins.androidMultiplatformLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
-    listOf(
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "Shared"
-            isStatic = true
-        }
-    }
+    // iOS targets compile to klibs only; the app framework is produced by :umbrella (ADR-0021).
+    iosArm64()
+    iosSimulatorArm64()
     
     android {
        namespace = "com.ahmetbozkan.fartmap.shared"
@@ -24,7 +19,7 @@ kotlin {
        minSdk = libs.versions.android.minSdk.get().toInt()
     
        compilerOptions {
-           jvmTarget = JvmTarget.JVM_11
+           jvmTarget = JvmTarget.JVM_17
        }
        androidResources {
            enable = true
@@ -53,9 +48,18 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(libs.compose.navigation)
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+            implementation(libs.kotlinx.serialization.json)
+            implementation(libs.kotlinx.datetime)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.datastore.preferences)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }
