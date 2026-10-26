@@ -19,6 +19,11 @@ jobs:
   secret-scan:
     name: Secret scan
     runs-on: ubuntu-latest
+    # The action lists the pull request's commits through the API, which needs pull-requests: read
+    # (the workflow-level permissions block above grants contents: read only).
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,6 +33,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_CONFIG: .gitleaks.toml
+          # Findings go to the job summary and the exit code; PR comments would need pull-requests: write.
+          GITLEAKS_ENABLE_COMMENTS: "false"
       - name: No tracked config or secret files
         run: scripts/check-no-secrets.sh
 
@@ -62,9 +69,17 @@ jobs:
 
   ios:
     name: iOS framework, shared tests, app build
-    runs-on: macos-15
+    # Firebase iOS SDK 13 declares Swift tools 6.2, so the default Xcode 16.4 of macos-15 cannot resolve it.
+    # macos-26 ships Xcode 26.x; pin the locally verified 26.4.1 (TechStack.md §3.1) with a fallback to the newest 26.
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
+      - name: Select Xcode 26
+        run: |
+          XCODE=/Applications/Xcode_26.4.1.app
+          [ -d "$XCODE" ] || XCODE=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
       - uses: actions/setup-java@v4
         with:
           distribution: zulu

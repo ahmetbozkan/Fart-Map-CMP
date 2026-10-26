@@ -2,6 +2,20 @@
 
 Tracks structural and governance changes to the planning system itself.
 
+## 2026-10-26 (session 14 — first CI run, two workflow fixes)
+
+### Context
+- Owner committed the bootstrap as `639efcb` on branch `01-initial-setup` and opened PR #1; the first CI run failed in `secret-scan` and `ios`. Both were workflow configuration defects; no code changed.
+
+### Changed
+- `.github/workflows/ci.yml` — `secret-scan` job gets `permissions: contents: read, pull-requests: read` (gitleaks-action lists PR commits through the API; the workflow-level block had removed that permission) and `GITLEAKS_ENABLE_COMMENTS: "false"`; `ios` job moves from `macos-15` (default Xcode 16.4, Swift tools 6.1) to `macos-26` and selects Xcode 26.4.1 before the Gradle step, because `firebase-ios-sdk` 13.0.1 declares Swift tools 6.2.1.
+- `planning/roadmap/tasks/TASK-01-01-01-05.md` — first-run evidence and fixes; DoD still not met until a green run.
+- `planning/roadmap/STATE.md` — snapshot row: branch, PR, CI status.
+- `planning/architecture/TechStack.md` — §3.1 note on the CI macOS image and Xcode requirement.
+
+### Not verified
+- The rerun. The owner pushes the fix; the story moves to Done on the first fully green run.
+
 ## 2026-10-21 (session 13 — STORY-01-01-01 implemented)
 
 ### Context

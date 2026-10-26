@@ -3,7 +3,7 @@
 > **Purpose:** live snapshot of the repository's planning and readiness state.
 > This is not a product roadmap and not a release plan. It is the current operating state for contributors.
 > Update this file whenever planning status, authority, or next authorized work changes.
-> Last updated: 2026-10-21 (session 13: STORY-01-01-01 implemented and validated locally; Review).
+> Last updated: 2026-10-26 (session 14: first CI run on PR #1, two workflow fixes; Review).
 
 ---
 
@@ -11,7 +11,7 @@
 
 | Area | Current status | Notes |
 |---|---|---|
-| Overall project status | **Bootstrap story implemented locally; in Review** | Repository `github.com/ahmetbozkan/Fart-Map-CMP` (branch `main`, one template commit; session 13 changes uncommitted, owner commits); both Android flavors and both iOS schemes build and launch to the placeholder, shared tests, lint and the backend emulator tests pass on the recorded baseline (`TechStack.md` §3.1); CI not yet run |
+| Overall project status | **Bootstrap story implemented locally; in Review** | Repository `github.com/ahmetbozkan/Fart-Map-CMP`: bootstrap committed as `639efcb` on branch `01-initial-setup`, PR #1 open; both Android flavors and both iOS schemes build and launch to the placeholder, shared tests, lint and the backend emulator tests pass on the recorded baseline (`TechStack.md` §3.1); first CI run failed in `secret-scan` (token permission) and `ios` (Xcode 16.4 vs Swift tools 6.2), both fixed on 2026-10-26, rerun pending |
 | Product planning | **Complete and reconciled** | Owner decisions of 2026-10-14 recorded (ADR-0018, ADR-0020); Features ↔ ReleaseStrategy ids and phases reconciled |
 | Architecture planning | **Complete and reconciled** | ADR-0015 (backend compute, Firebase scope), ADR-0016 (purchases), ADR-0017 (rewarded ads), ADR-0019 (location split), ADR-0021 (three-module layout `shared` / `firebaseData` / `umbrella`) applied to the contracts; `TechStack.md` §3.1 baseline filled 2026-10-21 |
 | Governance/meta layer | **Complete** | CLAUDE.md freeze rule narrowed; root process docs archived; read chain cleaned |
@@ -98,7 +98,7 @@ No product-level MVP-critical TBD is open.
 
 ### Immediate
 
-1. **Owner:** review the staged session 13 changes, commit and push; open a draft PR; add the GitHub secrets (§5.1).
+1. **Owner:** push the session 14 workflow fix to `01-initial-setup` so PR #1 reruns; add any GitHub secrets still missing (§5.1).
 2. **Agent (Mode 4):** when CI reports, fix anything red in the workflows; then move STORY-01-01-01 and its tasks to Done/Verified with the CI link as evidence.
 3. **Agent (Mode 2):** author STORY-01-01-02 (DI, navigation shell, theme, observability base), STORY-01-01-03 (Room bootstrap) and STORY-01-01-04 (real rules) under EPIC-01-01, then EPIC-01-02 (session and identity) using the templates.
 
