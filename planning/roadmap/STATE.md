@@ -3,7 +3,7 @@
 > **Purpose:** live snapshot of the repository's planning and readiness state.
 > This is not a product roadmap and not a release plan. It is the current operating state for contributors.
 > Update this file whenever planning status, authority, or next authorized work changes.
-> Last updated: 2026-10-15 (owner confirmations recorded, session 11 close).
+> Last updated: 2026-10-26 (session 14: first CI run on PR #1, two workflow fixes; Review).
 
 ---
 
@@ -11,14 +11,14 @@
 
 | Area | Current status | Notes |
 |---|---|---|
-| Overall project status | **Planning closeout complete; waiting for the new repository** | Every layer audited and reconciled on 2026-10-14 (`meta/audits/2026-10-14-planning-closeout-audit.md`); documentation expansion stops here |
+| Overall project status | **Bootstrap story implemented locally; in Review** | Repository `github.com/ahmetbozkan/Fart-Map-CMP`: bootstrap committed as `639efcb` on branch `01-initial-setup`, PR #1 open; both Android flavors and both iOS schemes build and launch to the placeholder, shared tests, lint and the backend emulator tests pass on the recorded baseline (`TechStack.md` §3.1); first CI run failed in `secret-scan` (token permission) and `ios` (Xcode 16.4 vs Swift tools 6.2), both fixed on 2026-10-26, rerun pending |
 | Product planning | **Complete and reconciled** | Owner decisions of 2026-10-14 recorded (ADR-0018, ADR-0020); Features ↔ ReleaseStrategy ids and phases reconciled |
-| Architecture planning | **Complete and reconciled** | ADR-0015 (backend compute, Firebase scope), ADR-0016 (purchases), ADR-0017 (rewarded ads), ADR-0019 (location split) applied to the contracts |
+| Architecture planning | **Complete and reconciled** | ADR-0015 (backend compute, Firebase scope), ADR-0016 (purchases), ADR-0017 (rewarded ads), ADR-0019 (location split), ADR-0021 (three-module layout `shared` / `firebaseData` / `umbrella`) applied to the contracts; `TechStack.md` §3.1 baseline filled 2026-10-21 |
 | Governance/meta layer | **Complete** | CLAUDE.md freeze rule narrowed; root process docs archived; read chain cleaned |
 | Execution docs | **Complete** | Sprint template duplication removed; no other change |
 | Design | **Phase 1 coverage complete at spec level** | Seven screen specs, 13 flows, handoff record; Stitch artifacts arrive screen by screen (non-blocking) |
-| Roadmap instances | **Started** | `PHASE-01`, `EPIC-01-01`, `STORY-01-01-01` (Backlog) |
-| Implementation authorization | **Authorized for the new repository only, starting with STORY-01-01-01 once its dependencies are met** | No application code is written in this PoC repository |
+| Roadmap instances | **Active** | `PHASE-01` Active, `EPIC-01-01` Active, `STORY-01-01-01` Review with tasks `TASK-01-01-01-01…06` all in Review (evidence recorded) |
+| Implementation authorization | **STORY-01-01-01 in Review; next story authored after the owner's commit and a green CI run** | Work happens in this repository only; the PoC stays frozen |
 
 ---
 
@@ -27,13 +27,13 @@
 | Layer | Status | Detail |
 |---|---|---|
 | Product (`planning/product/`) | **Complete** | 16 docs; stale "friend"/"territory"/TBD wording removed; six personas acknowledged in governance |
-| Architecture (`planning/architecture/`) | **Complete** | 12 contracts; TechStack carries the bootstrap policy and iOS linking rule; DataContracts carries catalog, entitlement, token, device and private-location collections |
-| Meta / governance (`planning/meta/`) | **Complete** | 20 ADRs; archive and audits folders |
+| Architecture (`planning/architecture/`) | **Complete** | 12 contracts; TechStack carries the bootstrap policy, the proven baseline (§3.1) and the iOS linking rule; Architecture §6 names the three modules (ADR-0021); DataContracts carries catalog, entitlement, token, device and private-location collections |
+| Meta / governance (`planning/meta/`) | **Complete** | 21 ADRs; archive and audits folders |
 | Execution (`planning/execution/`) | **Complete** | Kernel, workflow, DoR/DoD, templates, sprint and review rules |
 | Skills (`planning/skills/`) | **Complete for Phase 1** | 13 playbooks (monetization added); canonical code examples are added from the first real implementation, not invented |
-| Roadmap (`planning/roadmap/`) | **Instances started** | Phase 1, first epic and first story authored; further epics authored as the preceding story reaches Ready |
+| Roadmap (`planning/roadmap/`) | **Instances active** | Phase 1, first epic and first story (Review) with six tasks (Review); STORY-01-01-02…04 authored next |
 | Design (`planning/design/`) | **Complete for Phase 1 at spec level** | Visual artifacts pending from the owner's Stitch process |
-| Implementation readiness | **Blocked on owner deliverables** | See §5 |
+| Implementation readiness | **Bootstrap done locally** | Owner items in §5 gate CI, deploy and later epics |
 
 ---
 
@@ -45,9 +45,10 @@
 - Architecture constitution and contracts: all twelve files under `planning/architecture/`
 - Execution kernel: `SYSTEM.md`, `Workflow.md`, `DefinitionOfReady.md`, `DefinitionOfDone.md`
 - Design for Phase 1: `design/DesignSpecification.md`, `design/UXFlowCatalog.md`, `design/screens/*.md`, `design/HANDOFF-UXF-01-04-MVP.md`
-- Settled decisions: `planning/meta/decisions/ADR-0001` through `ADR-0020`
+- Settled decisions: `planning/meta/decisions/ADR-0001` through `ADR-0021`
 - Operating entrypoint and guardrails: `planning/CLAUDE.md`, `planning/meta/AgentGuardrails.md`, `planning/meta/INDEX.md`
-- Roadmap instances: `roadmap/phases/PHASE-01.md`, `roadmap/epics/EPIC-01-01.md`, `roadmap/stories/STORY-01-01-01.md`
+- Roadmap instances: `roadmap/phases/PHASE-01.md`, `roadmap/epics/EPIC-01-01.md`, `roadmap/stories/STORY-01-01-01.md`, `roadmap/tasks/TASK-01-01-01-01…06.md`
+- Repository entrypoint and commands: root `CLAUDE.md`, `README.md`, `backend/README.md`
 
 ### 3.2 Provisional
 
@@ -73,18 +74,21 @@
 - Cloud Functions as backend compute; Messaging, Crashlytics, App Check in scope; backend lives in `backend/` of the new repository; `dev` and `prod` Firebase projects (ADR-0015).
 - RevenueCat KMP SDK for purchases with server-mirrored entitlements (ADR-0016); AdMob rewarded ads with server-side verification and single-use tokens (ADR-0017).
 - Precise location in an owner-only subdocument; public projection fuzzed (ADR-0019).
-- MapKit on iOS and Google Maps on Android behind one map contract; Firebase kept behind interfaces so shared tests run without it; GitHub Actions with iOS builds on a macOS runner; bootstrap on the latest stable compatible dependency set, recorded in `TechStack.md` §3.1.
+- MapKit on iOS and Google Maps on Android behind one map contract; Firebase kept behind interfaces so shared tests run without it; GitHub Actions with iOS builds on a macOS runner; bootstrap on the latest stable compatible dependency set, recorded in `TechStack.md` §3.1 (Kotlin 2.4.21, CMP 1.12.2, AGP 9.4.1, Gradle 9.8.2, GitLive 2.7.0, Firebase iOS SDK 13.0.1; verified 2026-10-21).
+- Three Kotlin modules: `shared` (no Firebase types), `firebaseData` (GitLive adapters), `umbrella` (iOS framework `Shared`); Android flavors `dev`/`prod`; Xcode configurations `Debug-dev`/`Debug-prod`/`Release-dev`/`Release-prod` with schemes `FartMap Dev`/`FartMap Prod` (ADR-0021, TASK-01-01-01-01/04).
 
 ### Repository decisions
 
-- This repository is a frozen PoC and the current home of `planning/`. The owner creates the new repository and consoles and copies `planning/` into it. Secrets and Firebase config files were untracked here on 2026-10-14; the owner replaces the Firebase project and keys. Nothing else is removed from the PoC.
+- This repository (`Fart-Map-CMP`) is the product; the PoC is frozen reference. Firebase configs and secrets are injected (`scripts/inject-config.sh`), never tracked; templates are committed; `scripts/check-no-secrets.sh` and gitleaks guard CI. The agent never commits or pushes; the owner commits.
 
 ---
 
 ## 5) Known Open Questions / Unresolved Decisions
 
-1. **Owner deliverables (block STORY-01-01-01):** new repository with GitHub Actions; `dev` and `prod` Firebase projects with App Check; applicationId, iOS bundle id, display name; RevenueCat project; AdMob app with test ad units; App Store Connect and Play Console apps and Phase 1 store products; copy of `planning/` into the new repository.
-2. **Design artifacts:** Stitch screens arrive one by one; stories do not block on them (`design/SYSTEM.md` §4).
+1. **Owner items that gate the story's Done (acceptance criterion 4 and the deploy path):** review and commit the session 13 changes, push, open a draft PR so `.github/workflows/ci.yml` runs; add repository secrets `GOOGLE_SERVICES_JSON_DEV`, `GOOGLE_SERVICES_JSON_PROD`, `GOOGLE_SERVICE_INFO_PLIST_DEV`, `GOOGLE_SERVICE_INFO_PLIST_PROD` (base64 of the four config files) and the environment secret `FIREBASE_SERVICE_ACCOUNT` in GitHub environments `dev` and `prod` (prod with a required reviewer); upgrade `fart-map-dev` and `fart-map-1a558` to the Blaze plan and enable Firestore (native mode, location `europe-west1` to match the functions region) and Storage in both; confirm the repository is private.
+2. **Owner items for the local toolchain:** install JDK 21 (`brew install openjdk@21`; Gradle provisions one meanwhile, the Firestore emulator needs it on `PATH`) and Node.js 22 (local Node is 20.11; `backend/functions` declares 22).
+3. **Owner items for later epics:** Auth providers Google/Apple/Anonymous and App Check registration (EPIC-01-02), RevenueCat project and AdMob app with test ad units (EPIC-01-06), App Store Connect / Play Console apps and store products (EPIC-01-06); minimum iOS version decision (template 18.2; see `TechStack.md` §3.1 notes).
+4. **Design artifacts:** Stitch screens arrive one by one; stories do not block on them (`design/SYSTEM.md` §4).
 
 No product-level MVP-critical TBD is open.
 
@@ -94,9 +98,9 @@ No product-level MVP-critical TBD is open.
 
 ### Immediate
 
-1. **Owner:** commit the closeout milestone in this repository; create the new repository, Firebase projects and consoles; copy `planning/` into the new repository.
-2. **Agent (Mode 2, then Mode 3) in the new repository:** when item 1 is done, move `STORY-01-01-01` to Ready (DoR evidence: dependencies met) and implement it; author `TASK-01-01-01-01…06` from its task breakdown.
-3. **Agent:** on STORY-01-01-01 Done, author STORY-01-01-02/03/04 under EPIC-01-01, then EPIC-01-02 (session and identity) using the templates.
+1. **Owner:** push the session 14 workflow fix to `01-initial-setup` so PR #1 reruns; add any GitHub secrets still missing (§5.1).
+2. **Agent (Mode 4):** when CI reports, fix anything red in the workflows; then move STORY-01-01-01 and its tasks to Done/Verified with the CI link as evidence.
+3. **Agent (Mode 2):** author STORY-01-01-02 (DI, navigation shell, theme, observability base), STORY-01-01-03 (Room bootstrap) and STORY-01-01-04 (real rules) under EPIC-01-01, then EPIC-01-02 (session and identity) using the templates.
 
 ### Should wait
 
@@ -113,10 +117,10 @@ No product-level MVP-critical TBD is open.
 2. Architecture contract layer complete (true)
 3. Governance/meta layer synchronized (true)
 4. Execution kernel complete (true)
-5. First slice passes Definition of Ready (STORY-01-01-01: pending owner deliverables; all planning confirmations closed 2026-10-15)
-6. The work happens in the new repository, never in this PoC (owner decision)
+5. First slice passes Definition of Ready (STORY-01-01-01: Ready 2026-10-18, implemented 2026-10-21)
+6. The work happens in this repository (`Fart-Map-CMP`), never in the PoC (owner decision)
 
-Current state: **Implementation authorized for STORY-01-01-01 in the new repository once its dependencies are met.**
+Current state: **STORY-01-01-01 implemented and validated locally (Review). Next implementation story is authored after the owner's commit and the first CI run.**
 
 ---
 
@@ -136,7 +140,7 @@ Current state: **Implementation authorized for STORY-01-01-01 in the new reposit
 - [ ] Read `planning/architecture/Architecture.md`
 - [ ] Read `planning/architecture/SecurityAndSecrets.md`
 - [ ] Read `planning/product/ContentSafety.md`
-- [ ] Check relevant ADRs (`0001`–`0020`)
+- [ ] Check relevant ADRs (`0001`–`0021`)
 - [ ] Confirm no layer-boundary or privacy default violation
 
 ### 7.3 Before touching execution docs

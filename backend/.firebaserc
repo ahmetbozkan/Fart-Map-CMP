@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "fart-map-dev",
+    "dev": "fart-map-dev",
+    "prod": "fart-map-1a558"
+  }
+}

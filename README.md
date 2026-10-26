@@ -1,31 +1,64 @@
- This is a Kotlin Multiplatform project targeting Android, iOS.
+# Fart Map
 
-* [/iosApp](./iosApp/iosApp) contains an iOS application. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+Kotlin Multiplatform + Compose Multiplatform app for Android and iOS. The specification lives in [`planning/`](planning/CLAUDE.md); agents and humans read `planning/CLAUDE.md` first.
 
-* [/shared](./shared/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./shared/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./shared/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./shared/src/jvmMain/kotlin)
-    folder is the appropriate location.
+## Modules
 
-### Running the apps
+- `shared` — Compose Multiplatform UI, domain, data contracts and sync. No Firebase SDK types; shared tests run without Firebase (ADR-0021, `planning/architecture/TechStack.md` §6.2).
+- `firebaseData` — GitLive Firebase adapters implementing the `shared` contracts; the only Kotlin module that depends on Firebase.
+- `umbrella` — iOS-only module that links `shared` + `firebaseData` into the static framework `Shared` consumed by Xcode.
+- `androidApp` — Android shell (flavors `dev` / `prod`, build types `debug` / `release`).
+- `iosApp` — Xcode project and SwiftUI shell (configurations `Debug-dev`, `Release-dev`, `Debug-prod`, `Release-prod`; schemes `FartMap Dev`, `FartMap Prod`).
+- `backend` — Firebase rules, indexes and Cloud Functions (aliases `dev`, `prod`).
 
-Use the run configurations provided by the run widget in your IDE's toolbar. You can also use these commands and options:
+## Toolchain
 
-- Android app: `./gradlew :androidApp:assembleDebug`
-- iOS app: open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+- JDK 21 for the Gradle daemon (`gradle/gradle-daemon-jvm.properties` provisions it; `brew install openjdk@21` avoids the download). The launcher needs JDK 17 or newer.
+- Gradle wrapper, Kotlin, Compose Multiplatform and AGP versions: `gradle/libs.versions.toml`; the proven baseline is recorded in `planning/architecture/TechStack.md` §3.1.
+- Xcode 26 with the iOS simulator runtime. Firebase iOS SDK comes through Swift Package Manager (`Package.resolved` is tracked).
+- Node.js 22 and `firebase-tools` 15 for the backend; the Firestore emulator needs Java 21 on `PATH` (`backend/README.md`).
 
-### Running tests
+## Config injection (never commit real files)
 
-Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
+Firebase client configs and secrets are not tracked. Templates are committed next to each real file:
 
-- Android tests: `./gradlew :shared:testAndroidHostTest`
-- iOS tests: `./gradlew :shared:iosSimulatorArm64Test`
+| Real file (untracked) | Template |
+|---|---|
+| `androidApp/src/dev/google-services.json` | `…/google-services.json.template` |
+| `androidApp/src/prod/google-services.json` | `…/google-services.json.template` |
+| `iosApp/Configuration/GoogleService-Info-dev.plist` | `…/GoogleService-Info-dev.plist.template` |
+| `iosApp/Configuration/GoogleService-Info-prod.plist` | `…/GoogleService-Info-prod.plist.template` |
+| `androidApp/secrets.properties` | `androidApp/secrets.properties.template` |
 
----
+Run `scripts/inject-config.sh` to write them. It reads, per file, a base64 environment variable (`GOOGLE_SERVICES_JSON_DEV`, `GOOGLE_SERVICES_JSON_PROD`, `GOOGLE_SERVICE_INFO_PLIST_DEV`, `GOOGLE_SERVICE_INFO_PLIST_PROD`, plus optional `MAPS_API_KEY_DEV` / `MAPS_API_KEY_PROD`) or a copy in `~/.fartmap/` (`google-services-dev.json`, `google-services-prod.json`, `GoogleService-Info-dev.plist`, `GoogleService-Info-prod.plist`). CI uses the environment variables from the repository secret store. `scripts/check-no-secrets.sh` fails if a real file is ever tracked; CI also runs gitleaks with `.gitleaks.toml`.
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+If a real config is ever committed: remove it from the index, rotate the affected keys in the Firebase console, and record the incident in `planning/meta/ChangeLog.md`.
+
+## Commands
+
+```bash
+# Android (both flavors) and lint
+./gradlew :androidApp:assembleDevDebug :androidApp:assembleProdDebug
+./gradlew :androidApp:lintDevDebug
+
+# Shared tests (Android host + iOS simulator)
+./gradlew :shared:allTests
+
+# iOS framework and app (xcodebuild runs the Gradle embed task itself)
+./gradlew :umbrella:linkDebugFrameworkIosSimulatorArm64
+xcodebuild -project iosApp/iosApp.xcodeproj -scheme "FartMap Dev" -destination 'platform=iOS Simulator,name=iPhone 17' build
+xcodebuild -project iosApp/iosApp.xcodeproj -scheme "FartMap Prod" -destination 'platform=iOS Simulator,name=iPhone 17' build
+# The Kotlin framework is static: the embed step reports SKIPPED by design; the custom configuration
+# names need KOTLIN_FRAMEWORK_BUILD_TYPE, which Configuration/Config.xcconfig sets per configuration.
+
+# Secrets guard
+scripts/check-no-secrets.sh
+```
+
+Backend commands are listed in `backend/README.md`.
+
+## Rules that never bend
+
+- No secrets or Firebase config files in git.
+- No error swallowing; no dependency-direction violations (`planning/CLAUDE.md` §4).
+- Work items, `planning/roadmap/STATE.md` and `planning/meta/ChangeLog.md` are updated with every meaningful change.

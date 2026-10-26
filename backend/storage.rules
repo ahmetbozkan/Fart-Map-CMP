@@ -1,0 +1,10 @@
+rules_version = '2';
+
+// Default-deny posture. Media paths are opened per feature (voice clips: Phase 4, avatars: catalog assets are public read when the catalog story lands).
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

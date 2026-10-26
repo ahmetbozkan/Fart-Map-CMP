@@ -1,0 +1,54 @@
+name: Deploy backend
+
+# dev: every push to main that touches backend/. prod: a published release, or a manual run choosing "prod".
+# The "prod" GitHub environment must require a reviewer (repository settings → Environments) so the prod deploy waits for approval.
+on:
+  push:
+    branches: [main]
+    paths: ["backend/**"]
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        options: [dev, prod]
+        default: dev
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to ${{ (github.event_name == 'release' || github.event.inputs.environment == 'prod') && 'prod' || 'dev' }}
+    runs-on: ubuntu-latest
+    environment: ${{ (github.event_name == 'release' || github.event.inputs.environment == 'prod') && 'prod' || 'dev' }}
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: backend/functions/package-lock.json
+      - name: Install firebase-tools
+        run: npm install -g firebase-tools@15
+      - name: Install and build functions
+        working-directory: backend/functions
+        run: |
+          npm ci
+          npm run lint
+          npm run build
+      - name: Write service account
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          echo "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-sa.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-sa.json" >> "$GITHUB_ENV"
+      - name: Deploy rules, indexes, storage rules and functions
+        env:
+          TARGET: ${{ (github.event_name == 'release' || github.event.inputs.environment == 'prod') && 'prod' || 'dev' }}
+        run: firebase deploy --only firestore:rules,firestore:indexes,storage,functions -P "$TARGET" --non-interactive --force

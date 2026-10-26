@@ -1,0 +1,16 @@
+# gitleaks configuration: default rules plus allowlists for committed templates and planning docs.
+title = "Fart Map"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Templates contain placeholders only; planning docs describe keys without holding them."
+paths = [
+  '''.*\.template$''',
+  '''^planning/.*''',
+  '''^backend/functions/package-lock\.json$''',
+]
+regexes = [
+  '''REPLACE_WITH_[A-Z_]+''',
+]

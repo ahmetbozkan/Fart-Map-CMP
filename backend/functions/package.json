@@ -1,0 +1,29 @@
+{
+  "name": "fartmap-functions",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Fart Map Cloud Functions (2nd gen)",
+  "main": "lib/index.js",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src test",
+    "test:unit": "vitest run --exclude test/rules.test.ts",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-fartmap \"vitest run test/rules.test.ts\"",
+    "test": "npm run test:unit && npm run test:rules"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@firebase/rules-unit-testing": "^4.0.0",
+    "eslint": "^9.0.0",
+    "typescript": "^5.4.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^3.0.0"
+  }
+}
