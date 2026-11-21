@@ -1,32 +1,84 @@
-# Fart Map — repository entrypoint
+# Fart Map
 
-Read `planning/CLAUDE.md` first; it is the agent front door and names the mandatory reading order. Then `planning/roadmap/STATE.md` for what is authorized now, and `planning/meta/AgentGuardrails.md` for hard stops.
+A location-based social entertainment app: users log fart moments on a shared map, react to each other, and build a funny identity. Kotlin/Compose Multiplatform for Android and iOS, with Firebase as the backend. **The app exists to make money:** cosmetic purchases, opt-in rewarded ads, a subscription later. Growth and store presence matter as much as code. This repo is the product; the PoC repo is frozen reference only.
 
-This repository is the product. The PoC (`FartMap-CMP`) is frozen reference material only.
+## Start here
+1. `planning/STATE.md` (the SessionStart hook prints its "Now" block) → the story in `planning/stories/` → only the spec the story needs (`planning/README.md` is the map).
+2. The path-scoped rules in `.claude/rules/` load automatically when you touch matching files. The skills in `.claude/skills/` hold the procedures (`/implement-story`, `/verify`, `new-feature`, `firestore-change`, …).
+3. Don't read `planning/archive/`. It is history, not authority.
 
-## Toolchain (verified 2026-10-21; baseline table in `planning/architecture/TechStack.md` §3.1)
+## Modules (ADR-0021)
+| Module | Contents |
+|---|---|
+| `shared` | Compose UI, ViewModels, domain, repository interfaces. **No Firebase types**; tests run without Firebase |
+| `firebaseData` | GitLive Firebase implementations of the `shared` contracts (the only Kotlin module with Firebase) |
+| `umbrella` | iOS only; builds the static `Shared` framework plus the iOS Koin composition |
+| `androidApp` | Shell; flavors `dev` / `prod` |
+| `iosApp` | SwiftUI shell; `Debug-dev` / `Release-dev` / `Debug-prod` / `Release-prod`; schemes `FartMap Dev` / `FartMap Prod` |
+| `backend/` | Firestore/Storage rules, indexes, Cloud Functions (TypeScript, Node 22) |
 
-- Gradle wrapper 9.8.2 with a Java 21 daemon JVM (`gradle/gradle-daemon-jvm.properties`); launcher JDK 17 or newer. Install JDK 21: `brew install openjdk@21`.
-- Kotlin 2.4.21, Compose Multiplatform 1.12.2, AGP 9.4.1, compileSdk 37, minSdk 24, JVM target 17.
-- Backend: Node.js 22, `firebase-tools` 15, Java 21 on `PATH` for the emulators.
-- Modules (ADR-0021): `shared` (Compose Multiplatform UI, domain, data contracts, sync; no Firebase SDK types), `firebaseData` (GitLive Firebase adapters), `umbrella` (iOS-only; builds the `Shared` framework), `androidApp` (flavors `dev`/`prod`), `iosApp` (Xcode project; configurations `Debug-dev`, `Release-dev`, `Debug-prod`, `Release-prod`; schemes `FartMap Dev`, `FartMap Prod`), `backend/` (Firebase rules and Cloud Functions).
+Package root: `com.ahmetbozkan.fartmap`, with `feature/<name>/{presentation,domain,data}` and `core/{domain,data,presentation,navigation,design,di,platform,observability}`.
 
-## Commands (run after every meaningful change; the launcher JDK must be 17+, the daemon provisions 21)
-
+## Commands
+The owner works on macOS and Windows. Use bash (Git Bash on Windows) for scripts; in PowerShell use `gradlew.bat` in place of `./gradlew`.
 ```bash
-./gradlew :androidApp:assembleDevDebug :androidApp:assembleProdDebug
-./gradlew :shared:allTests
-./gradlew :androidApp:lintDevDebug
-./gradlew :umbrella:linkDebugFrameworkIosSimulatorArm64
-xcodebuild -project iosApp/iosApp.xcodeproj -scheme "FartMap Dev" -destination 'platform=iOS Simulator,name=iPhone 17' build
-cd backend/functions && npm ci && npm run build && npm run lint && npm test   # Java 21 on PATH for the emulator
+scripts/verify.sh            # picks checks from what changed; --full runs everything. iOS only on macOS
+./gradlew :androidApp:assembleDevDebug :androidApp:assembleProdDebug :androidApp:lintDevDebug
+./gradlew :shared:testAndroidHostTest      # fast shared tests (any OS); :shared:allTests adds iOS sim (macOS)
+./gradlew detekt                           # static analysis (after the static-analysis PR lands)
+./gradlew :umbrella:linkDebugFrameworkIosSimulatorArm64                                         # macOS
+xcodebuild -project iosApp/iosApp.xcodeproj -scheme "FartMap Dev" -destination 'platform=iOS Simulator,name=iPhone 17' build   # macOS
+(cd backend/functions && npm ci && npm run build && npm run lint && npm test)  # Java 21 on PATH for emulators
 scripts/check-no-secrets.sh
 ```
+- **iOS on Windows:** can't be built locally; the macOS CI job on the draft PR is the iOS check.
+- **Firebase configs:** injected, never committed (`scripts/inject-config.sh`, see README).
 
-Firebase configs are injected, never committed: `scripts/inject-config.sh` (see README, Config injection).
+## Work loop (details: `planning/WorkingAgreement.md`)
+1. Use plan mode for anything non-trivial.
+2. Branch `NN-short-name` from `main`.
+3. Implement, then make `scripts/verify.sh` green.
+4. Tick the story, add evidence, update `planning/STATE.md`.
+5. Commit, push the branch, open a **draft** PR with `gh pr create --draft`.
+6. **Never** push to `main`, merge, force-push, or skip hooks. The owner merges.
+7. Keep a decision you'd change as a **Proposed** ADR (`adr` skill); don't apply it.
 
 ## Non-negotiables
+- **No secrets in git.** `google-services.json`, `GoogleService-Info*.plist` and `secrets.properties` are never tracked, read or printed; hooks block them.
+- **No swallowed errors.** Every catch becomes a typed State/Event or a structured log. No `printStackTrace`, no empty catch.
+- **Layering.** Presentation → Domain ← Data. Domain imports nothing from data, Room, Firebase or platform code. Features never import each other. Firebase lives only in `firebaseData`.
+- **One pattern per concern:** StateViewModel, typed routes, Koin, `Result<T>`. A new pattern needs an ADR first.
+- **Privacy defaults:**
+  - visibility defaults to FOLLOWERS;
+  - unknown values map to PRIVATE;
+  - precise coordinates are owner-only (`farts/{id}/private/location`) and public docs carry fuzzed geohash-6 coordinates;
+  - minimum age 13 (an age band, never a date of birth).
+- **The server is authoritative:** rules and functions enforce visibility, counters, entitlements, unlock tokens and the 3/day ad cap. Client checks are UX only, and the client never grants itself an unlock.
+- **Monetization hard rules:**
+  - cosmetics only;
+  - logging, the map, reacting and safety tools stay free;
+  - no XP, rank or achievements for sale;
+  - rewarded ads are opt-in and single-use;
+  - no banners or interstitials;
+  - no dark patterns.
+- **Map-first and humor-first.** The map is the launch screen. Every string carries the product voice.
+- **Parity:** a feature is done only when it works on Android and iOS.
 
-- No secrets or Firebase config files in git (`google-services.json`, `GoogleService-Info*.plist`, `secrets.properties`): templates only; real files are injected (`planning/architecture/SecurityAndSecrets.md` §4).
-- No error swallowing; no dependency-direction violations (`planning/CLAUDE.md` §4).
-- Update `planning/roadmap/STATE.md`, `planning/meta/ChangeLog.md` and the work item under `planning/roadmap/` after meaningful changes.
+## Stop and ask the owner when
+- privacy or safety defaults, monetization posture, a product principle, or phase scope would change;
+- an accepted ADR would be reversed;
+- a feature isn't in `planning/product/features/`;
+- two authoritative docs conflict;
+- a task needs a secret committed.
+
+## Where things live
+| Topic | File |
+|---|---|
+| State / roadmap / stories | `planning/STATE.md`, `planning/ROADMAP.md`, `planning/stories/` |
+| Product brief, scope and phases, features | `planning/product/Product.md`, `Scope.md`, `features/` |
+| Monetization / growth | `planning/product/Monetization.md`, `Growth.md` |
+| Architecture / Firestore schema + rules / security | `planning/architecture/Architecture.md`, `DataContracts.md`, `Security.md` |
+| Stack versions and toolchain gotchas | `planning/architecture/TechStack.md`, `gradle/libs.versions.toml` |
+| Design tokens / screens | `planning/design/DesignSpecification.md`, `planning/design/screens/` |
+| Decisions | `planning/decisions/README.md` |
+| How this Claude setup works | `.claude/README.md` |

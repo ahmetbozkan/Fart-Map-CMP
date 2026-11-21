@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew *)",
+      "Bash(gradlew.bat *)",
+      "Bash(bash scripts/*)",
+      "Bash(scripts/verify.sh*)",
+      "Bash(scripts/check-no-secrets.sh)",
+      "Bash(scripts/check-doc-links.sh)",
+      "Bash(npm --prefix backend/functions *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(git branch*)",
+      "Bash(git switch*)",
+      "Bash(git fetch*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push -u origin *)",
+      "Bash(gh pr create --draft*)",
+      "Bash(gh pr view*)",
+      "Bash(gh pr checks*)",
+      "Bash(gh pr diff*)",
+      "Bash(gh run list*)",
+      "Bash(gh run view*)"
+    ],
+    "deny": [
+      "Bash(git push origin main*)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(gh pr merge*)",
+      "Read(**/google-services.json)",
+      "Read(**/GoogleService-Info-dev.plist)",
+      "Read(**/GoogleService-Info-prod.plist)",
+      "Read(**/GoogleService-Info.plist)",
+      "Read(**/secrets.properties)",
+      "Read(~/.fartmap/**)",
+      "Edit(**/google-services.json)",
+      "Edit(**/GoogleService-Info-dev.plist)",
+      "Edit(**/GoogleService-Info-prod.plist)",
+      "Edit(**/secrets.properties)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-context.mjs\"" }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write|MultiEdit|NotebookEdit|Bash",
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.mjs\"" }
+        ]
+      }
+    ]
+  }
+}
