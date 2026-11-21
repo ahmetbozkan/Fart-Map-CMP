@@ -46,7 +46,7 @@ android {
         versionName = "1.0"
     }
 
-    // One dimension: which backend the build talks to (planning/architecture/FirebaseStrategy.md §8).
+    // One dimension: which backend the build talks to (planning/architecture/Backend.md §8).
     flavorDimensions += "env"
     productFlavors {
         create("dev") {

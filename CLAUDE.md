@@ -25,7 +25,7 @@ The owner works on macOS and Windows. Use bash (Git Bash on Windows) for scripts
 scripts/verify.sh            # picks checks from what changed; --full runs everything. iOS only on macOS
 ./gradlew :androidApp:assembleDevDebug :androidApp:assembleProdDebug :androidApp:lintDevDebug
 ./gradlew :shared:testAndroidHostTest      # fast shared tests (any OS); :shared:allTests adds iOS sim (macOS)
-./gradlew detekt                           # static analysis (after the static-analysis PR lands)
+./gradlew detekt                           # static analysis; Konsist architecture tests run in testAndroidHostTest
 ./gradlew :umbrella:linkDebugFrameworkIosSimulatorArm64                                         # macOS
 xcodebuild -project iosApp/iosApp.xcodeproj -scheme "FartMap Dev" -destination 'platform=iOS Simulator,name=iPhone 17' build   # macOS
 (cd backend/functions && npm ci && npm run build && npm run lint && npm test)  # Java 21 on PATH for emulators

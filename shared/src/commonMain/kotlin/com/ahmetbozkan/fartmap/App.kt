@@ -18,10 +18,10 @@ import com.ahmetbozkan.fartmap.core.platform.AppEnvironment
  * Replaced by the navigation shell in STORY-01-01-02.
  */
 @Composable
-fun App(environment: AppEnvironment, firebaseProjectId: String) {
+fun App(environment: AppEnvironment, firebaseProjectId: String, modifier: Modifier = Modifier) {
     MaterialTheme {
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxSize()
                 .safeContentPadding()
                 .padding(24.dp),

@@ -114,6 +114,7 @@ This project does **not** inherit the PoC's version lines. It is bootstrapped on
 | Google Mobile Ads (Android / iOS) / UMP | 25.5.0 / iOS SPM package not yet added / 4.0.0 — catalog entries only; EPIC-01-06 | not yet resolved |
 | kotlinx-serialization / kotlinx-datetime / Coil | 1.12.0 / 0.8.0 / 3.6.3 (Coil catalog entry only) | 2026-10-21 (Coil not yet resolved) |
 | Node.js / firebase-tools | 22 (`backend/functions` engine; CI) / 15.25.1; firebase-functions 6.6.0, firebase-admin 13.10.0, TypeScript 5.9.3, vitest 3.2.7, `@firebase/rules-unit-testing` 4.0.1 | 2026-10-21 (local run on Node 20.11.0; the emulator needs Java 21) |
+| detekt / detekt-formatting / compose-rules / Konsist | 1.23.8 (its analyzer is pinned to Kotlin 2.0.21 in the root build, the documented workaround for detekt 1.x on newer Kotlin) / 1.23.8 / 0.4.28 (the line built for detekt 1.23) / 0.18.1. detekt 2.0 is still alpha (2.0.0-alpha.6); move to it and compose-rules 0.6+ once it is stable | 2026-11-21 (Windows 11, JBR 21) |
 
 Verification environment: macOS 26 (Darwin 25.6), Xcode 26.4.1, iOS simulator "iPhone 17", Android Studio 2026.2 lint. Notes recorded with the baseline:
 
@@ -183,7 +184,7 @@ Every pull request runs:
 - Android debug build,
 - iOS framework link and an `xcodebuild` simulator build on a macOS runner,
 - backend: functions unit tests and Firestore rules tests on the emulator suite,
-- static checks configured in the repository (Android lint; detekt if adopted).
+- static checks: Android lint, `detekt` (all Kotlin modules, `config/detekt/detekt.yml`) and the Konsist architecture tests in `:shared:testAndroidHostTest`; `scripts/check-doc-links.sh` in the secret-scan job.
 
 Secrets (Firebase config files, signing, API keys) are injected from the CI secret store (`Security.md` §4) and never printed.
 
