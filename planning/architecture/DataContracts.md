@@ -1,7 +1,7 @@
 # Data Contracts: Fart Map (Remote/Firestore Contract)
 
 > **Planning spine position:** authoritative remote data contract and security-rule intent.
-> Upstream: `architecture/ArchitecturePrinciples.md`, `architecture/Architecture.md`, `architecture/SecurityAndSecrets.md`, `architecture/DataModel.md`, `product/Features.md`, `product/SocialSystems.md`, `product/ProgressionSystems.md`, ADR-0002/0007/0009/0010/0012/0014.
+> Upstream: `architecture/Architecture.md`, `architecture/Security.md`, `architecture/DataModel.md`, `product/features/`, `product/SocialSystems.md`, `product/ProgressionSystems.md`, ADR-0002/0007/0009/0010/0012/0014.
 > Downstream: Firestore schema implementation, security rules, repository remote mappers, sync policy implementation.
 > This document defines canonical remote entities and rule intent. It does not define local Room tables (see `DataModel.md`).
 
@@ -296,7 +296,7 @@ Written only by the Cloud Function that consumes RevenueCat webhooks. Readable b
 | `token_id` | String | Yes | Issued by the SSV callback function |
 | `item_id` | String | Yes | |
 | `issued_at` | Timestamp | Yes | |
-| `expires_at` | Timestamp | Yes | Short validity window |
+| `expires_at` | Timestamp | Yes | Short validity window for *redeeming* the token (anti-hoarding). It is not an unlock duration: a redeemed token unlocks exactly one fart and the item re-locks (the "no `unlock_expiry`" rule) |
 | `consumed_by_fart_id` | String? | No | Set when consumed |
 
 Readable by the owner; never client-written. The daily cap (3) is enforced in the issuing function.
@@ -323,7 +323,7 @@ Owner read/write only; removed on sign-out.
 8. XP and leaderboard writes are server-authoritative (not client-calculated final source).
 9. A fart using a non-free `avatar_id` or `sound_id` is accepted only if `user_entitlements` grants the item or an unconsumed `rewarded_unlocks` token names it; the token is consumed by the write trigger (ADR-0016, ADR-0017).
 10. `public_lat`/`public_lng` must lie inside the `coarse_location_key` cell; a function re-validates from the private location (ADR-0019).
-11. `description_text` is rejected above 500 characters (`Features.md` CREATE-03.1 Step 6).
+11. `description_text` is rejected above 500 characters (`features/` CREATE-03.1 Step 6).
 
 ---
 
@@ -435,7 +435,7 @@ This document does not define:
 
 - Room schema internals (`DataModel.md`),
 - exact sync retry/conflict implementation (`SyncStrategy.md`),
-- SDK initialization and environment wiring (`FirebaseStrategy.md`),
+- SDK initialization and environment wiring (`Backend.md`),
 - analytics taxonomy (`Observability.md`).
 
 ---

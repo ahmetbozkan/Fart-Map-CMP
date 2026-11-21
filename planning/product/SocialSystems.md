@@ -1,13 +1,13 @@
 # Social Systems — Fart Map
 
-> **Authority level:** This document expands the SOCIAL-01–05 entries in `Features.md` with authoritative interaction models, state machines, data contracts, and implementation rules. When this document and `Features.md` conflict, this document wins for social-specific behavior. Always read `Features.md` SOCIAL-01–05 entries first for pillar scores, phase assignments, and loop mapping.
+> **Authority level:** This document expands the SOCIAL-01–05 entries in `features/` with authoritative interaction models, state machines, data contracts, and implementation rules. When this document and `features/` conflict, this document wins for social-specific behavior. Always read `features/` SOCIAL-01–05 entries first for pillar scores, phase assignments, and loop mapping.
 
 **Related documents:**
-- `Features.md` §8 Social Systems (SOCIAL-01–05)
+- `features/` Social Systems (SOCIAL-01–05)
 - `ADR-0009` — Follow-only social graph with approval
 - `ADR-0010` — MVP visibility tiers: Public / Followers / Private
-- `CoreLoops.md` — L2, L4, L8
-- `UserJourney.md` — Stages 4, 6, 7, 8
+- `Product.md` — L2, L4, L8
+- `Product.md` — Stages 4, 6, 7, 8
 - `ContentSafety.md` — social threat model
 - `Glossary.md` — all social entity terms
 

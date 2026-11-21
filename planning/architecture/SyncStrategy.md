@@ -1,7 +1,9 @@
 # Sync Strategy: Fart Map
 
+> **Pending ADR-0022 (Proposed).** See the note at the top of `DataModel.md`. The invariants in `Architecture.md` §8 hold for either option.
+
 > **Planning spine position:** authoritative offline sync and reconciliation contract.
-> Upstream: `architecture/ArchitecturePrinciples.md`, `architecture/Architecture.md`, `architecture/DataModel.md`, `architecture/DataContracts.md`, ADR-0007.
+> Upstream: `architecture/Architecture.md`, `architecture/DataModel.md`, `architecture/DataContracts.md`, ADR-0007.
 > Downstream: sync engine implementation, repository write paths, retry workers, conflict tests.
 > This document defines how local and remote state converge. It does not define UI copy.
 
@@ -180,7 +182,7 @@ Minimum required sync tests:
 This document does not define:
 
 - Firestore collection schemas (`DataContracts.md`),
-- repository package naming (`RepositoryRules.md`),
+- repository package naming (`Architecture.md`),
 - analytics taxonomy details (`Observability.md`).
 
 ---

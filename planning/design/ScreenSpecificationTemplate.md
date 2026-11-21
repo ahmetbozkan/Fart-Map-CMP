@@ -1,7 +1,7 @@
 # Screen Specification Template: Fart Map
 
 > Authority: standard contract for per-screen design specs.
-> Upstream: `planning/design/SYSTEM.md`, `planning/design/DesignSpecification.md`, `planning/product/Features.md`, `planning/product/UserJourney.md`, `planning/product/CoreLoops.md`, relevant architecture docs.
+> Upstream: `planning/design/DesignSpecification.md`, `planning/product/features/`, `planning/product/Product.md`, relevant architecture docs.
 > Downstream: screen-specific design docs, Stitch mapping records, implementation stories/tasks.
 
 ---

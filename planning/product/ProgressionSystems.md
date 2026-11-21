@@ -1,12 +1,12 @@
 # Progression Systems — Fart Map
 
-> **Authority level:** This document expands the PROG-01–05 (PROG-06 territory is deferred, ADR-0011) and ACH-01–02 entries in `Features.md` with authoritative XP models, streak rules, leaderboard design, anti-abuse controls, and achievement categories. When this document and `Features.md` conflict, this document wins for progression-specific behavior. Always read `Features.md` §10 and §11 first for pillar scores, phase assignments, and loop mapping.
+> **Authority level:** This document expands the PROG-01–05 (PROG-06 territory is deferred, ADR-0011) and ACH-01–02 entries in `features/` with authoritative XP models, streak rules, leaderboard design, anti-abuse controls, and achievement categories. When this document and `features/` conflict, this document wins for progression-specific behavior. Always read `features/` first for pillar scores, phase assignments, and loop mapping.
 
 **Related documents:**
-- `Features.md` §10 Progression Systems (PROG-01–05)
-- `Features.md` §11 Achievement Systems (ACH-01–02)
-- `CoreLoops.md` — L5 (Progression/Streak), L6 (Competition/Ranking)
-- `UserJourney.md` — Stage 5 (Habit), Stage 7 (Identity Investment)
+- `features/` Progression Systems (PROG-01–05)
+- `features/` Achievement Systems (ACH-01–02)
+- `Product.md` — L5 (Progression/Streak), L6 (Competition/Ranking)
+- `Product.md` — Stage 5 (Habit), Stage 7 (Identity Investment)
 - `ContentSafety.md` — anti-abuse and fairness requirements
 - `Glossary.md` — progression entity terms
 - Open TBDs: all five resolved (see §10)

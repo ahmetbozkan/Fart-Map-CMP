@@ -1,14 +1,14 @@
 # Glossary: Fart Map
 
 > **Planning spine position:** cross-cutting vocabulary; feeds every product document.
-> Upstream: `Vision.md`, `ProductPillars.md`, `Personas.md`, `UserMotivations.md`, `UserJourney.md`, `CoreLoops.md`. Downstream: `Features.md`, Systems docs, `architecture/DataModel.md`, `design/*`.
-> This document is the **single source of truth for domain terms**. Every later doc references these definitions rather than redefining them (per `meta/archive/PlanningDependencyGraph.md` §7, single-definition rule).
+> Upstream: `Product.md`. Downstream: `features/`, Systems docs, `architecture/DataModel.md`, `design/*`.
+> This document is the **single source of truth for domain terms**. Every later doc references these definitions rather than redefining them (per `planning/archive/meta/archive/PlanningDependencyGraph.md` §7, single-definition rule).
 
 ---
 
 ## 1) Purpose & How to Use
 
-Fart Map's concept uses playful, ambiguous language ("fart", "flavor", "signature", "territory"). The PoC code left several of these as placeholders (`signatureId`, `feelingId`, `flavorId` marked `// tbd` — see `meta/archive/PlanningAuditReport.md` §6). Undefined terms cause inconsistent features, conflicting data models, and divergent UI copy.
+Fart Map's concept uses playful, ambiguous language ("fart", "flavor", "signature", "territory"). The PoC code left several of these as placeholders (`signatureId`, `feelingId`, `flavorId` marked `// tbd` — see `planning/archive/meta/archive/PlanningAuditReport.md` §6). Undefined terms cause inconsistent features, conflicting data models, and divergent UI copy.
 
 This glossary fixes meaning so that:
 - AI agents use one definition across product, architecture, and design.
@@ -19,7 +19,7 @@ This glossary fixes meaning so that:
 - A term is **defined here once**; other documents link to it.
 - If a feature needs a new domain concept, it must be added here **before** the feature is specified.
 - Terms marked **TBD (decision required)** must be resolved before any feature depending on them enters planning.
-- This is the **domain** glossary. Process/planning terms (epic, story, DoR, skill) belong in `meta/PlanningGlossary.md`.
+- This is the **domain** glossary. Process/planning terms (epic, story, DoR, skill) belong in `planning/archive/meta/PlanningGlossary.md`.
 
 ---
 
@@ -30,7 +30,7 @@ This glossary fixes meaning so that:
 | **Status: Stable** | Definition agreed; safe to build on |
 | **Status: Provisional** | Working definition; may refine but usable |
 | **Status: TBD** | Decision required before dependent features are planned |
-| *(pillar tags)* | Pillars the concept primarily serves (from `ProductPillars.md`) |
+| *(pillar tags)* | Pillars the concept primarily serves (from `Product.md`) |
 
 ---
 
@@ -67,16 +67,16 @@ A user's personal, recurring visual/stylistic stamp applied to their Farts/Marke
 
 ### Flavor
 **Status: Provisional.** *(Humor, Identity)*
-A comedic **category/theme** of a Fart — the "type" of moment (e.g., silent-but-deadly, symphony, sneaky). Flavor classifies content for humor variety, filtering, and collection. Per-Fart (unlike Signature, which is per-user). PoC field: `flavorId`.
+A per-Fart **5-step comedic severity scale** chosen with a stepper (CREATE-04, `features/create.md`; default "Stinky"). It drives marker styling. Per-Fart (unlike Signature, which is per-user). Distinct from Intensity (CREATE-05, a 0.0–1.0 slider stored with 0% ranking weight).
 **Distinction:** *Signature* = who made it (identity); *Flavor* = what kind it is (content category).
 
 ### Feeling
 **Status: Dropped from MVP (PoC concept).** *(Humor, Social)*
-Not part of the Fart entity (`Features.md` CREATE-03.3, `DataModel.md`); retained only as a possible future expressive attribute. The emotional/reaction tone attached to a Fart by its author at creation (e.g., relieved, proud, embarrassed). Adds comedic narrative and personality. Distinct from **Reaction** (which is given by *other* users afterward). PoC field: `feelingId`.
+Not part of the Fart entity (`features/` CREATE-03.3, `DataModel.md`); retained only as a possible future expressive attribute. The emotional/reaction tone attached to a Fart by its author at creation (e.g., relieved, proud, embarrassed). Adds comedic narrative and personality. Distinct from **Reaction** (which is given by *other* users afterward). PoC field: `feelingId`.
 
 ### Intensity
 **Status: Provisional.** *(Humor, Progress)*
-A magnitude attribute of a Fart (stored as a normalized 0.0–1.0 value, `Features.md` CREATE-03.3). Used for humor framing and potentially for progression/scoring. Must not become a spam-incentive (Progress pillar guardrail: reward meaningful participation, not volume).
+A magnitude attribute of a Fart (stored as a normalized 0.0–1.0 value, `features/` CREATE-03.3). Used for humor framing and potentially for progression/scoring. Must not become a spam-incentive (Progress pillar guardrail: reward meaningful participation, not volume).
 **Resolved:** humor-only; 0% weight in XP and ranking until a fair mechanic exists (`ProgressionSystems.md` §10).
 
 ### Caption / Comment-on-own
@@ -126,7 +126,7 @@ A milestone reward for reaching a defined goal. Visible identity/reputation sign
 
 ### Rank / Leaderboard
 **Status: Stable.** *(Progress, Social, Identity)*
-A relative standing of users (global, local, followers, or group). Engine of Loop **L6** and Motivation **M6** (status). **Fairness and anti-abuse are first-class**; no pay-to-win (Personas §7). Requires a defined scoring source (see Intensity TBD).
+A relative standing of users (global, local, followers, or group). Engine of Loop **L6** and Motivation **M6** (status). **Fairness and anti-abuse are first-class**; no pay-to-win (Personas §7). Scoring source is defined in `ProgressionSystems.md` §4 (Intensity weight 0%).
 
 ### Stat
 **Status: Stable.** *(Progress)*
@@ -147,7 +147,7 @@ Territory is explicitly **out of MVP scope** and should not block MVP feature pl
 
 ### User / Account
 **Status: Stable.** *(Identity)*
-A registered participant. PoC supports Google/Apple auth (Apple incomplete — Audit §5). Lightweight start allowed; identity upgrade incentivized (Personas §7).
+A participant. Every user starts with an anonymous session that is a full session (ADR-0018); linking a Google or Apple account keeps the same uid and is nudged after the first log, never forced.
 
 ### Profile
 **Status: Stable.** *(Identity, Social)*
@@ -196,7 +196,7 @@ A product-generated, meme-native, context-free piece of content designed to trav
 
 ### Viral Loop / K-factor
 **Status: Stable.** *(Growth)*
-The cycle where Advocacy (Journey Stage 8) produces new Awareness (Stage 1). K-factor = average new users generated per existing user; a target metric in `SuccessMetrics.md`.
+The cycle where Advocacy (Journey Stage 8) produces new Awareness (Stage 1). K-factor = average new users generated per existing user; a target metric in `Metrics.md`.
 
 ---
 
@@ -226,7 +226,7 @@ These exist because confusing them produces bad data models and inconsistent UI.
 | **Intensity role** | Humor-only; 0% weight in XP and ranking | Resolved (`ProgressionSystems.md` §10) |
 | **Signature composition** | Single style selection | Resolved (ADR-0013) |
 
-**Rule:** an agent must not specify a feature depending on a TBD term until that term's decision is recorded as an ADR in `meta/decisions/`. No domain term is currently TBD.
+**Rule:** an agent must not specify a feature depending on a TBD term until that term's decision is recorded as an ADR in `decisions/`. No domain term is currently TBD.
 
 ---
 

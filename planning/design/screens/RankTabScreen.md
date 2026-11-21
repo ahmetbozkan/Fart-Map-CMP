@@ -3,7 +3,7 @@
 ## Ownership
 - Status: active
 - Owner concern: design/screen behavior
-- Upstream dependencies: `planning/design/DesignSpecification.md` (11.10), `planning/product/ReleaseStrategy.md` §3 (leaderboards are Phase 3), `planning/product/Monetization.md` §6 (no purchase prompt), ADR-0018, ADR-0020
+- Upstream dependencies: `planning/design/DesignSpecification.md` (11.10), `planning/product/Scope.md` §3 (leaderboards are Phase 3), `planning/product/Monetization.md` §6 (no purchase prompt), ADR-0018, ADR-0020
 - Downstream consumers: UI stories/tasks for the Rank tab; Phase 3 leaderboard stories replace the teaser
 
 ## Traceability

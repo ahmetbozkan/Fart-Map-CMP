@@ -1,14 +1,14 @@
 # Monetization — Fart Map
 
-> **Authority level:** This document expands MON-01, MON-02, and MON-03 from `Features.md` with authoritative monetization rules, product boundaries, SKU definitions, pricing philosophy, and implementation constraints. When this document and `Features.md` conflict, this document wins for monetization-specific behavior. Always read `Features.md` §13 first for pillar scores and phase assignments.
+> **Authority level:** This document expands MON-01, MON-02, and MON-03 from `features/` with authoritative monetization rules, product boundaries, SKU definitions, pricing philosophy, and implementation constraints. When this document and `features/` conflict, this document wins for monetization-specific behavior. Always read `features/` first for pillar scores and phase assignments.
 
 **Related documents:**
-- `Features.md` §13 Monetization Systems (MON-01–03)
-- `CREATE-03.2` in `Features.md` — Log Fart monetization binding rules
+- `features/` Monetization Systems (MON-01–03)
+- `CREATE-03.2` in `features/` — Log Fart monetization binding rules
 - `SocialSystems.md` — no direct monetization, but reaction packs are future MON-01
 - `ProgressionSystems.md` — cosmetic unlock tracks tied to progression
 - `ContentSafety.md` — monetization must not weaken safety controls
-- `Vision.md` / `ProductPillars.md` — humor-first, no pay-to-win, fairness as trust
+- `Product.md` — humor-first, no pay-to-win, fairness as trust
 
 ---
 
@@ -124,7 +124,7 @@ These rules apply to every locked cosmetic item across every surface. They are n
 2. Tapping a locked item shows a bottom sheet with the appropriate unlock options (see CREATE-03.2 for Log Fart-specific rules).
 3. The bottom sheet must clearly label the item name, a short humorous description, and the price/unlock method.
 4. No locked item triggers an automatic paywall. The paywall is always user-initiated.
-5. If the user has an active premium subscription, all items accessible via subscription show no locked state. No "Go Premium" CTA is shown for items the user already has access to.
+5. (From MON-02.) If the user has an active premium subscription, all items accessible via subscription show no locked state. No "Go Premium" CTA is shown for items the user already has access to.
 
 ---
 
@@ -218,7 +218,7 @@ Unacceptable:
 
 To prevent rewarded ads from becoming a de facto free premium path:
 - Maximum 3 rewarded ad views per user per day (across all item types).
-- After the daily limit is reached, the "Watch Ad" option is hidden. The "Go Premium" option remains.
+- After the daily limit is reached, the "Watch Ad" option is hidden. The "Buy" option remains (Phase 1); "Go Premium" is added only once MON-02 ships (Phase 4 today; see proposed ADR-0024).
 - Exact limit may be adjusted later based on ad revenue data, but must never be set high enough that the ad path meaningfully competes with premium conversion.
 
 ### Ad SDK and provider
@@ -245,7 +245,7 @@ This table maps every in-app surface where a monetization interaction can occur.
 | Profile — Avatar section | Locked avatar → bottom sheet | MON-01 / MON-03 |
 | Profile — Signature section (PROFILE-03) | Locked signature → bottom sheet | MON-01 |
 | Profile — Achievement showcase (ACH-02) | Locked frame → bottom sheet | MON-01 |
-| Settings — Premium | Full subscription paywall | MON-02 |
+| Settings — Premium (from MON-02 phase) | Full subscription paywall | MON-02 |
 | Cosmetic catalog / shop | Browse and purchase | MON-01 / MON-02 |
 | Achievement unlock celebration | "Add to Showcase" only; no purchase | None |
 | Level-up celebration | No purchase prompt | None |
@@ -310,7 +310,7 @@ These are known monetization anti-patterns that are explicitly prohibited in Far
 - [ ] Rewarded ads are opt-in only; no passive ad placement exists anywhere in the product
 - [ ] Rewarded ad unlock re-locks immediately after one action is consumed
 - [ ] Daily rewarded ad cap enforced server-side
-- [ ] After daily cap: "Watch Ad" option is hidden; "Go Premium" remains
+- [ ] After daily cap: "Watch Ad" option is hidden; "Buy" remains ("Go Premium" only once MON-02 exists)
 - [ ] Ad SDK does not inject passive inventory; reviewed before integration
 
 **Entitlements and infrastructure (ADR-0016, ADR-0017):**

@@ -7,10 +7,10 @@
 - flow: `UXF-01`, `UXF-02`, `UXF-03`, `UXF-04`, `UXF-08`, `UXF-11`, `UXF-12`, `UXF-13`
 - loop: `L1`, `L2`, `L3`, `L5` (seed), `L8` (seed)
 - journey stage: `2 -> 3 -> 4 -> 5 -> 7`
-- architecture links: `planning/architecture/NavigationStrategy.md`, `planning/architecture/DataContracts.md`, `planning/architecture/SyncStrategy.md`, `planning/architecture/SecurityAndSecrets.md`, ADR-0015–ADR-0020
+- architecture links: `planning/architecture/Architecture.md`, `planning/architecture/DataContracts.md`, `planning/architecture/SyncStrategy.md`, `planning/architecture/Security.md`, ADR-0015–ADR-0020
 
 ## Included Design Artifacts
-- design spec sections: `planning/design/DesignSpecification.md` 9.4 (navigation), 10, 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.9, 11.10
+- design spec sections: `planning/design/DesignSpecification.md` 2–10 and 12–16 (tokens, components, navigation, motion, accessibility); screen-level behavior is in the screen specs below (the old §11 is archived)
 - screen specs:
   - `planning/design/screens/AuthLoginScreen.md`
   - `planning/design/screens/MapScreen.md`
