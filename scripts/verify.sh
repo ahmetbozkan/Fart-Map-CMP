@@ -60,7 +60,7 @@ if has '^backend/'; then
     run "backend" bash -c 'cd backend/functions && npm ci --no-audit --no-fund && npm run build && npm run lint && npm test'
   else
     run "backend (build, lint, unit)" bash -c 'cd backend/functions && npm ci --no-audit --no-fund && npm run build && npm run lint && npm run test:unit'
-    results+=("SKIP  backend rules tests (firebase CLI missing: npm install -g firebase-tools@15; CI runs them)")
+    results+=("SKIP  backend emulator tests (rules + idempotency; firebase CLI missing: npm install -g firebase-tools@15; CI runs them)")
   fi
 fi
 

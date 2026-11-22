@@ -1,20 +1,284 @@
 rules_version = '2';
 
-// Default-deny posture (planning/architecture/DataContracts.md §5, SecurityAndSecrets.md §6).
-// Every collection is opened explicitly by the feature story that owns it; nothing is readable
-// or writable until a rule below says so. Anonymous Firebase sessions count as signed in (ADR-0018).
+// Firestore security rules (planning/architecture/DataContracts.md §3–§5). Default deny: a collection is open only
+// where a rule below says so. Anonymous Firebase sessions count as signed in (ADR-0018). Rules lookups
+// (get/exists) run with full access, so a rule may consult documents its caller cannot read.
+// Every allowed and denied case is covered by backend/functions/test/emulator/*.test.ts.
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ---------- helpers ----------
 
     function signedIn() {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return signedIn() && request.auth.uid == userId;
+    function uid() {
+      return request.auth.uid;
     }
 
-    // Catch-all: deny. Add collection rules ABOVE this block, never loosen it.
+    function isUser(userId) {
+      return signedIn() && uid() == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function hasExactly(required, optional) {
+      return incoming().keys().hasAll(required) && incoming().keys().hasOnly(required.concat(optional));
+    }
+
+    function changedOnly(keys) {
+      return incoming().diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+
+    function isNow(field) {
+      return incoming()[field] == request.time;
+    }
+
+    function isText(value, minSize, maxSize) {
+      return value is string && value.size() >= minSize && value.size() <= maxSize;
+    }
+
+    // Absent, null, or text within limits.
+    function optionalText(field, maxSize) {
+      return !(field in incoming()) || incoming()[field] == null || isText(incoming()[field], 0, maxSize);
+    }
+
+    function doc(path) {
+      return /databases/$(database)/documents/$(path);
+    }
+
+    function blockedEitherWay(a, b) {
+      return exists(doc('blocks/' + a + '_' + b)) || exists(doc('blocks/' + b + '_' + a));
+    }
+
+    function approvedFollower(follower, author) {
+      let rel = doc('follow_relationships/' + follower + '_' + author);
+      return exists(rel) && get(rel).data.status == 'APPROVED';
+    }
+
+    // A cosmetic the caller may use: an active free catalog item, or one granted in their entitlements
+    // (ADR-0016). The rewarded-token path is added with EPIC-01-06 (ADR-0017). Fails closed.
+    function cosmeticAllowed(itemId) {
+      let item = doc('cosmetic_items/' + itemId);
+      let entitlements = doc('user_entitlements/' + uid());
+      return itemId is string
+        && ((exists(item) && get(item).data.is_free == true && get(item).data.is_active == true)
+          || (exists(entitlements) && itemId in get(entitlements).data.items));
+    }
+
+    // ---------- users (ADR-0025) ----------
+
+    // Public profile: profile fields and server-written counters only.
+    match /users/{userId} {
+      function validProfileFields() {
+        return isText(incoming().display_name, 1, 50)
+          && cosmeticAllowed(incoming().avatar_id)
+          && optionalText('bio', 300)
+          && optionalText('signature_style_id', 64)
+          && incoming().is_following_list_public is bool;
+      }
+
+      allow read: if signedIn();
+      allow create: if isUser(userId)
+        && hasExactly(
+          ['user_id', 'display_name', 'avatar_id', 'follower_count', 'following_count',
+            'is_following_list_public', 'created_at', 'updated_at'],
+          ['bio', 'signature_style_id'])
+        && incoming().user_id == userId
+        && validProfileFields()
+        && incoming().is_following_list_public == false
+        && incoming().follower_count == 0
+        && incoming().following_count == 0
+        && isNow('created_at') && isNow('updated_at');
+      allow update: if isUser(userId)
+        && changedOnly(['display_name', 'avatar_id', 'bio', 'signature_style_id', 'is_following_list_public', 'updated_at'])
+        && validProfileFields()
+        && isNow('updated_at');
+      allow delete: if false;
+
+      // Owner-only account facts: age band (self-declared once, immutable), providers, anonymity, suspension.
+      match /private/{docId} {
+        allow read: if isUser(userId) && docId == 'account';
+        allow create: if isUser(userId) && docId == 'account'
+          && hasExactly(['age_band', 'linked_providers', 'is_anonymous', 'is_suspended', 'created_at', 'updated_at'], [])
+          && incoming().age_band in ['AGE_13_17', 'AGE_18_PLUS']
+          && incoming().linked_providers == []
+          && incoming().is_anonymous == (request.auth.token.firebase.sign_in_provider == 'anonymous')
+          && incoming().is_suspended == false
+          && isNow('created_at') && isNow('updated_at');
+        allow update, delete: if false; // server-managed (linking, moderation)
+      }
+
+      // Push tokens: owner only.
+      match /devices/{deviceId} {
+        allow read, delete: if isUser(userId);
+        allow create, update: if isUser(userId)
+          && hasExactly(['fcm_token', 'platform', 'updated_at'], [])
+          && isText(incoming().fcm_token, 1, 4096)
+          && incoming().platform in ['ANDROID', 'IOS']
+          && isNow('updated_at');
+      }
+    }
+
+    // ---------- farts ----------
+
+    function canReadFart(fart) {
+      return signedIn() && (
+        fart.author_user_id == uid()
+        || (fart.is_hidden == false && fart.is_removed == false && (
+          fart.visibility_mode == 'PUBLIC'
+          || (fart.visibility_mode == 'FOLLOWERS'
+            && approvedFollower(uid(), fart.author_user_id)
+            && !blockedEitherWay(uid(), fart.author_user_id)))));
+    }
+
+    match /farts/{fartId} {
+      function validVisibility() {
+        return incoming().visibility_mode in ['PUBLIC', 'FOLLOWERS', 'PRIVATE'];
+      }
+
+      function validDescription() {
+        return optionalText('description_text', 500);
+      }
+
+      // Single document reads apply the full visibility rule.
+      allow get: if canReadFart(resource.data);
+
+      // Queries must be provably safe from their constraints alone: public, visible farts (the map, EPIC-01-03)
+      // or the caller's own farts (profile). Follower feeds arrive with SOCIAL-03 (Phase 2).
+      allow list: if signedIn() && (
+        resource.data.author_user_id == uid()
+        || (resource.data.visibility_mode == 'PUBLIC'
+          && resource.data.is_hidden == false
+          && resource.data.is_removed == false));
+
+      // Public doc only: fuzzed coordinates (ADR-0019); precise ones go to private/location in the same batch.
+      allow create: if signedIn()
+        && hasExactly(
+          ['fart_id', 'author_user_id', 'public_lat', 'public_lng', 'coarse_location_key', 'timestamp_epoch_ms',
+            'avatar_id', 'flavor_level', 'intensity_value', 'visibility_mode', 'reaction_count',
+            'reaction_breakdown', 'comment_count', 'report_count', 'is_hidden', 'is_removed', 'created_at',
+            'updated_at'],
+          ['description_text', 'sound_id'])
+        && incoming().fart_id == fartId
+        && incoming().author_user_id == uid()
+        && incoming().public_lat is number && incoming().public_lat >= -90 && incoming().public_lat <= 90
+        && incoming().public_lng is number && incoming().public_lng >= -180 && incoming().public_lng <= 180
+        && isText(incoming().coarse_location_key, 1, 32)
+        && incoming().timestamp_epoch_ms is int
+        && cosmeticAllowed(incoming().avatar_id)
+        && (!('sound_id' in incoming()) || incoming().sound_id == null || cosmeticAllowed(incoming().sound_id))
+        && incoming().flavor_level is int && incoming().flavor_level >= 1 && incoming().flavor_level <= 5
+        && incoming().intensity_value is number
+        && incoming().intensity_value >= 0 && incoming().intensity_value <= 1
+        && validVisibility()
+        && validDescription()
+        && incoming().reaction_count == 0
+        && incoming().reaction_breakdown == {}
+        && incoming().comment_count == 0
+        && incoming().report_count == 0
+        && incoming().is_hidden == false
+        && incoming().is_removed == false
+        && isNow('created_at') && isNow('updated_at');
+
+      // The author edits description and visibility, or soft-deletes. Counters and moderation fields are
+      // server-written only; a removed fart is frozen.
+      allow update: if signedIn()
+        && resource.data.author_user_id == uid()
+        && resource.data.is_removed == false
+        && changedOnly(['description_text', 'visibility_mode', 'is_removed', 'removed_reason', 'updated_at'])
+        && validVisibility()
+        && validDescription()
+        && (incoming().is_removed == false
+          || (incoming().is_removed == true && incoming().removed_reason == 'USER_DELETED'))
+        && (incoming().is_removed == true || !('removed_reason' in incoming()) || incoming().removed_reason == null)
+        && isNow('updated_at');
+
+      allow delete: if false;
+
+      // Precise coordinates: author only (ADR-0019). getAfter() so the batch that creates the fart can write it.
+      match /private/{docId} {
+        allow read: if signedIn() && docId == 'location'
+          && get(doc('farts/' + fartId)).data.author_user_id == uid();
+        allow create, update: if signedIn() && docId == 'location'
+          && getAfter(doc('farts/' + fartId)).data.author_user_id == uid()
+          && hasExactly(['lat', 'lng', 'updated_at'], [])
+          && incoming().lat is number && incoming().lat >= -90 && incoming().lat <= 90
+          && incoming().lng is number && incoming().lng >= -180 && incoming().lng <= 180
+          && isNow('updated_at');
+        allow delete: if false;
+      }
+
+      // One reaction per user per fart (doc id = uid). Counters are maintained by a trigger (EPIC-01-05).
+      match /reactions/{userId} {
+        function validReaction() {
+          return hasExactly(['fart_id', 'user_id', 'type', 'created_at'], [])
+            && incoming().fart_id == fartId
+            && incoming().user_id == userId
+            && incoming().type in ['DEAD', 'TOXIC', 'RIP', 'SMELLED', 'LEGEND']
+            && isNow('created_at');
+        }
+
+        allow read: if canReadFart(get(doc('farts/' + fartId)).data);
+        allow create, update: if isUser(userId) && validReaction() && canReadFart(get(doc('farts/' + fartId)).data);
+        allow delete: if isUser(userId);
+      }
+    }
+
+    // ---------- safety ----------
+
+    match /blocks/{blockId} {
+      allow read: if signedIn() && resource.data.blocker_id == uid();
+      allow create: if signedIn()
+        && hasExactly(['blocker_id', 'blocked_id', 'created_at'], [])
+        && incoming().blocker_id == uid()
+        && isText(incoming().blocked_id, 1, 128)
+        && incoming().blocked_id != uid()
+        && blockId == uid() + '_' + incoming().blocked_id
+        && isNow('created_at');
+      allow update: if false;
+      allow delete: if signedIn() && resource.data.blocker_id == uid();
+    }
+
+    // Reporters create; only moderation (Admin SDK) reads or updates (§5.6).
+    match /moderation_reports/{reportId} {
+      allow create: if signedIn()
+        && hasExactly(
+          ['report_id', 'reporter_user_id', 'target_type', 'target_id', 'reason_code', 'status', 'created_at',
+            'updated_at'],
+          [])
+        && incoming().report_id == reportId
+        && incoming().reporter_user_id == uid()
+        && incoming().target_type in ['FART', 'COMMENT', 'USER']
+        && isText(incoming().target_id, 1, 128)
+        && isText(incoming().reason_code, 1, 40)
+        && incoming().status == 'OPEN'
+        && isNow('created_at') && isNow('updated_at');
+      allow read, update, delete: if false;
+    }
+
+    // ---------- monetization (server-written, ADR-0016/0017) ----------
+
+    match /cosmetic_items/{itemId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    match /user_entitlements/{userId} {
+      allow read: if isUser(userId);
+      allow write: if false;
+    }
+
+    match /rewarded_unlocks/{userId}/tokens/{tokenId} {
+      allow read: if isUser(userId);
+      allow write: if false;
+    }
+
+    // Everything else (comments, follow writes, progression, leaderboards, function_runs) stays closed until
+    // the story that owns it opens it. Allows are OR-ed, so this never narrows a rule above; it documents intent.
     match /{document=**} {
       allow read, write: if false;
     }
