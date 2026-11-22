@@ -12,7 +12,7 @@
 | Phases, MVP list, gates, permanent non-goals, open conflicts | `product/Scope.md` |
 | Feature specs (one file per system) | `product/features/` |
 | Monetization rules | `product/Monetization.md` |
-| Growth, ASO, store risk, launch (proposals) | `product/Growth.md` |
+| Growth, ASO, store risk, launch | `product/Growth.md` |
 | Social rules (Phase 2+) / progression rules (Phase 3+) | `product/SocialSystems.md` / `product/ProgressionSystems.md` |
 | Safety, privacy, moderation | `product/ContentSafety.md` |
 | Metrics, North Star, analytics taxonomy input | `product/Metrics.md` |
@@ -20,7 +20,7 @@
 | **Architecture** | |
 | Layers, modules, patterns, navigation, multiplatform, testing | `architecture/Architecture.md` |
 | Firestore schema and rules matrix | `architecture/DataContracts.md` |
-| Local persistence and sync (pending ADR-0022) | `architecture/DataModel.md`, `architecture/SyncStrategy.md` |
+| Local data: offline cache, write pattern, DataStore keys (ADR-0022) | `architecture/LocalData.md` |
 | Firebase, functions, environments | `architecture/Backend.md` |
 | Secrets, config injection, privacy enforcement | `architecture/Security.md` |
 | Errors, logging, analytics events | `architecture/Observability.md` |

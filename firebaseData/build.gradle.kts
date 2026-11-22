@@ -25,12 +25,13 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":shared"))
             implementation(libs.kotlinx.coroutines.core)
-            api(libs.gitlive.firebase.auth)
-            api(libs.gitlive.firebase.firestore)
-            api(libs.gitlive.firebase.storage)
-            api(libs.gitlive.firebase.analytics)
-            api(libs.gitlive.firebase.crashlytics)
-            api(libs.gitlive.firebase.messaging)
+            // implementation, not api: GitLive types must not leak into androidApp/umbrella (ADR-0021).
+            implementation(libs.gitlive.firebase.auth)
+            implementation(libs.gitlive.firebase.firestore)
+            implementation(libs.gitlive.firebase.storage)
+            implementation(libs.gitlive.firebase.analytics)
+            implementation(libs.gitlive.firebase.crashlytics)
+            implementation(libs.gitlive.firebase.messaging)
         }
         androidMain.dependencies {
             implementation(project.dependencies.platform(libs.android.firebase.bom))

@@ -20,12 +20,10 @@
 - Create: CREATE-01–06, CREATE-07 (free + purchasable set), CREATE-09 (delete).
 - Social and profile: SOCIAL-01, PROFILE-01, PROFILE-02 (light).
 - Privacy and moderation: PRIV-01–03 (baseline), MOD-01, MOD-02 (baseline), MOD-03 (basic).
-- Monetization and push: MON-01 (a la carte), MON-03, NOTIF-01 (reaction push).
+- Monetization and push: MON-01 (a la carte + Wardrobe shop + launch catalog + starter pack, ADR-0024), MON-03 (single-use), NOTIF-01 (reaction push; permission after first log, ADR-0023).
+- Growth: SHARE-01-lite, SHARE-02 deep link + landing page, cold-start seeding (ADR-0023).
 
-**Pending proposals that would change Phase 1:**
-- ADR-0022: offline data layer.
-- ADR-0023: growth kernel (share + deep link, cold start).
-- ADR-0024: monetization v2.
+**Accepted 2026-11-22:** ADR-0022 (Firestore offline persistence), ADR-0023 (growth kernel, PUBLIC default for 18+ in Phase 1), ADR-0024 (monetization v2, single-use ads, no scope trims).
 
 ### EPIC-01-01: Bootstrap and walking skeleton (Active)
 
@@ -40,20 +38,21 @@
 **Stories:**
 - [x] STORY-01-01-01: Project bootstrap and build pipeline (`stories/STORY-01-01-01.md`)
 - [ ] STORY-01-01-02: Core packages: Koin modules, typed navigation shell (four tabs + auth entry), theme tokens → `core/design`, observability base (`AppError`, `Result`, logger, Crashlytics/Analytics init, event contract), `StateViewModel` base class (makes the `new-feature` skill templates compile)
-- [ ] STORY-01-01-03: Local data layer: **blocked on the ADR-0022 decision.** Room + PendingOperation + SyncEngine if rejected; Firestore persistence config + write pattern + `PendingWriteMonitor` if accepted
+- [ ] STORY-01-01-03: Local data layer (ADR-0022, `architecture/LocalData.md`): Firestore persistence settings at startup, `AppWriteScope` + `PendingWriteMonitor` (contracts in `shared`, implementation in `firebaseData`), sign-out `clearPersistence()`, DataStore keys from `LocalData.md` §5 including the age-band-aware visibility default, tests from §9. Also adds the `RemoteConfig` contract + GitLive config adapter with safe defaults (ADR-0024)
 - [ ] STORY-01-01-04: Backend: real rules skeleton per `DataContracts.md` §5 with a rules test per case, CI deploy to `dev`. Also fix `backend/functions/src/lib/idempotency.ts`, which claims the key before running the work (a failure is never retried) and has no TTL on `function_runs`; add tests for `runOnce` and `onFartCreated`. Keep `onFartCreated` out of prod until it does real work
 
 ### Planned epics (instantiate one at a time)
 
 - **EPIC-01-02:** Session and identity: anonymous, Google, Apple, linking, 13+ age band.
 - **EPIC-01-03:** Map and markers on both platforms: filters, fuzzed projection, marker parity.
-- **EPIC-01-04:** Log Fart: quick log + detailed log, drafts, offline, delete.
+- **EPIC-01-04:** Log Fart: quick log + detailed log, drafts, offline (Firestore queue), delete, visibility default per ADR-0023.
 - **EPIC-01-05:** Reactions, detail sheet and safety: report, block, auto-hide at 3.
-- **EPIC-01-06:** Cosmetics monetization: catalog, RevenueCat purchases, AdMob rewarded with server-side verification, entitlements mirror.
-- **EPIC-01-07:** Social tab, Rank tab, Profile and Settings (Phase 1 variants; see the trim candidates in ADR-0024).
-- **EPIC-01-08:** Reaction push notification and deep link.
+- **EPIC-01-06:** Cosmetics monetization: launch catalog, Wardrobe shop, starter pack offer, RevenueCat purchases + Offerings, AdMob rewarded (single-use) with server-side verification and Remote Config cap, entitlements mirror (ADR-0016/0017/0024).
+- **EPIC-01-07:** Social tab, Rank tab, Profile and Settings (Phase 1 variants; all four tabs stay, ADR-0024 accepted with no trims).
+- **EPIC-01-08:** Reaction push notification and deep link; permission prompt after the first successful log (ADR-0023).
 - **EPIC-01-09:** Backend rules, functions, emulator tests and CI deploy (cross-cutting; grows with each epic).
-- **Launch readiness** (proposed in `planning/product/Growth.md`): store listings, privacy labels / Data Safety, review notes, share card, analytics funnel.
+- **EPIC-01-10:** Growth kernel (ADR-0023): share card rendering on both platforms, App Links / Universal Links on an owned domain, web landing page, Play Install Referrer, official landmark markers (admin script), aggregated regional counts.
+- **EPIC-01-11:** Launch readiness (`planning/product/Growth.md` §8): store listings, privacy labels / Data Safety, review notes, analytics funnels incl. revenue metrics, closed test.
 
 ## PHASE-02 … PHASE-05
 

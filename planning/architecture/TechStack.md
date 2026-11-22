@@ -25,7 +25,7 @@ It exists to prevent:
 Settled stack decisions:
 
 - Kotlin Multiplatform + Compose Multiplatform for shared client code.
-- Room for local persistence (ADR-0001).
+- Firestore offline persistence (via GitLive) as the local data layer; DataStore for preferences and drafts (ADR-0022, superseding ADR-0001 Room).
 - GitLive Firebase SDK for Firebase access from shared code (ADR-0002).
 - Koin for DI with shared + platform modules (ADR-0003).
 - Custom StateViewModel pattern for presentation (ADR-0004).
@@ -48,7 +48,6 @@ This project does **not** inherit the PoC's version lines. It is bootstrapped on
 
 - Kotlin (K2) with the Compose compiler plugin.
 - Gradle with the Android Gradle Plugin; version catalog (`gradle/libs.versions.toml`) as the single version source.
-- KSP for annotation processing (Room).
 - JDK: 21 LTS if the AGP/Gradle pair at bootstrap supports it, otherwise 17 LTS. The JDK is pinned in the repository README and CI.
 
 ### UI and app framework
@@ -63,7 +62,7 @@ This project does **not** inherit the PoC's version lines. It is bootstrapped on
 
 ### Persistence
 
-- Room for Kotlin Multiplatform with the bundled SQLite driver (Android) and the native driver (iOS).
+- Firestore persistent cache through GitLive (ADR-0022, `LocalData.md`). Room is not used; reintroducing it needs a new ADR (`LocalData.md` §8).
 - DataStore Preferences for lightweight settings.
 
 ### Backend and network
@@ -105,7 +104,8 @@ This project does **not** inherit the PoC's version lines. It is bootstrapped on
 | Kotlin | 2.4.21 (K2; Compose compiler plugin and serialization plugin on the same version) | 2026-10-21 |
 | Compose Multiplatform | 1.12.2; Material3 `1.12.0-alpha03` (no stable Material3 line exists after 1.9.0; this is the line the JetBrains wizard pairs with CMP 1.12.x; replace by the first stable 1.12.x) | 2026-10-21 |
 | AGP / Gradle | 9.4.1 / 9.8.2 (template shipped 9.1.1 / 9.5.1; raised on day one, both builds green); daemon JVM Azul Zulu 21 from `gradle/gradle-daemon-jvm.properties`, launcher JDK 17+; compileSdk 37, targetSdk 37, minSdk 24; JVM target 17 | 2026-10-21 |
-| Room / KSP | 2.8.5 / 2.3.12 — catalog entry only; first resolved by STORY-01-01-03 | not yet resolved |
+| Room / KSP | Removed 2026-11-22 (ADR-0022); never resolved | — |
+| Firebase Remote Config | Added with EPIC-01-06 (ADR-0024): GitLive `firebase-config` on the same GitLive line + `Firebase/RemoteConfig` SPM product linked in `iosApp` | not yet resolved |
 | Koin | 4.2.2 (core, compose, compose-viewmodel) | 2026-10-21 |
 | GitLive Firebase / Firebase BOM / Firebase iOS SDK | 2.7.0 (auth, firestore, storage, analytics, crashlytics, messaging) / 35.0.2 / 13.0.1 via SPM `upToNextMajor` (products Analytics, Auth, Firestore, Storage, Crashlytics, Messaging, AppCheck linked in `iosApp`; `-ObjC`); `Package.resolved` tracked | 2026-10-21 |
 | Navigation / Lifecycle (CMP) | 2.9.2 / 2.11.0 | 2026-10-21 |
@@ -114,6 +114,7 @@ This project does **not** inherit the PoC's version lines. It is bootstrapped on
 | Google Mobile Ads (Android / iOS) / UMP | 25.5.0 / iOS SPM package not yet added / 4.0.0 — catalog entries only; EPIC-01-06 | not yet resolved |
 | kotlinx-serialization / kotlinx-datetime / Coil | 1.12.0 / 0.8.0 / 3.6.3 (Coil catalog entry only) | 2026-10-21 (Coil not yet resolved) |
 | Node.js / firebase-tools | 22 (`backend/functions` engine; CI) / 15.25.1; firebase-functions 6.6.0, firebase-admin 13.10.0, TypeScript 5.9.3, vitest 3.2.7, `@firebase/rules-unit-testing` 4.0.1 | 2026-10-21 (local run on Node 20.11.0; the emulator needs Java 21) |
+| detekt / detekt-formatting / compose-rules / Konsist | 1.23.8 (its analyzer is pinned to Kotlin 2.0.21 in the root build, the documented workaround for detekt 1.x on newer Kotlin) / 1.23.8 / 0.4.28 (the line built for detekt 1.23) / 0.18.1. detekt 2.0 is still alpha (2.0.0-alpha.6); move to it and compose-rules 0.6+ once it is stable | 2026-11-21 (Windows 11, JBR 21) |
 
 Verification environment: macOS 26 (Darwin 25.6), Xcode 26.4.1, iOS simulator "iPhone 17", Android Studio 2026.2 lint. Notes recorded with the baseline:
 
@@ -144,7 +145,7 @@ The PoC lines (Kotlin 2.2.20, CMP 1.9.0, AGP 8.11.2, Room 2.8.2, Koin 4.1.1, Git
 1. Centralize versions in one version catalog (`libs.versions.toml`).
 2. Keep Android/iOS shared dependency lines aligned where multiplatform artifacts are used.
 3. Prefer patch/minor upgrades; major upgrades require a compatibility review note in the PR.
-4. Any upgrade touching Compose/Kotlin/Firebase/Room/Koin/RevenueCat/Ads requires a regression pass for Android build, iOS build, serialization compatibility, navigation/state integration, purchase and ad smoke flows.
+4. Any upgrade touching Compose/Kotlin/Firebase/Koin/RevenueCat/Ads requires a regression pass for Android build, iOS build, serialization compatibility, navigation/state integration, purchase and ad smoke flows.
 5. Do not mix competing libraries for the same concern (two DI frameworks, two local DB stacks, two purchase SDKs).
 
 ---
@@ -153,7 +154,7 @@ The PoC lines (Kotlin 2.2.20, CMP 1.9.0, AGP 8.11.2, Room 2.8.2, Koin 4.1.1, Git
 
 Without ADR approval, do not add:
 
-- SQLDelight (conflicts with ADR-0001),
+- SQLDelight or Room (local data is Firestore persistence per ADR-0022; a dataset that needs a local DB requires a new ADR),
 - Hilt/Dagger or other DI frameworks,
 - alternate Firebase wrappers in parallel with GitLive,
 - a second navigation framework,
@@ -183,7 +184,7 @@ Every pull request runs:
 - Android debug build,
 - iOS framework link and an `xcodebuild` simulator build on a macOS runner,
 - backend: functions unit tests and Firestore rules tests on the emulator suite,
-- static checks configured in the repository (Android lint; detekt if adopted).
+- static checks: Android lint, `detekt` (all Kotlin modules, `config/detekt/detekt.yml`) and the Konsist architecture tests in `:shared:testAndroidHostTest`; `scripts/check-doc-links.sh` in the secret-scan job.
 
 Secrets (Firebase config files, signing, API keys) are injected from the CI secret store (`Security.md` §4) and never printed.
 

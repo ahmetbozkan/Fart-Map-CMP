@@ -77,7 +77,7 @@ core/observability            Result/AppError, logger, analytics event contracts
 - **Features:** `map`, `log`, `auth`, `profile`, `social`, `progression`, `monetization`, `notifications`.
 - **Ownership:** a fart is a `feature/log` entity even when the map shows it.
 - **Firebase:** any code that touches Firebase lives in `firebaseData/src/*/kotlin/com/ahmetbozkan/fartmap/firebase/`, mirroring the feature or `core/data` package it implements.
-- **Room** (if it stays; ADR-0022 is pending): the single `@Database` lives in `core/data` and registers feature entities. This is the one sanctioned `core/data → feature/*/data` reference and must be recorded in the Konsist allow-list.
+- **Local data** (ADR-0022): Firestore's persistent cache through `firebaseData`; no Room database. Writes go through the app-scoped `AppWriteScope` and `PendingWriteMonitor` in `core/data` (contracts) / `firebaseData` (implementation). Details: `LocalData.md`.
 
 ## 5) Patterns: one answer per concern
 
@@ -87,7 +87,8 @@ core/observability            Result/AppError, logger, analytics event contracts
 | Navigation | Type-safe Compose Navigation with `@Serializable` routes (ADR-0005); session-driven start (ADR-0006, §7) |
 | DI | Koin: `sharedModule` plus platform modules composed at startup (ADR-0003). No singleton shortcuts |
 | Platform capability | A contract in `core/platform`. Use `expect`/`actual` for small pure-Kotlin seams; use an interface implemented in `androidMain`/`iosMain`, or in Swift and injected through Koin from `umbrella`, when an SDK is involved (ADR-0008) |
-| Local persistence | Room (ADR-0001) **or** Firestore offline persistence if proposed ADR-0022 is accepted. Preferences and drafts go in DataStore |
+| Local persistence | Firestore offline persistence behind repository interfaces (ADR-0022, `LocalData.md`); preferences and drafts in DataStore. Room only for a dataset that hits a trigger in `LocalData.md` §8, via a new ADR |
+| Runtime config | Firebase Remote Config behind a `RemoteConfig` contract in `core/platform`, every key with a safe in-app default (ADR-0024); values the server enforces (e.g. the rewarded-ad cap) are read by functions from the same source, never trusted from the client |
 | Remote | GitLive Firebase, called only from `firebaseData` (ADR-0002, ADR-0021) |
 | Errors | Repositories return `Result<T>` with a typed `AppError`; nothing is swallowed (§6) |
 | Backend compute | Cloud Functions (ADR-0015). Clients never compute counters, ranks, entitlements or unlocks |
@@ -123,11 +124,11 @@ core/observability            Result/AppError, logger, analytics event contracts
 
 ## 8) Offline-first and data flow
 
-**Invariants (both data options):**
+**Invariants:**
 - Reads render local state immediately; remote updates arrive in the background.
 - User writes succeed locally and are never lost to connectivity.
 - There is exactly **one** remote write path.
-- Online-only operations (purchases, ad rewards, account linking) are never queued.
+- Online-only operations (purchases, ad rewards, account linking, callable functions) are never queued; they fail fast with a typed "needs connection" error.
 - The user never sees "no connectivity" as a failure. Only terminal failures that need user action surface as typed UI state.
 
 **Conflicts:**
@@ -139,11 +140,11 @@ core/observability            Result/AppError, logger, analytics event contracts
 
 **Idempotency:** deterministic document ids. Reactions, follows and blocks use composite keys.
 
-**Mechanism:** currently `SyncStrategy.md` + `DataModel.md` (Room + PendingOperation queue, ADR-0001/0007). Proposed ADR-0022 replaces this with Firestore offline persistence. **Do not implement STORY-01-01-03 until the owner decides ADR-0022.**
+**Mechanism (ADR-0022):** Firestore's persistent cache and its durable write queue. Client-generated ids, one batch per user action, the commit launched in app scope and never awaited on the UI path (GitLive `set()` suspends until the server acknowledges), rejections reported by `PendingWriteMonitor`. Full contract: `LocalData.md`.
 
 **Canonical flows:**
-1. **Log a fart.** Screen Action → ViewModel validates → repository `addFart(fart)`. A local write makes the marker appear at once. The single sync path delivers it, and the public doc carries fuzzed coordinates while the precise location goes to `farts/{id}/private/location` (ADR-0019).
-2. **Map.** ViewModel observes `observeMapFarts(filter)`: a local stream that backfills from remote.
+1. **Log a fart.** Screen Action → ViewModel validates → repository `addFart(fart)`. One batch (public doc with fuzzed coordinates + `farts/{id}/private/location` with the precise ones, ADR-0019) is launched in app scope; the cache shows the marker at once (`hasPendingWrites`) and Firestore delivers it when online.
+2. **Map.** ViewModel observes `observeMapFarts(viewport, filter)`: a snapshot listener on geohash ranges that emits from cache first, then server deltas (including removals).
 3. **Profile.** Cached profile renders first and remote refreshes it. Show an error only when there is no cache.
 4. **Error.** `Result.Failure(AppError)` → State error plus an observability event.
 
@@ -175,7 +176,7 @@ core/observability            Result/AppError, logger, analytics event contracts
 
 - No secrets in git; configs are injected (`scripts/inject-config.sh`).
 - Privacy by default:
-  - visibility defaults to FOLLOWERS;
+  - visibility default: PUBLIC in Phase 1 for the 18+ age band, FOLLOWERS for 13–17 and for everyone once SOCIAL-03 ships (ADR-0023); last-used thereafter;
   - unknown values map to PRIVATE;
   - precise coordinates never reach presentation types for content the user does not own.
 - Least privilege for permissions and rules.
@@ -197,6 +198,6 @@ core/observability            Result/AppError, logger, analytics event contracts
 - [ ] Firebase is only in `firebaseData` *(Gradle: `shared` has no GitLive dependency)*
 - [ ] No swallowed errors *(detekt)*; every error case has a State or Event
 - [ ] All screens use StateViewModel; one-time effects are Events
-- [ ] Visibility default is FOLLOWERS; no precise coordinates in public docs or presentation types for others' content
+- [ ] Visibility default follows ADR-0023 (Phase 1: PUBLIC for 18+, FOLLOWERS for 13–17; last-used thereafter); no precise coordinates in public docs or presentation types for others' content
 - [ ] Non-free cosmetics need a server-verified entitlement or token; the client never grants unlocks
 - [ ] Any new pattern has an ADR

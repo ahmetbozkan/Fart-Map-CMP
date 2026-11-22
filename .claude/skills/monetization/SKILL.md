@@ -5,7 +5,7 @@ description: Implement cosmetic purchases (RevenueCat), rewarded-ad unlocks (AdM
 
 # Monetization and entitlements
 
-Rules: `planning/product/Monetization.md` (hard rules §2, surface map §6), `planning/product/features/create.md` CREATE-03.2, ADR-0016/0017. Proposals not yet accepted: ADR-0024.
+Rules: `planning/product/Monetization.md` (hard rules §2, surface map §6), `planning/product/features/create.md` CREATE-03.2, ADR-0016/0017. Monetization v2: ADR-0024 (accepted 2026-11-22).
 
 ## Hard rules (stop and ask if a change would break one)
 - Cosmetics only. Logging, the map, reacting and safety tools are always free. No XP, rank or achievements for sale.
@@ -15,8 +15,13 @@ Rules: `planning/product/Monetization.md` (hard rules §2, surface map §6), `pl
   - at most 3 per day, enforced server-side;
   - never voice recording or marker themes.
 - No banners or interstitials, no dark patterns, no purchase prompt during onboarding, the map, reactions, comments or privacy screens.
-- Locked items stay visible. A tap opens the unlock sheet; it never auto-opens a paywall. Phase 1 sheet: **Buy** + **Watch ad to try once**; after the cap, Buy only. "Go Premium" appears only once MON-02 exists.
+- Locked items stay visible. A tap opens the unlock sheet; it never auto-opens a paywall. Phase 1 sheet: **Buy** + **Watch ad to try once**; after the cap, Buy only. "Go Premium" appears once MON-02 ships (Phase 2, ADR-0024).
 - Copy is humorous and on-voice ("The Thunderclap Collection", never "Upgrade for a better experience").
+
+## Phase 1 surfaces (ADR-0024)
+- **Wardrobe** shop entry in Profile (browse + buy avatars, sounds, packs). Never on the map or reaction surfaces.
+- **Starter pack** offer once after the first successful log (`starter_pack_offer_shown` in DataStore); dismissible, no countdown, never in onboarding.
+- **Remote Config** keys with safe defaults: offering id, `rewarded_daily_cap` (default 3; the enforcing function reads the server-side value), offer timing, copy variant.
 
 ## Purchase flow
 1. Catalog from `cosmetic_items` (Firestore); prices from the RevenueCat offering via `PurchasesClient`. Never hardcode prices.

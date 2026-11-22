@@ -25,13 +25,13 @@
 ## Layout Structure
 - Top-level regions: item preview (asset, humorous name and one-line description), price line from the store offering, two buttons.
 - Primary CTA: **Buy** (label carries the localized price).
-- Secondary actions: **Watch Ad to Try Once**; close. No third option until MON-02 ships (Phase 4).
+- Secondary actions: **Watch Ad to Try Once**; close. No third option until MON-02 ships (Phase 2, ADR-0024), then "Go Premium".
 
 ## UI States
 - Loading: offering/price loading skeleton; buttons disabled.
 - Empty: N/A.
 - Success: "It's yours." (purchase) or "Unlocked for this one." (ad) then auto-return.
-- Error: purchase failed/cancelled → sheet stays with a humor-consistent note; ad not available/dismissed early → "No ad right now. Try again or buy it."; daily ad cap reached → ad button hidden, Buy remains.
+- Error: purchase failed/cancelled → sheet stays with a humor-consistent note; ad not available/dismissed early → "No ad right now. Try again or buy it."; daily ad cap reached (Remote Config value, server-enforced, ADR-0024) → ad button hidden, Buy remains; "Go Premium" is added once MON-02 ships (Phase 2).
 - Offline: both buttons disabled with "Needs a connection" note; the free items remain usable.
 
 ## Interactions

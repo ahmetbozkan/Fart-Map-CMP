@@ -26,7 +26,7 @@
 
 ---
 
-> **Phase assignment update (2026-10-14, ADR-0020):** MON-01 a la carte purchases of avatars and sounds and MON-03 rewarded ads ship in Phase 1; MON-02 subscription remains Phase 4. Purchases run through RevenueCat (ADR-0016); rewarded ads through AdMob with server-side verification (ADR-0017).
+> **Phase assignment update (2026-10-14, ADR-0020):** MON-01 a la carte purchases of avatars and sounds and MON-03 rewarded ads ship in Phase 1; MON-02 subscription remains Phase 4. **Updated 2026-11-22 (ADR-0024):** subscription moves to Phase 2 (catalog ≥ 20 items); Phase 1 adds the Wardrobe shop, a defined launch catalog, a starter pack after the first log, Remote Config levers and RevenueCat Offerings/Experiments. Rewarded ads stay single-use. Purchases run through RevenueCat (ADR-0016); rewarded ads through AdMob with server-side verification (ADR-0017).
 
 ## 1) Monetization Philosophy
 
@@ -132,7 +132,7 @@ These rules apply to every locked cosmetic item across every surface. They are n
 
 ### Phase assignment
 
-Phase 4 or later. **Do not ship this before the cosmetic economy (MON-01) is established and meaningful.** The subscription has nothing to sell if there is no catalog depth.
+Phase 2 (ADR-0024), once the catalog has 20 or more items. **Do not ship this before the cosmetic economy (MON-01) is established and meaningful.** Voice recording (CREATE-08) joins the subscription when it ships (Phase 4). The subscription has nothing to sell if there is no catalog depth.
 
 ### What premium includes
 
@@ -217,8 +217,8 @@ Unacceptable:
 ### Rewarded ad frequency limits
 
 To prevent rewarded ads from becoming a de facto free premium path:
-- Maximum 3 rewarded ad views per user per day (across all item types).
-- After the daily limit is reached, the "Watch Ad" option is hidden. The "Buy" option remains (Phase 1); "Go Premium" is added only once MON-02 ships (Phase 4 today; see proposed ADR-0024).
+- Maximum 3 rewarded ad views per user per day (across all item types). The value is a Remote Config key (ADR-0024) read by the enforcing Cloud Function; the client value is display-only.
+- After the daily limit is reached, the "Watch Ad" option is hidden. The "Buy" option remains (Phase 1); "Go Premium" is added once MON-02 ships (Phase 2, ADR-0024).
 - Exact limit may be adjusted later based on ad revenue data, but must never be set high enough that the ad path meaningfully competes with premium conversion.
 
 ### Ad SDK and provider
@@ -246,7 +246,8 @@ This table maps every in-app surface where a monetization interaction can occur.
 | Profile — Signature section (PROFILE-03) | Locked signature → bottom sheet | MON-01 |
 | Profile — Achievement showcase (ACH-02) | Locked frame → bottom sheet | MON-01 |
 | Settings — Premium (from MON-02 phase) | Full subscription paywall | MON-02 |
-| Cosmetic catalog / shop | Browse and purchase | MON-01 / MON-02 |
+| Cosmetic catalog / shop (Profile → Wardrobe, Phase 1) | Browse and purchase | MON-01 / MON-02 |
+| After first successful log (once) | Starter pack offer; dismissible, no countdown, never during onboarding (ADR-0024) | MON-01 |
 | Achievement unlock celebration | "Add to Showcase" only; no purchase | None |
 | Level-up celebration | No purchase prompt | None |
 | Leaderboard | No purchase prompt | None |

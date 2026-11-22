@@ -61,6 +61,11 @@ kotlin {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
         }
+        // Architecture tests (Konsist) run on the JVM host only: `./gradlew :shared:testAndroidHostTest`.
+        getByName("androidHostTest").dependencies {
+            implementation(libs.konsist)
+            implementation(libs.kotlin.testJunit)
+        }
     }
 }
 

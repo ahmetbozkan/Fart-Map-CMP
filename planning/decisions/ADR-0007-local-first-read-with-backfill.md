@@ -1,6 +1,6 @@
 # ADR-0007: Local-First Reads with Remote Backfill
 
-- Status: Accepted (strategy completed in `architecture/SyncStrategy.md`)
+- Status: Accepted; mechanism amended by ADR-0022 (2026-11-22). The principle (local-first reads, remote backfill, offline writes never lost) stands; it is delivered by Firestore's persistent cache and write queue as specified in `architecture/LocalData.md`. The custom pending-operations/sync-engine strategy is archived.
 - Date: 2026-06-20
 - Source: `planning/archive/meta/archive/PlanningAuditReport.md` §8
 

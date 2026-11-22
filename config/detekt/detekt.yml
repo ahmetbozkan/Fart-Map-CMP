@@ -1,0 +1,101 @@
+# Builds on detekt's default config (buildUponDefaultConfig = true); only overrides live here.
+# The project's non-negotiable "no swallowed errors" rule is enforced by the exceptions rule set below.
+
+exceptions:
+  active: true
+  PrintStackTrace:
+    active: true
+  SwallowedException:
+    active: true
+    ignoredExceptionTypes:
+      - CancellationException
+  TooGenericExceptionCaught:
+    active: true
+  ThrowingExceptionsWithoutMessageOrCause:
+    active: true
+  RethrowCaughtException:
+    active: true
+
+empty-blocks:
+  EmptyCatchBlock:
+    active: true
+    allowedExceptionNameRegex: '^$' # no "ignored"/"expected" escape hatch
+
+style:
+  ForbiddenComment:
+    active: false # TODOs are fine; track real gaps in the story instead
+  MagicNumber:
+    active: true
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+    excludes: ['**/test/**', '**/*Test/**', '**/commonTest/**', '**/androidHostTest/**', '**/iosTest/**', '**/core/design/**']
+  WildcardImport:
+    active: true
+  MaxLineLength:
+    active: true
+    maxLineLength: 140
+  UnusedPrivateMember:
+    active: true
+    allowedNames: '.*Preview$'
+
+naming:
+  FunctionNaming:
+    active: true
+    ignoreAnnotated: ['Composable'] # Composables are PascalCase
+    functionPattern: '[a-z][a-zA-Z0-9]*|MainViewController' # iOS entry point keeps the UIKit-style name
+    excludes: ['**/commonTest/**', '**/androidHostTest/**', '**/iosTest/**', '**/test/**'] # backtick test names
+  TopLevelPropertyNaming:
+    active: true
+
+complexity:
+  LongParameterList:
+    active: true
+    ignoreAnnotated: ['Composable']
+  TooManyFunctions:
+    active: true
+    ignorePrivate: true
+
+formatting:
+  active: true
+  autoCorrect: true
+  # Composable function names and multiplatform file layout clash with these ktlint rules.
+  FunctionNaming:
+    active: false
+  Filename:
+    active: false
+  MaximumLineLength:
+    maxLineLength: 140
+  TrailingCommaOnCallSite:
+    active: false
+  TrailingCommaOnDeclarationSite:
+    active: false
+
+Compose:
+  ComposableAnnotationNaming:
+    active: true
+  ModifierMissing:
+    active: true
+  ModifierNaming:
+    active: true
+  ModifierNotUsedAtRoot:
+    active: true
+  ModifierReused:
+    active: true
+  ModifierWithoutDefault:
+    active: true
+  MultipleEmitters:
+    active: true
+  MutableParams:
+    active: true
+  ParameterNaming:
+    active: true
+  PreviewPublic:
+    active: true
+  RememberMissing:
+    active: true
+  UnstableCollections:
+    active: false # Compose Multiplatform 1.12 strong skipping makes this noise
+  ViewModelForwarding:
+    active: true
+  ViewModelInjection:
+    active: true
