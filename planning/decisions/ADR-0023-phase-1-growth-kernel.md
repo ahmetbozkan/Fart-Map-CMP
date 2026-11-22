@@ -45,3 +45,4 @@ Gate 1 needs map density (first social touch ≥ 40% within 24 h), and density n
   - architecture: `Backend.md` §6b, `Security.md`, `LocalData.md` §5;
   - `CLAUDE.md`, `.claude/rules/kotlin-shared.md`;
   - ADR-0010/0020 notes; `ROADMAP.md`.
+- **Amendment (owner, 2026-11-23, STORY-01-01-04):** PUBLIC is **enforced** as adults-only, not just a default. Users in the 13–17 band (and anyone whose `users/{uid}/private/account` is missing) can post only FOLLOWERS or PRIVATE. Firestore rules reject PUBLIC creates and switches for them; the client offers only the allowed options (`allowedVisibilities`). Applied to `firestore.rules`, `DataContracts.md` §4/§5.2, `LocalData.md` §5, `Scope.md`, `CLAUDE.md` and `.claude/rules/kotlin-shared.md`.

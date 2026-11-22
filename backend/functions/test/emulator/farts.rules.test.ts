@@ -13,9 +13,45 @@ beforeAll(async () => {
 afterAll(async () => {
   await env.cleanup();
 });
+const account = (ageBand: string) => ({ age_band: ageBand, linked_providers: [], is_anonymous: false, is_suspended: false });
+
 beforeEach(async () => {
   await env.clearFirestore();
-  await seed(env, catalog);
+  await seed(env, {
+    ...catalog,
+    [`users/${ALICE}/private/account`]: account("AGE_18_PLUS"),
+    "users/anon-1/private/account": account("AGE_18_PLUS"),
+    "users/teen-1/private/account": account("AGE_13_17"),
+  });
+});
+
+describe("farts: PUBLIC is for adults only (ADR-0023 amendment)", () => {
+  it("an adult may post PUBLIC", async () => {
+    await assertSucceeds(user(env, ALICE).doc("farts/f1").set(newFart("f1", ALICE)));
+  });
+
+  it("a 13–17 user may not post PUBLIC, but may post FOLLOWERS or PRIVATE", async () => {
+    const db = user(env, "teen-1");
+    await assertFails(db.doc("farts/f1").set(newFart("f1", "teen-1")));
+    await assertSucceeds(db.doc("farts/f2").set(newFart("f2", "teen-1", { visibility_mode: "FOLLOWERS" })));
+    await assertSucceeds(db.doc("farts/f3").set(newFart("f3", "teen-1", { visibility_mode: "PRIVATE" })));
+  });
+
+  it("without an account doc there is no PUBLIC (fail closed)", async () => {
+    const db = user(env, "no-account");
+    await assertFails(db.doc("farts/f1").set(newFart("f1", "no-account")));
+    await assertSucceeds(db.doc("farts/f2").set(newFart("f2", "no-account", { visibility_mode: "FOLLOWERS" })));
+  });
+
+  it("a 13–17 user may not switch an existing fart to PUBLIC; an adult may", async () => {
+    await seed(env, {
+      "farts/t": storedFart("t", "teen-1", { visibility_mode: "FOLLOWERS" }),
+      "farts/a": storedFart("a", ALICE, { visibility_mode: "FOLLOWERS" }),
+    });
+    await assertFails(user(env, "teen-1").doc("farts/t").update({ visibility_mode: "PUBLIC", updated_at: serverNow() }));
+    await assertSucceeds(user(env, "teen-1").doc("farts/t").update({ visibility_mode: "PRIVATE", updated_at: serverNow() }));
+    await assertSucceeds(user(env, ALICE).doc("farts/a").update({ visibility_mode: "PUBLIC", updated_at: serverNow() }));
+  });
 });
 
 describe("farts: create", () => {

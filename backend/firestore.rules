@@ -147,8 +147,16 @@ service cloud.firestore {
     }
 
     match /farts/{fartId} {
+      // PUBLIC is for the 18+ band only (ADR-0023 amendment, owner 2026-11-23). The age band lives in the owner-only
+      // private account doc (ADR-0025); no account doc means no PUBLIC (fail closed).
+      function mayPostPublic() {
+        let account = /databases/$(database)/documents/users/$(uid())/private/account;
+        return exists(account) && get(account).data.age_band == 'AGE_18_PLUS';
+      }
+
       function validVisibility() {
-        return incoming().visibility_mode in ['PUBLIC', 'FOLLOWERS', 'PRIVATE'];
+        return incoming().visibility_mode in ['PUBLIC', 'FOLLOWERS', 'PRIVATE']
+          && (incoming().visibility_mode != 'PUBLIC' || mayPostPublic());
       }
 
       function validDescription() {

@@ -185,7 +185,7 @@ MVP is the minimum scope that makes Phase 1 meaningful, safe, and shippable — 
 - Description field with emoji support (CREATE-06)
 - 2 free avatars minimum; remaining avatars purchasable a la carte (permanent, MON-01) or unlockable once via rewarded ad (MON-03) — ADR-0020
 - ≥3 free sounds; remaining sounds purchasable or ad-unlockable the same way (CREATE-07 free set plus MON-01/MON-03)
-- Visibility selector: Public / Followers / Private (ADR-0010). Default for a first log: **Public** for the 18+ age band, **Followers** for 13–17 (ADR-0023); last-used thereafter. The default for new users reverts to Followers when SOCIAL-03 ships
+- Visibility selector: Public / Followers / Private (ADR-0010). Default for a first log: **Public** for the 18+ age band, **Followers** for 13–17 (ADR-0023); last-used thereafter. Users aged 13–17 cannot choose Public at all (enforced server-side, ADR-0023 amendment 2026-11-23). The default for new users reverts to Followers when SOCIAL-03 ships
 - Delete own fart (CREATE-09; edit is Phase 2)
 
 **Social**

@@ -34,7 +34,7 @@ Source: `planning/architecture/Architecture.md`. These are enforced by Konsist a
 
 ## Data
 - The domain ↔ DTO mapping round-trips **every** field. Add a mapper test for each new field; the `visibility` regression test is mandatory.
-- Visibility default (ADR-0023): PUBLIC in Phase 1 for the 18+ age band, FOLLOWERS for 13–17 and for everyone once SOCIAL-03 ships; last-used (DataStore) wins after the first log. An unknown enum value decodes to PRIVATE.
+- Visibility default (ADR-0023): PUBLIC in Phase 1 for the 18+ age band, FOLLOWERS for 13–17 and for everyone once SOCIAL-03 ships; last-used (DataStore) wins after the first log if still allowed. PUBLIC is adults-only (`allowedVisibilities`; rules enforce it): never offer it to 13–17 or an unknown age band. An unknown enum value decodes to PRIVATE.
 - A fart write = public doc with fuzzed geohash-6 coordinates + `farts/{id}/private/location` with the precise coordinates, in one batch. Precise coordinates never enter presentation types for content the user doesn't own.
 - Never compute counters, ranks, entitlements or unlocks on the client.
 - Offline (ADR-0022, `planning/architecture/LocalData.md`): Firestore's persistent cache is the local layer; no Room, no sync engine. Client-generated id, one batch per user action launched in `AppWriteScope` (**never `await` GitLive `set()`/`commit()` on the UI path**, because it suspends until the server acknowledges), rejections reported through `PendingWriteMonitor`. Pending state comes from `hasPendingWrites`.

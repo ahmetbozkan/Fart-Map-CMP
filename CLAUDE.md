@@ -49,7 +49,7 @@ scripts/check-no-secrets.sh
 - **Layering.** Presentation → Domain ← Data. Domain imports nothing from data, Firebase or platform code. Features never import each other. Firebase lives only in `firebaseData`.
 - **One pattern per concern:** StateViewModel, typed routes, Koin, `AppResult<T>`. A new pattern needs an ADR first.
 - **Privacy defaults:**
-  - visibility default (ADR-0023): PUBLIC in Phase 1 for the 18+ age band, FOLLOWERS for 13–17 and for everyone once SOCIAL-03 ships; last-used thereafter;
+  - visibility default (ADR-0023): PUBLIC in Phase 1 for the 18+ age band, FOLLOWERS for 13–17 and for everyone once SOCIAL-03 ships; last-used thereafter. PUBLIC is adults-only, enforced by rules (13–17 can never post PUBLIC);
   - unknown values map to PRIVATE;
   - precise coordinates are owner-only (`farts/{id}/private/location`) and public docs carry fuzzed geohash-6 coordinates;
   - minimum age 13 (an age band, never a date of birth).

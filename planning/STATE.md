@@ -16,8 +16,7 @@
 3. EPIC-01-02 (session and identity) replaces the in-memory session stub.
 
 ## Pending owner decisions
-- Minors and PUBLIC: rules currently let a 13–17 user choose PUBLIC explicitly (ADR-0023 only fixes the default to FOLLOWERS). Enforce "no PUBLIC for AGE_13_17" in rules (reads `private/account`), or keep it a default?
-- Minor-safe defaults for the 13–17 band (currently: never PUBLIC by default, FOLLOWERS) and the other Phase 1 launch items in `planning/product/Scope.md` §7a.
+- Further minor-safe defaults for the 13–17 band (PUBLIC is already blocked for them) and the other Phase 1 launch items in `planning/product/Scope.md` §7a.
 - Launch catalog prices (RevenueCat Offerings) and the owned domain for App Links / Universal Links (ADR-0023/0024).
 - Minimum iOS version (the template uses 18.2).
 - Open items in `planning/product/Scope.md` §7a marked "Phase 1 launch": push preferences, sensitive zones.
@@ -31,6 +30,7 @@
 
 ## Decided (owner, 2026-11-22)
 - Crash and analytics collection stays on in `prod` until the consent screen (EPIC-01-06) exists; then collection moves behind consent.
+- PUBLIC is adults-only, enforced in rules (2026-11-23, ADR-0023 amendment): 13–17 users post FOLLOWERS or PRIVATE only.
 - Phase 1 implementation prioritizes functionality; visual design (contrast, `surfaceContainer*` roles, fonts, icons) is revisited after implementation.
 
 ## Provisional

@@ -335,6 +335,7 @@ Owner read/write only; removed on sign-out.
 9. A fart using a non-free `avatar_id` or `sound_id` is accepted only if `user_entitlements` grants the item or an unconsumed `rewarded_unlocks` token names it; the token is consumed by the write trigger (ADR-0016, ADR-0017).
 10. `public_lat`/`public_lng` must lie inside the `coarse_location_key` cell; a function re-validates from the private location (ADR-0019).
 11. `description_text` is rejected above 500 characters (`features/` CREATE-03.1 Step 6).
+12. `visibility_mode == PUBLIC` is accepted only when the author's `users/{uid}/private/account.age_band == AGE_18_PLUS` (ADR-0023 amendment); a missing account doc means no PUBLIC.
 
 ---
 
@@ -354,6 +355,8 @@ This section defines required behavior; exact rule code lives in implementation.
 1. If `fart.visibility_mode == PUBLIC`: allow read (subject to moderation removal flags and suspension policies).
 2. If `fart.visibility_mode == FOLLOWERS`: allow only if approved follow relation exists from requester -> author and no block relation either direction.
 3. If `fart.visibility_mode == PRIVATE`: allow only author.
+
+**Writing PUBLIC:** only authors in the 18+ band (from `users/{uid}/private/account`) may create a PUBLIC fart or switch one to PUBLIC (ADR-0023 amendment, 2026-11-23).
 
 **Queries (implemented in STORY-01-01-04):** rules can only authorize a query from its constraints, so list reads are allowed for exactly two shapes: `visibility_mode == PUBLIC && is_hidden == false && is_removed == false` (the map, plus the geohash range of EPIC-01-03) and `author_user_id == auth.uid` (own profile). Hidden or removed farts are visible to their author only. FOLLOWERS content is fetched per author once follows exist (SOCIAL-03, Phase 2). PUBLIC reads are not block-filtered by rules; the client hides blocked authors.
 
