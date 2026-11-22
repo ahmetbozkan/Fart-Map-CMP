@@ -66,7 +66,7 @@ export function newFart(fartId: string, author: string, overrides: Data = {}): D
     author_user_id: author,
     public_lat: 41.01,
     public_lng: 28.97,
-    coarse_location_key: "sxk9",
+    coarse_location_key: "sxk9w2",
     timestamp_epoch_ms: 1_700_000_000_000,
     avatar_id: FREE_AVATAR,
     flavor_level: 3,

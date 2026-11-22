@@ -54,6 +54,17 @@ describe("farts: create", () => {
     await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { description_text: "x".repeat(501) })));
   });
 
+  it("denies a coarse location key that is not a geohash-6 cell", async () => {
+    const db = user(env, ALICE);
+    await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { coarse_location_key: "sxk9" })));
+    await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { coarse_location_key: "41.008234,28.978359" })));
+    await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { coarse_location_key: "sxk9wa" }))); // 'a' is not geohash
+  });
+
+  it("denies a cosmetic used as the wrong type", async () => {
+    await assertFails(user(env, ALICE).doc("farts/f1").set(newFart("f1", ALICE, { avatar_id: FREE_SOUND })));
+  });
+
   it("denies client-set counters, moderation flags or timestamps", async () => {
     const db = user(env, ALICE);
     await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { reaction_count: 1 })));
@@ -92,10 +103,16 @@ describe("farts: private location (ADR-0019)", () => {
     await assertFails(user(env, ALICE).doc("farts/f1/private/other").set(location()));
   });
 
+  it("is frozen once the fart is soft-deleted", async () => {
+    await seed(env, { "farts/f1": storedFart("f1", ALICE, { is_removed: true, removed_reason: "USER_DELETED" }) });
+    await assertFails(user(env, ALICE).doc("farts/f1/private/location").set(location()));
+  });
+
   it("is readable by the author only", async () => {
     await seed(env, { "farts/f1": storedFart("f1", ALICE), "farts/f1/private/location": { lat: 1, lng: 2 } });
     await assertSucceeds(user(env, ALICE).doc("farts/f1/private/location").get());
     await assertFails(user(env, BOB).doc("farts/f1/private/location").get());
+    await assertFails(anonymous(env).doc("farts/f1/private/location").get());
     await assertFails(signedOut(env).doc("farts/f1/private/location").get());
   });
 });
@@ -195,6 +212,7 @@ describe("farts: update and delete", () => {
     await assertFails(user(env, BOB).doc("farts/f1").update({ description_text: "x", updated_at: serverNow() }));
     await assertFails(user(env, ALICE).doc("farts/f1").update({ reaction_count: 99, updated_at: serverNow() }));
     await assertFails(user(env, ALICE).doc("farts/f1").update({ is_hidden: true, updated_at: serverNow() }));
+    await assertFails(user(env, ALICE).doc("farts/f1").update({ report_count: 0, is_removed: false, updated_at: serverNow(), author_user_id: BOB }));
     await assertFails(user(env, ALICE).doc("farts/f1").update({ public_lat: 10, updated_at: serverNow() }));
     await assertFails(user(env, ALICE).doc("farts/f1").update({ description_text: "no timestamp" }));
   });

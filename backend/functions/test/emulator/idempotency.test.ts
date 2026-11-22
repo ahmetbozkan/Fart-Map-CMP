@@ -61,6 +61,18 @@ describe("runOnce", () => {
     expect(calls).toBe(1);
   });
 
+  it("a failing delivery never releases a claim that another delivery re-took after lease expiry", async () => {
+    let clock = 2_000_000;
+    const now = () => clock;
+    const failing = runOnce(db, "k5", async () => {
+      clock += 120_000; // lease (60s) expires while this delivery is still working
+      expect(await runOnce(db, "k5", async () => undefined, { now, leaseMs: 60_000 })).toBe("ran"); // redelivery re-claims and finishes
+      throw new Error("first delivery fails late");
+    }, { now, leaseMs: 60_000 });
+    await expect(failing).rejects.toThrow("first delivery fails late");
+    expect((await db.doc("function_runs/k5").get()).data()?.status).toBe("done");
+  });
+
   it("every record carries expire_at for the TTL policy", async () => {
     const clock = 5_000_000;
     await runOnce(db, "k4", async () => undefined, { now: () => clock, ttlMs: 1000 });

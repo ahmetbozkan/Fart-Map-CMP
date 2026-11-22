@@ -43,6 +43,14 @@ describe("reactions", () => {
     await assertFails(signedOut(env).doc(`farts/pub/reactions/${BOB}`).set(reaction("pub", BOB)));
   });
 
+  it("denies reacting across a block in either direction", async () => {
+    await seed(env, { [`blocks/${ALICE}_${BOB}`]: { blocker_id: ALICE, blocked_id: BOB } });
+    await assertFails(user(env, BOB).doc(`farts/pub/reactions/${BOB}`).set(reaction("pub", BOB)));
+    await env.clearFirestore();
+    await seed(env, { ...catalog, "farts/pub": storedFart("pub", ALICE), [`blocks/${BOB}_${ALICE}`]: { blocker_id: BOB, blocked_id: ALICE } });
+    await assertFails(user(env, BOB).doc(`farts/pub/reactions/${BOB}`).set(reaction("pub", BOB)));
+  });
+
   it("denies reacting to a fart you cannot read", async () => {
     await assertFails(user(env, BOB).doc(`farts/priv/reactions/${BOB}`).set(reaction("priv", BOB)));
   });
@@ -86,27 +94,48 @@ describe("blocks", () => {
 });
 
 describe("moderation reports (DataContracts §5.6)", () => {
-  const report = (id: string, reporter: string, overrides: Record<string, unknown> = {}) => ({
-    report_id: id, reporter_user_id: reporter, target_type: "FART", target_id: "pub", reason_code: "SPAM",
-    status: "OPEN", created_at: serverNow(), updated_at: serverNow(), ...overrides,
+  const report = (reporter: string, overrides: Record<string, unknown> = {}) => {
+    const fields = { target_type: "FART", target_id: "pub", ...overrides };
+    const id = `${reporter}_${fields.target_type}_${fields.target_id}`;
+    return {
+      id,
+      data: {
+        report_id: id, reporter_user_id: reporter, reason_code: "SPAM", status: "OPEN",
+        created_at: serverNow(), updated_at: serverNow(), ...fields,
+      },
+    };
+  };
+
+  it("allows signed-in users (including anonymous) to report, one report per target", async () => {
+    const bob = report(BOB);
+    await assertSucceeds(user(env, BOB).doc(`moderation_reports/${bob.id}`).set(bob.data));
+    const anon = report("anon-1");
+    await assertSucceeds(anonymous(env, "anon-1").doc(`moderation_reports/${anon.id}`).set(anon.data));
   });
 
-  it("allows signed-in users (including anonymous) to report", async () => {
-    await assertSucceeds(user(env, BOB).doc("moderation_reports/r1").set(report("r1", BOB)));
-    await assertSucceeds(anonymous(env, "anon-1").doc("moderation_reports/r2").set(report("r2", "anon-1")));
+  it("denies a second report of the same target by the same reporter", async () => {
+    const bob = report(BOB);
+    await assertSucceeds(user(env, BOB).doc(`moderation_reports/${bob.id}`).set(bob.data));
+    await assertFails(user(env, BOB).doc(`moderation_reports/${bob.id}`).set(bob.data));
   });
 
-  it("denies spoofed reporters, non-OPEN status, unknown targets and signed-out users", async () => {
-    await assertFails(user(env, BOB).doc("moderation_reports/r1").set(report("r1", ALICE)));
-    await assertFails(user(env, BOB).doc("moderation_reports/r1").set(report("r1", BOB, { status: "ACTIONED" })));
-    await assertFails(user(env, BOB).doc("moderation_reports/r1").set(report("r1", BOB, { target_type: "PLANET" })));
-    await assertFails(signedOut(env).doc("moderation_reports/r1").set(report("r1", BOB)));
+  it("denies free-form ids, spoofed reporters, non-OPEN status, unknown targets and signed-out users", async () => {
+    const bob = report(BOB);
+    await assertFails(user(env, BOB).doc("moderation_reports/r1").set({ ...bob.data, report_id: "r1" }));
+    const spoof = report(ALICE);
+    await assertFails(user(env, BOB).doc(`moderation_reports/${spoof.id}`).set(spoof.data));
+    const actioned = report(BOB, { status: "ACTIONED" });
+    await assertFails(user(env, BOB).doc(`moderation_reports/${actioned.id}`).set(actioned.data));
+    const planet = report(BOB, { target_type: "PLANET" });
+    await assertFails(user(env, BOB).doc(`moderation_reports/${planet.id}`).set(planet.data));
+    await assertFails(signedOut(env).doc(`moderation_reports/${bob.id}`).set(bob.data));
   });
 
   it("nobody reads or edits reports from the client, not even the reporter", async () => {
-    await seed(env, { "moderation_reports/r1": report("r1", BOB) });
-    await assertFails(user(env, BOB).doc("moderation_reports/r1").get());
-    await assertFails(user(env, BOB).doc("moderation_reports/r1").update({ status: "DISMISSED" }));
+    const bob = report(BOB);
+    await seed(env, { [`moderation_reports/${bob.id}`]: bob.data });
+    await assertFails(user(env, BOB).doc(`moderation_reports/${bob.id}`).get());
+    await assertFails(user(env, BOB).doc(`moderation_reports/${bob.id}`).update({ status: "DISMISSED" }));
     await assertFails(user(env, ALICE).collection("moderation_reports").get());
   });
 });

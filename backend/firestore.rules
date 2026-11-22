@@ -59,13 +59,16 @@ service cloud.firestore {
       return exists(rel) && get(rel).data.status == 'APPROVED';
     }
 
-    // A cosmetic the caller may use: an active free catalog item, or one granted in their entitlements
-    // (ADR-0016). The rewarded-token path is added with EPIC-01-06 (ADR-0017). Fails closed.
-    function cosmeticAllowed(itemId) {
+    // A cosmetic of the given type (AVATAR / SOUND) the caller may use: a catalog item of that type that is active
+    // and free, or granted in their entitlements (ADR-0016). The rewarded-token path is added with EPIC-01-06
+    // (ADR-0017). Fails closed: unknown items, wrong types and missing entitlements are denied.
+    function cosmeticAllowed(itemId, type) {
       let item = doc('cosmetic_items/' + itemId);
       let entitlements = doc('user_entitlements/' + uid());
       return itemId is string
-        && ((exists(item) && get(item).data.is_free == true && get(item).data.is_active == true)
+        && exists(item)
+        && get(item).data.type == type
+        && ((get(item).data.is_free == true && get(item).data.is_active == true)
           || (exists(entitlements) && itemId in get(entitlements).data.items));
     }
 
@@ -73,9 +76,15 @@ service cloud.firestore {
 
     // Public profile: profile fields and server-written counters only.
     match /users/{userId} {
+      // The avatar is re-checked only when it changes, so a later-revoked item never blocks editing a bio.
+      function avatarOk() {
+        return (resource != null && incoming().avatar_id == resource.data.avatar_id)
+          || cosmeticAllowed(incoming().avatar_id, 'AVATAR');
+      }
+
       function validProfileFields() {
         return isText(incoming().display_name, 1, 50)
-          && cosmeticAllowed(incoming().avatar_id)
+          && avatarOk()
           && optionalText('bio', 300)
           && optionalText('signature_style_id', 64)
           && incoming().is_following_list_public is bool;
@@ -167,10 +176,10 @@ service cloud.firestore {
         && incoming().author_user_id == uid()
         && incoming().public_lat is number && incoming().public_lat >= -90 && incoming().public_lat <= 90
         && incoming().public_lng is number && incoming().public_lng >= -180 && incoming().public_lng <= 180
-        && isText(incoming().coarse_location_key, 1, 32)
+        && incoming().coarse_location_key is string && incoming().coarse_location_key.matches('^[0-9b-hjkmnp-z]{6}$')
         && incoming().timestamp_epoch_ms is int
-        && cosmeticAllowed(incoming().avatar_id)
-        && (!('sound_id' in incoming()) || incoming().sound_id == null || cosmeticAllowed(incoming().sound_id))
+        && cosmeticAllowed(incoming().avatar_id, 'AVATAR')
+        && (!('sound_id' in incoming()) || incoming().sound_id == null || cosmeticAllowed(incoming().sound_id, 'SOUND'))
         && incoming().flavor_level is int && incoming().flavor_level >= 1 && incoming().flavor_level <= 5
         && incoming().intensity_value is number
         && incoming().intensity_value >= 0 && incoming().intensity_value <= 1
@@ -203,8 +212,10 @@ service cloud.firestore {
       match /private/{docId} {
         allow read: if signedIn() && docId == 'location'
           && get(doc('farts/' + fartId)).data.author_user_id == uid();
+        // Frozen once the fart is removed; purging it on removal is server work (projection function, EPIC-01-04).
         allow create, update: if signedIn() && docId == 'location'
           && getAfter(doc('farts/' + fartId)).data.author_user_id == uid()
+          && getAfter(doc('farts/' + fartId)).data.is_removed == false
           && hasExactly(['lat', 'lng', 'updated_at'], [])
           && incoming().lat is number && incoming().lat >= -90 && incoming().lat <= 90
           && incoming().lng is number && incoming().lng >= -180 && incoming().lng <= 180
@@ -223,7 +234,10 @@ service cloud.firestore {
         }
 
         allow read: if canReadFart(get(doc('farts/' + fartId)).data);
-        allow create, update: if isUser(userId) && validReaction() && canReadFart(get(doc('farts/' + fartId)).data);
+        // No reacting across a block in either direction (a blocked user can't reach the blocker's counters).
+        allow create, update: if isUser(userId) && validReaction()
+          && canReadFart(get(doc('farts/' + fartId)).data)
+          && !blockedEitherWay(uid(), get(doc('farts/' + fartId)).data.author_user_id);
         allow delete: if isUser(userId);
       }
     }
@@ -243,13 +257,15 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.blocker_id == uid();
     }
 
-    // Reporters create; only moderation (Admin SDK) reads or updates (§5.6).
+    // Reporters create; only moderation (Admin SDK) reads or updates (§5.6). The id is reporter + target, so one
+    // account files at most one report per target and cannot flood a target into auto-hide on its own.
     match /moderation_reports/{reportId} {
       allow create: if signedIn()
         && hasExactly(
           ['report_id', 'reporter_user_id', 'target_type', 'target_id', 'reason_code', 'status', 'created_at',
             'updated_at'],
           [])
+        && reportId == uid() + '_' + incoming().target_type + '_' + incoming().target_id
         && incoming().report_id == reportId
         && incoming().reporter_user_id == uid()
         && incoming().target_type in ['FART', 'COMMENT', 'USER']

@@ -76,7 +76,7 @@ Readable by the owner only; never readable by other users (it reveals whether a 
 | `author_user_id` | String | Yes | Owner uid |
 | `public_lat` | Double | Yes | Fuzzed coordinate (ADR-0019); never the true position |
 | `public_lng` | Double | Yes | Fuzzed coordinate (ADR-0019) |
-| `coarse_location_key` | String | Yes | Public-safe bucket |
+| `coarse_location_key` | String | Yes | Public-safe bucket: a geohash-6 cell (rules enforce the format) |
 | `timestamp_epoch_ms` | Long | Yes | Event time |
 | `avatar_id` | String | Yes | CREATE-03.3 |
 | `flavor_level` | Int | Yes | 1..5 |
@@ -256,7 +256,7 @@ Client must not compute ranks.
 
 ## 3.12 `moderation_reports/{reportId}`
 
-Restricted moderation collection.
+Restricted moderation collection. The document id is `{reporter_user_id}_{target_type}_{target_id}`, so one account files at most one report per target (rules enforce it); auto-hide counts distinct reporters.
 
 | Field | Type | Required |
 |---|---|---|

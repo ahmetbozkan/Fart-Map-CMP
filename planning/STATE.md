@@ -7,14 +7,16 @@
 - Phase 1, EPIC-01-01. STORY-01-01-01 Done. Planning consolidation, `.claude/` setup, static analysis and ADR-0022/0023/0024 acceptance merged (PRs #2–#5).
 - Backend deploys to `fart-map-dev` from CI on every merge to `main` (first green run 2026-11-22: rules, indexes, `health`, `onFartCreated`, `europe-west1`).
 - STORY-01-01-02 Done (PR #6 merged as `ceb2c71`): Koin, typed navigation shell, theme tokens, observability base, `StateViewModel`.
-- STORY-01-01-03 (local data layer: Firestore cache, write path, preferences, sign-out wipe, Remote Config contract) in Review: draft PR from `07-local-data`. Android verified locally; iOS by the CI `ios` job.
+- STORY-01-01-03 Done (PR #7 merged as `30aa4fa`): Firestore cache, write path, preferences, sign-out wipe, Remote Config contract.
+- STORY-01-01-04 (Firestore rules for Phase 1, ADR-0025 user doc split, `runOnce` fix) in Review: draft PR #8 from `08-backend-rules`; emulator suites run in CI.
 
 ## Next
-1. Owner reviews and merges the STORY-01-01-03 PR. On the Mac, run `FartMap Dev` once to confirm the STORY-01-01-02 shell on iOS.
-2. STORY-01-01-04 (backend rules skeleton, `runOnce` fix).
+1. Owner reviews and merges PR #8 (STORY-01-01-04); the dev deploy then publishes the rules and the `function_runs` TTL policy.
+2. On the Mac, run `FartMap Dev` once to confirm the STORY-01-01-02/03 shell on iOS.
 3. EPIC-01-02 (session and identity) replaces the in-memory session stub.
 
 ## Pending owner decisions
+- Minors and PUBLIC: rules currently let a 13–17 user choose PUBLIC explicitly (ADR-0023 only fixes the default to FOLLOWERS). Enforce "no PUBLIC for AGE_13_17" in rules (reads `private/account`), or keep it a default?
 - Minor-safe defaults for the 13–17 band (currently: never PUBLIC by default, FOLLOWERS) and the other Phase 1 launch items in `planning/product/Scope.md` §7a.
 - Launch catalog prices (RevenueCat Offerings) and the owned domain for App Links / Universal Links (ADR-0023/0024).
 - Minimum iOS version (the template uses 18.2).

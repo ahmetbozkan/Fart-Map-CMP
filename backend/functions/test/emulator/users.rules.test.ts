@@ -57,6 +57,15 @@ describe("users: public profile (ADR-0025)", () => {
     await assertFails(user(env, BOB).doc(`users/${ALICE}`).update({ display_name: "Hacked", updated_at: serverNow() }));
     await assertFails(db.doc(`users/${ALICE}`).delete());
   });
+
+  it("a later-revoked avatar does not block editing other profile fields", async () => {
+    await seed(env, {
+      [`users/${ALICE}`]: profile(ALICE, { avatar_id: PAID_AVATAR }), // granted earlier, entitlement since revoked
+    });
+    const db = user(env, ALICE);
+    await assertSucceeds(db.doc(`users/${ALICE}`).update({ bio: "Still here.", updated_at: serverNow() }));
+    await assertFails(db.doc(`users/${ALICE}`).update({ avatar_id: "avatar-unknown", updated_at: serverNow() }));
+  });
 });
 
 describe("users: private account (ADR-0025)", () => {

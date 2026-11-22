@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { FieldValue, Firestore, Timestamp } from "firebase-admin/firestore";
 import { logError } from "./log";
 
@@ -17,7 +18,8 @@ const DEFAULT_TTL_MS = 30 * 24 * 60 * 60 * 1000; // Eventarc redelivers for far 
  *
  * - The first delivery claims `function_runs/{key}` with status `running` and a lease, runs the work, then marks it
  *   `done`. Later deliveries of a done key are skipped.
- * - If the work throws, the claim is released and the error rethrown, so a redelivery (retry) runs it again.
+ * - If the work throws, the claim is released (only if it is still this delivery's claim) and the error rethrown,
+ *   so a redelivery (retry) runs it again.
  * - A `running` claim whose lease has expired (the instance died mid-work) may be re-claimed.
  * - Every record carries `expire_at`, so `function_runs` doesn't grow forever.
  */
@@ -31,14 +33,17 @@ export async function runOnce(
   const leaseMs = options.leaseMs ?? DEFAULT_LEASE_MS;
   const expireAt = Timestamp.fromMillis(now() + (options.ttlMs ?? DEFAULT_TTL_MS));
   const ref = db.collection("function_runs").doc(key);
+  const claimId = randomUUID();
 
   const claimed = await db.runTransaction(async (tx) => {
     const snap = await tx.get(ref);
     const existing = snap.data();
     if (existing?.status === "done") return false;
-    if (existing?.status === "running" && (existing.lease_until as Timestamp).toMillis() > now()) return false;
+    const leaseUntil = existing?.lease_until as Timestamp | undefined;
+    if (existing?.status === "running" && leaseUntil && leaseUntil.toMillis() > now()) return false;
     tx.set(ref, {
       status: "running",
+      claim_id: claimId,
       lease_until: Timestamp.fromMillis(now() + leaseMs),
       claimed_at: FieldValue.serverTimestamp(),
       expire_at: expireAt,
@@ -50,7 +55,7 @@ export async function runOnce(
   try {
     await work();
   } catch (error) {
-    await ref.delete().catch((releaseError: unknown) => {
+    await releaseClaim(db, key, claimId).catch((releaseError: unknown) => {
       // The lease still expires, so a later redelivery can re-claim; log so the stuck window is visible.
       logError("run_once_release_failed", { key, error: String(releaseError) });
     });
@@ -58,6 +63,15 @@ export async function runOnce(
   }
   await ref.set({ status: "done", done_at: FieldValue.serverTimestamp(), expire_at: expireAt }, { merge: true });
   return "ran";
+}
+
+/** Deletes the run record only if it still holds this delivery's claim (a re-claim after lease expiry wins). */
+async function releaseClaim(db: Firestore, key: string, claimId: string): Promise<void> {
+  const ref = db.collection("function_runs").doc(key);
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (snap.data()?.claim_id === claimId) tx.delete(ref);
+  });
 }
 
 /** Deterministic key for a Firestore trigger delivery. */
