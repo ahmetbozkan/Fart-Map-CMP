@@ -4,7 +4,7 @@ Firebase rules, indexes and Cloud Functions for Fart Map (`planning/architecture
 
 - Projects: `dev` = `fart-map-dev` (default alias), `prod` = `fart-map-1a558` (`.firebaserc`).
 - Runtime: Cloud Functions 2nd generation, TypeScript, Node.js 22 (`firebase.json`). Install Node 22 LTS locally (macOS `brew install node@22`, Windows `winget install OpenJS.NodeJS.LTS`, or nvm). The emulator suite needs Java 21 on `PATH`/`JAVA_HOME` (`firebase-tools` 15 refuses older JDKs); the same JDK 21 the Gradle daemon uses works.
-- Region: `europe-west1` (`functions/src/region.ts`); keep it equal to the Firestore location chosen when the database was created.
+- Region: `europe-west1` for functions (`functions/src/region.ts`) and for the Firestore database (`firestore.location` in `firebase.json`, used when a deploy has to create the database). Keep the two equal; a database's location can't be changed after creation.
 
 ## Commands
 
