@@ -3,15 +3,15 @@
 ## Ownership
 - Status: active
 - Owner concern: design/screen behavior
-- Upstream dependencies: `planning/design/DesignSpecification.md` (11.2), `planning/product/Features.md` (`MAP-01`, `MAP-02`, `CREATE-01`, `SOCIAL-01`), `planning/product/ContentSafety.md`
+- Upstream dependencies: `planning/design/DesignSpecification.md` (11.2), `planning/product/features/` (`MAP-01`, `MAP-02`, `CREATE-01`, `SOCIAL-01`), `planning/product/ContentSafety.md`
 - Downstream consumers: UI stories/tasks for map exploration and marker interaction
 
 ## Traceability
 - Feature link(s): `MAP-01`, `MAP-02`, `CREATE-01`, `SOCIAL-01`
 - Loop link(s): `L1`, `L2`
 - Journey stage(s): `3 -> 4`
-- Persona focus: primary persona set (`planning/product/Personas.md`)
-- Architecture link(s): `planning/architecture/NavigationStrategy.md`, `planning/architecture/MultiplatformStrategy.md`, `planning/architecture/DataContracts.md`
+- Persona focus: primary persona set (`planning/product/Product.md`)
+- Architecture link(s): `planning/architecture/Architecture.md`, `planning/architecture/DataContracts.md`
 
 ## Screen Goal
 - Primary user outcome: quickly understand nearby activity and enter create/detail flows from the map.

@@ -38,3 +38,7 @@ backend/functions/lib/
 **/ui-debug.log
 **/firestore-debug.log
 .firebase/
+
+# Claude Code personal overrides
+.claude/settings.local.json
+CLAUDE.local.md

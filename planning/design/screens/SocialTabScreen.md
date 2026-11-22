@@ -3,7 +3,7 @@
 ## Ownership
 - Status: active
 - Owner concern: design/screen behavior
-- Upstream dependencies: `planning/design/DesignSpecification.md` (11.9), `planning/product/Features.md` (`MAP-02`, `SOCIAL-01`), `planning/product/ProductGovernance.md` §6 (map-first social rule), ADR-0020
+- Upstream dependencies: `planning/design/DesignSpecification.md` (11.9), `planning/product/features/` (`MAP-02`, `SOCIAL-01`), `planning/product/Product.md` (map-first social rule), ADR-0020
 - Downstream consumers: UI stories/tasks for the Social tab; Phase 2 feed stories extend this screen
 
 ## Traceability
@@ -11,7 +11,7 @@
 - Loop link(s): `L2`, `L3`
 - Journey stage(s): `3 -> 4`
 - Persona focus: Social Reactor, Explorer
-- Architecture link(s): `planning/architecture/DataContracts.md` §3.2/§6, `planning/architecture/DataModel.md` §8 (map feed by coarse key), `planning/architecture/NavigationStrategy.md`
+- Architecture link(s): `planning/architecture/DataContracts.md` §3.2/§6, `planning/architecture/DataModel.md` §8 (map feed by coarse key), `planning/architecture/Architecture.md`
 
 ## Screen Goal
 - Primary user outcome: see what is happening nearby as a list when scanning the map is slower.

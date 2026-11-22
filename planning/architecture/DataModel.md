@@ -1,7 +1,9 @@
 # Data Model: Fart Map (Local Persistence Contract)
 
+> **Pending ADR-0022 (Proposed).** If the owner accepts Firestore offline persistence, this file and `SyncStrategy.md` are replaced by a short `LocalData.md`. Do not start Room work (STORY-01-01-03) until that decision is made. Known issues to fix if Room stays: per-feature entities vs one `@Database` in `core/data`; `ModerationReport` has its own outbox (second sync path); `PROGRESS` is client-enqueueable although XP is server-only; no op type for `farts/{id}/private/location`; no queue state column; local/remote field mismatches (`is_account_suspended`/`is_suspended`, missing `is_anonymous`, `linked_providers`, `age_band`, reaction counts, `rewarded_unlockable`).
+
 > **Planning spine position:** authoritative local data model contract for Room.
-> Upstream: `architecture/ArchitecturePrinciples.md`, `architecture/Architecture.md`, `architecture/SecurityAndSecrets.md`, `product/Features.md` (CREATE-03.3), `product/SocialSystems.md`, `product/ProgressionSystems.md`, ADR-0001/0007/0009/0010/0012/0014.
+> Upstream: `architecture/Architecture.md`, `architecture/Security.md`, `product/features/` (CREATE-03.3), `product/SocialSystems.md`, `product/ProgressionSystems.md`, ADR-0001/0007/0009/0010/0012/0014.
 > Downstream: repository implementations, sync strategy internals, local migrations, tests.
 > This document defines what local persistence stores and how local entities are structured. It does not define Firestore schema (see `DataContracts.md`).
 
@@ -443,7 +445,7 @@ This document does not define:
 - Firestore collection structure (see `DataContracts.md`),
 - sync retry algorithm details (see `SyncStrategy.md`),
 - analytics event schema (see `Observability.md`),
-- monetization receipt validation flow details (see `FirebaseStrategy.md` + future purchase contract docs).
+- monetization receipt validation flow details (see `Backend.md` + future purchase contract docs).
 
 ---
 

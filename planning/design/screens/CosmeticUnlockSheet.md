@@ -3,7 +3,7 @@
 ## Ownership
 - Status: active
 - Owner concern: design/screen behavior
-- Upstream dependencies: `planning/product/Features.md` CREATE-03.2, `planning/product/Monetization.md` §3/§5/§6, ADR-0016, ADR-0017, ADR-0020, `planning/design/DesignSpecification.md` (9.5 bottom sheet)
+- Upstream dependencies: `planning/product/features/` CREATE-03.2, `planning/product/Monetization.md` §3/§5/§6, ADR-0016, ADR-0017, ADR-0020, `planning/design/DesignSpecification.md` (9.5 bottom sheet)
 - Downstream consumers: UI stories/tasks for purchases and rewarded unlocks on Log Fart and Profile
 
 ## Traceability
@@ -11,7 +11,7 @@
 - Loop link(s): `L1`, `L5`
 - Journey stage(s): `3 -> 7`
 - Persona focus: Identity Builder, Instant Joker
-- Architecture link(s): `planning/architecture/DataContracts.md` §3.13–3.15, §5.7; `planning/architecture/MultiplatformStrategy.md` §8; `planning/skills/monetization-and-entitlements.md`
+- Architecture link(s): `planning/architecture/DataContracts.md` §3.13–3.15, §5.7; `planning/architecture/Architecture.md`; `.claude/skills/monetization/SKILL.md`
 
 ## Screen Goal
 - Primary user outcome: unlock a locked avatar or sound by buying it (permanent) or watching a rewarded ad (one use) without leaving the current flow.

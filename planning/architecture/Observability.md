@@ -1,9 +1,9 @@
 # Observability: Fart Map
 
 > **Planning spine position:** authoritative error, logging, analytics, and operational telemetry contract.
-> Upstream: `architecture/ArchitecturePrinciples.md`, `architecture/Architecture.md`, `architecture/SecurityAndSecrets.md`, ADR-0004.
+> Upstream: `architecture/Architecture.md`, `architecture/Security.md`, ADR-0004.
 > Downstream: error models, logging adapters, analytics emission points, alerting dashboards.
-> This document defines how failures and key behaviors are observed. It does not define product KPIs (see `product/SuccessMetrics.md`).
+> This document defines how failures and key behaviors are observed. It does not define product KPIs (see `product/Metrics.md`).
 
 ---
 
@@ -34,7 +34,7 @@ Primary goals:
 1. **Application logs** (debug/diagnostic, structured, redacted).
 2. **Error events** (operational failures with category and context) and **crash reports** via Firebase Crashlytics (ADR-0015), with custom keys limited to feature, operation and error category.
 3. **Product analytics events** (behavioral signals, privacy-filtered).
-4. **Security-sensitive audit events** (restricted access, stronger retention controls).
+4. **Security-sensitive audit events** (restricted access, stronger retention controls). *Phase 1 sizing for a solo owner: emit these as structured Cloud Functions logs with an `audit=true` label; a separate store with its own retention is deferred until there is an ops team or a compliance requirement.*
 
 Do not merge these into one unstructured stream.
 
@@ -100,7 +100,7 @@ Redaction happens at source before emission.
 
 ## 7) Sync and Auth Telemetry Requirements
 
-### Sync telemetry (required)
+### Sync telemetry (required once a sync mechanism exists; with ADR-0022 this reduces to pending-write rejections and time-to-ack buckets)
 
 - queue depth snapshots,
 - attempt outcomes (success/retry/terminal),
@@ -159,7 +159,7 @@ Minimum observability tests:
 
 ## 11) Phase 1 Analytics Event Taxonomy
 
-The minimum event set that makes `SuccessMetrics.md` §4–§8 measurable in Phase 1. Names are stable; parameters carry ids and categories only, never free text, precise coordinates or tokens. Owned by `core/observability`.
+The minimum event set that makes `Metrics.md` §4–§8 measurable in Phase 1. Names are stable; parameters carry ids and categories only, never free text, precise coordinates or tokens. Owned by `core/observability`.
 
 | Event | When | Parameters | Metric served |
 |---|---|---|---|
@@ -183,7 +183,7 @@ The minimum event set that makes `SuccessMetrics.md` §4–§8 measurable in Pha
 | `rewarded_ad_requested` / `rewarded_ad_completed` / `rewarded_unlock_consumed` | ad flow | `item_type` | Ad funnel, cap monitoring |
 | `sync_terminal_failure` | queue gives up | `entity_type`, `error_category` | Correctness |
 
-Funnel transitions in `SuccessMetrics.md` §7 are derived from these events; no additional events are added without updating this table.
+Funnel transitions in `Metrics.md` §7 are derived from these events; no additional events are added without updating this table.
 
 ## 12) Review Checklist
 

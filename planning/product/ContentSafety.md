@@ -1,8 +1,8 @@
 # Content Safety: Fart Map
 
 > **Planning spine position:** cross-cutting safety/privacy governance; constrains all social, map, and identity features.
-> Upstream: `Vision.md`, `ProductPillars.md`, `Personas.md`, `UserMotivations.md`, `UserJourney.md`, `CoreLoops.md`, `Glossary.md`. Downstream: `Features.md`, `SocialSystems.md`, `architecture/DataModel.md`, `architecture/DataContracts.md`, `architecture/SecurityAndSecrets.md`, `design/*`.
-> A viral, **location-based, social, user-generated-content** app carries real-world harm potential (doxxing, harassment, stalking, minor-safety, NSFW). This document encodes the non-negotiable safety, privacy, and moderation policy that features must obey **before** they are designed (per `meta/archive/PlanningStructureReview.md` §10).
+> Upstream: `Product.md`, `Glossary.md`. Downstream: `features/`, `SocialSystems.md`, `architecture/DataModel.md`, `architecture/DataContracts.md`, `architecture/Security.md`, `design/*`.
+> A viral, **location-based, social, user-generated-content** app carries real-world harm potential (doxxing, harassment, stalking, minor-safety, NSFW). This document encodes the non-negotiable safety, privacy, and moderation policy that features must obey **before** they are designed (per `planning/archive/meta/archive/PlanningStructureReview.md` §10).
 
 ---
 
@@ -20,7 +20,7 @@ AI agents and planners use this document to answer:
 - Safety is a **hard gate**, not a feature. A social/map/identity feature without its required safety controls is **incomplete** and must not ship.
 - When safety conflicts with any other goal (humor, growth, engagement), **safety and trust win** (Vision §17; Pillars §5; Personas §7 "Humor chaos vs Trust & safety → preserve humor; reject mechanics enabling harassment").
 - **Privacy-safe by default**: the safe option is the default; users opt *into* exposure, never out of protection.
-- This document governs **policy**; enforcement mechanisms live in `architecture/SecurityAndSecrets.md`, `DataContracts.md` (Firestore security rules), and moderation tooling.
+- This document governs **policy**; enforcement mechanisms live in `architecture/Security.md`, `DataContracts.md` (Firestore security rules), and moderation tooling.
 
 ---
 
@@ -92,7 +92,7 @@ Location + social + minors is the most dangerous combination and carries legal w
 | **No adult→minor contact vectors** | Limit how unknown adults can discover/contact younger users. |
 | **Escalation path** | Child-safety reports are highest priority and may require legal/authority escalation. |
 
-**Rule:** any feature that could expose minors to location or stranger contact requires explicit minor-safety review and is an **escalation trigger** for human/legal review (ties to future `AgentGuardrails.md`). Agents must not autonomously ship minor-affecting changes.
+**Rule:** any feature that could expose minors to location or stranger contact requires explicit minor-safety review and is an **escalation trigger** for human/legal review (ties to future `WorkingAgreement.md`). Agents must not autonomously ship minor-affecting changes.
 
 ---
 
@@ -122,7 +122,7 @@ Every concept in `Glossary.md` that users author (Fart, Caption, Comment, Signat
 
 ## 7) Anti-Abuse & Fairness (Protecting Progression Integrity)
 
-Ties to the Rival persona, Loop L6, and the Spam-Grinder anti-persona (`Personas.md` §3).
+Ties to the Rival persona, Loop L6, and the Spam-Grinder anti-persona (`Product.md`).
 
 | Abuse | Control |
 |---|---|
@@ -130,7 +130,7 @@ Ties to the Rival persona, Loop L6, and the Spam-Grinder anti-persona (`Personas
 | Fake engagement (reaction/comment rings) | Anomaly detection; weight authentic interaction |
 | Location spoofing (fake-GPS to claim places/Territory) | Plausibility checks on location/movement; flag impossible travel |
 | Pay-to-win | Hard product rule: monetization is cosmetic/additive only (Personas §7) — enforced in `Monetization.md` |
-| Invite spam (T6) | Rate-limit invites; detect low-quality install churn (`SuccessMetrics.md` §8) |
+| Invite spam (T6) | Rate-limit invites; detect low-quality install churn (`Metrics.md` §8) |
 
 **Rule:** if **Intensity** or any author-declared value feeds Rank/Progress (resolved: 0% weight, `ProgressionSystems.md` §10), it **requires anti-abuse before shipping**. Default: keep such values humor-only until a fair, abuse-resistant mechanic exists.
 
@@ -142,8 +142,8 @@ Ties to the Rival persona, Loop L6, and the Spam-Grinder anti-persona (`Personas
 |---|---|
 | **Data minimization** | Collect only what features need; precise location stored privately, exposed coarsely |
 | **User data rights** | Support account deletion and data export (GDPR/CCPA-style); deletion removes/anonymizes user content |
-| **Consent** | Explicit, in-context consent for location and notifications (don't front-load permission walls — `UserJourney.md` Stage 2) |
-| **Secret hygiene** | No secrets in VCS. The PoC committed a Maps API key and `GoogleService-Info.plist` (Audit §5, T9) — the new project uses untracked config + CI injection (`SecurityAndSecrets.md`) |
+| **Consent** | Explicit, in-context consent for location and notifications (don't front-load permission walls — `Product.md` Stage 2) |
+| **Secret hygiene** | No secrets in VCS. The PoC committed a Maps API key and `GoogleService-Info.plist` (Audit §5, T9) — this project uses untracked config + CI injection (`Security.md`) |
 | **Firestore security rules** | Backend access governed by security rules enforcing Visibility, ownership, and minor protections (`DataContracts.md`) |
 | **Third-party data** | GitLive Firebase usage must respect the same privacy posture across Android/iOS |
 
@@ -188,11 +188,11 @@ Safety scales with social surface area. It is not deferrable to "later."
 2. Treat **Block + Report** as the floor for any social feature; **location fuzzing + explicit Visibility** as the floor for any public map feature.
 3. **Privacy-safe by default** — the safe option is the default; exposure is opt-in.
 4. When safety conflicts with humor/growth/engagement, **safety wins** — redesign or reject.
-5. **Escalate, do not autonomously ship**, anything affecting **minor safety** (T4), **legal/compliance**, or **precise-location exposure** — these are human-review triggers (ties to `AgentGuardrails.md`).
+5. **Escalate, do not autonomously ship**, anything affecting **minor safety** (T4), **legal/compliance**, or **precise-location exposure** — these are human-review triggers (ties to `WorkingAgreement.md`).
 6. Never let author-declared values (Intensity) feed Rank without anti-abuse; default to humor-only.
 7. Enforce the **PoC lessons**: Visibility must round-trip; no secrets in VCS.
 8. Ensure each phase's **safety baseline** (§10) is met before the phase is "done."
-9. Every safety control implies a **counter-metric** in `SuccessMetrics.md` §8 (report/block/abuse rates) — instrument them.
+9. Every safety control implies a **counter-metric** in `Metrics.md` §8 (report/block/abuse rates) — instrument them.
 
 ---
 
@@ -205,5 +205,5 @@ Safety scales with social surface area. It is not deferrable to "later."
 - [ ] Minor-safety reviewed (if discovery/contact/location)?
 - [ ] Moderation path defined for any UGC it creates?
 - [ ] Anti-abuse present (if it feeds Stats/Rank/Territory)?
-- [ ] Counter-metrics instrumented (`SuccessMetrics.md` §8)?
+- [ ] Counter-metrics instrumented (`Metrics.md` §8)?
 - [ ] Any escalation trigger (minor/legal/precise-location)? If yes, flag for human review.

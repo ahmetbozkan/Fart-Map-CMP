@@ -1,7 +1,7 @@
 # UX Flow Catalog: Fart Map
 
 > Authority: flow-level design mapping and traceability index.
-> Upstream: `planning/product/Features.md`, `planning/product/UserJourney.md`, `planning/product/CoreLoops.md`, `planning/design/DesignSpecification.md`, `planning/design/SYSTEM.md`.
+> Upstream: `planning/product/features/`, `planning/product/Product.md`, `planning/design/DesignSpecification.md`.
 > Downstream: per-screen specs, Stitch artifacts, UI-related stories/tasks.
 
 ---

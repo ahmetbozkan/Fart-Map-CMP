@@ -3,15 +3,15 @@
 ## Ownership
 - Status: active
 - Owner concern: design/screen behavior
-- Upstream dependencies: `planning/design/DesignSpecification.md` (11.3), `planning/product/Features.md` (`CREATE-01` to `CREATE-08`), `planning/product/Monetization.md`, `planning/product/ContentSafety.md`
+- Upstream dependencies: `planning/design/DesignSpecification.md` (11.3), `planning/product/features/` (`CREATE-01` to `CREATE-08`), `planning/product/Monetization.md`, `planning/product/ContentSafety.md`
 - Downstream consumers: UI stories/tasks for creation flow, draft handling, and posting states
 
 ## Traceability
 - Feature link(s): `CREATE-01`, `CREATE-02`, `CREATE-03`, `CREATE-04`, `CREATE-05`, `CREATE-06`, `CREATE-07`, `CREATE-08`
 - Loop link(s): `L1`, `L8`
 - Journey stage(s): `3 -> 4 -> 8`
-- Persona focus: primary persona set (`planning/product/Personas.md`)
-- Architecture link(s): `planning/architecture/DataModel.md`, `planning/architecture/SyncStrategy.md`, `planning/architecture/DataContracts.md`, `planning/architecture/SecurityAndSecrets.md`
+- Persona focus: primary persona set (`planning/product/Product.md`)
+- Architecture link(s): `planning/architecture/DataModel.md`, `planning/architecture/SyncStrategy.md`, `planning/architecture/DataContracts.md`, `planning/architecture/Security.md`
 
 ## Screen Goal
 - Primary user outcome: complete a fart log quickly while supporting optional expressive depth.

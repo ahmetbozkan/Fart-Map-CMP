@@ -3,15 +3,15 @@
 ## Ownership
 - Status: active
 - Owner concern: design/screen behavior
-- Upstream dependencies: `planning/design/DesignSpecification.md` (11.1), `planning/product/Features.md` (`MAP-01`, `CREATE-01`), `planning/product/ContentSafety.md`
+- Upstream dependencies: `planning/design/DesignSpecification.md` (11.1), `planning/product/features/` (`MAP-01`, `CREATE-01`), `planning/product/ContentSafety.md`
 - Downstream consumers: UI stories/tasks for first-open and authentication flow
 
 ## Traceability
 - Feature link(s): `MAP-01`, `CREATE-01`
 - Loop link(s): `L1`
 - Journey stage(s): `2 -> 3`
-- Persona focus: primary persona set (`planning/product/Personas.md`)
-- Architecture link(s): `planning/architecture/NavigationStrategy.md`, `planning/architecture/FirebaseStrategy.md`, `planning/architecture/SecurityAndSecrets.md`
+- Persona focus: primary persona set (`planning/product/Product.md`)
+- Architecture link(s): `planning/architecture/Architecture.md`, `planning/architecture/Backend.md`, `planning/architecture/Security.md`
 
 ## Screen Goal
 - Primary user outcome: authenticate quickly and reach map context with minimal friction.

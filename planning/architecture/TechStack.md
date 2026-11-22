@@ -1,7 +1,7 @@
 # Tech Stack: Fart Map
 
 > **Planning spine position:** authoritative technology and version contract.
-> Upstream: `architecture/ArchitecturePrinciples.md`, `architecture/Architecture.md`, ADR-0001/0002/0003/0004/0005/0008/0015/0016/0017.
+> Upstream: `architecture/Architecture.md`, ADR-0001/0002/0003/0004/0005/0008/0015/0016/0017.
 > Downstream: Gradle configuration, dependency declarations, CI build definitions, backend toolchain, implementation modules.
 > This document defines approved technologies and version governance. It does not define feature behavior.
 
@@ -16,7 +16,7 @@ It exists to prevent:
 - drift in framework choices,
 - mixed dependency patterns across features,
 - unreviewed version upgrades that break multiplatform parity,
-- a new project starting from the PoC's year-old dependency lines by accident.
+- this project drifting back to the PoC's old dependency lines by accident.
 
 ---
 
@@ -42,7 +42,7 @@ No alternative technology may be introduced for any settled concern without a ne
 
 ## 3) Approved Technology Catalog
 
-The new project does **not** inherit the PoC's version lines. It is bootstrapped on the **latest stable, mutually compatible set** of the libraries below (§4.1) and the exact versions are then recorded in §3.1 as the baseline.
+This project does **not** inherit the PoC's version lines. It is bootstrapped on the **latest stable, mutually compatible set** of the libraries below (§4.1) and the exact versions are then recorded in §3.1 as the baseline.
 
 ### Language and build
 
@@ -132,7 +132,7 @@ The PoC lines (Kotlin 2.2.20, CMP 1.9.0, AGP 8.11.2, Room 2.8.2, Koin 4.1.1, Git
 
 ## 4) Version Governance Rules
 
-### 4.1 Bootstrap policy (new project)
+### 4.1 Bootstrap policy (applied 2026-10-21)
 
 1. Choose the latest stable release of each catalog entry whose compatibility is documented by its maintainer for the chosen Kotlin and Compose Multiplatform versions.
 2. Prove the set on day one: Android debug build, shared unit tests, iOS framework link, iOS simulator app build, backend emulator tests.
@@ -179,17 +179,17 @@ The Kotlin framework produced from shared code auto-links the Firebase products 
 
 Every pull request runs:
 
-- shared unit tests (`:composeApp:testDebugUnitTest` and the iOS simulator test task once §6.2 is satisfied),
+- shared unit tests (`:shared:testAndroidHostTest` on Linux, `:shared:iosSimulatorArm64Test` on macOS),
 - Android debug build,
 - iOS framework link and an `xcodebuild` simulator build on a macOS runner,
 - backend: functions unit tests and Firestore rules tests on the emulator suite,
 - static checks configured in the repository (Android lint; detekt if adopted).
 
-Secrets (Firebase config files, signing, API keys) are injected from the CI secret store (`SecurityAndSecrets.md` §4) and never printed.
+Secrets (Firebase config files, signing, API keys) are injected from the CI secret store (`Security.md` §4) and never printed.
 
 ### 6.4 Local validation commands
 
-The new repository's entrypoint README lists the exact commands and the JDK; they are the commands agents run after each meaningful change (Definition of Done).
+The root `CLAUDE.md` and `README.md` list the exact commands; `scripts/verify.sh` runs the right subset for a change (macOS also builds iOS; on Windows/Linux iOS is verified by CI).
 
 ---
 
