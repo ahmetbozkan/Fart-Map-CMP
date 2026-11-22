@@ -261,7 +261,7 @@ FollowRelationship {
 
 Composite primary key: `(from_user_id, to_user_id)`.
 
-Blocks are stored as a separate `Block` entity (`DataModel.md` §4.5, `DataContracts.md` §3.6) so blocking works without a prior follow request; `BLOCKED` on `FollowRelationship` is derived from it. Decided.
+Blocks are stored as a separate `Block` entity (`DataContracts.md` §3.6) so blocking works without a prior follow request; `BLOCKED` on `FollowRelationship` is derived from it. Decided.
 
 ---
 

@@ -1,7 +1,7 @@
 # Glossary: Fart Map
 
 > **Planning spine position:** cross-cutting vocabulary; feeds every product document.
-> Upstream: `Product.md`. Downstream: `features/`, Systems docs, `architecture/DataModel.md`, `design/*`.
+> Upstream: `Product.md`. Downstream: `features/`, Systems docs, `architecture/LocalData.md`, `design/*`.
 > This document is the **single source of truth for domain terms**. Every later doc references these definitions rather than redefining them (per `planning/archive/meta/archive/PlanningDependencyGraph.md` §7, single-definition rule).
 
 ---
@@ -12,7 +12,7 @@ Fart Map's concept uses playful, ambiguous language ("fart", "flavor", "signatur
 
 This glossary fixes meaning so that:
 - AI agents use one definition across product, architecture, and design.
-- Data models (`DataModel.md`, `DataContracts.md`) derive field names and types from agreed concepts.
+- Data models (`DataContracts.md`, `LocalData.md`) derive field names and types from agreed concepts.
 - UI copy stays tonally consistent (Humor pillar) without semantic drift.
 
 **Rules:**
@@ -58,7 +58,7 @@ The real-world geographic surface that hosts all Markers. The product's center o
 
 ## 4) Expressive Attributes (Identity & Humor Layer)
 
-These were the PoC's `// tbd` placeholders. Definitions below resolve them conceptually; data-layer decisions belong in `DataModel.md`.
+These were the PoC's `// tbd` placeholders. Definitions below resolve them conceptually; data-layer decisions belong in `DataContracts.md`.
 
 ### Signature
 **Status: Provisional.** *(Identity, Humor)*
@@ -72,7 +72,7 @@ A per-Fart **5-step comedic severity scale** chosen with a stepper (CREATE-04, `
 
 ### Feeling
 **Status: Dropped from MVP (PoC concept).** *(Humor, Social)*
-Not part of the Fart entity (`features/` CREATE-03.3, `DataModel.md`); retained only as a possible future expressive attribute. The emotional/reaction tone attached to a Fart by its author at creation (e.g., relieved, proud, embarrassed). Adds comedic narrative and personality. Distinct from **Reaction** (which is given by *other* users afterward). PoC field: `feelingId`.
+Not part of the Fart entity (`features/` CREATE-03.3, `DataContracts.md`); retained only as a possible future expressive attribute. The emotional/reaction tone attached to a Fart by its author at creation (e.g., relieved, proud, embarrassed). Adds comedic narrative and personality. Distinct from **Reaction** (which is given by *other* users afterward). PoC field: `feelingId`.
 
 ### Intensity
 **Status: Provisional.** *(Humor, Progress)*

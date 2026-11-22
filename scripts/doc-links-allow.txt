@@ -1,7 +1,9 @@
 # Paths referenced in docs that intentionally don't exist yet (or are created per machine).
 # Remove an entry once the file exists.
-LocalData.md
 planning/product/growth/
 planning/stories/STORY-01-01-02.md
 shared/src/androidMain
 shared/src/iosMain
+# Archived by ADR-0022 (now planning/archive/architecture/); historical mentions in ADRs are intended.
+DataModel.md
+SyncStrategy.md

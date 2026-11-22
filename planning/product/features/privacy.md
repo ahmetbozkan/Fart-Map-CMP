@@ -15,6 +15,7 @@ Let users control who can see each fart post.
 
 **Notes / open questions**
 - MVP tiers are fixed: `Public / Followers / Private`.
+- Default tier (ADR-0023): Public in Phase 1 for the 18+ age band, Followers for 13–17; reverts to Followers for users without a last-used choice when SOCIAL-03 ships. Public content always uses the fuzzed projection (ADR-0019).
 
 ## PRIV-02 Location Privacy and Precision Control
 **Purpose**

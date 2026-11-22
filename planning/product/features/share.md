@@ -3,6 +3,8 @@
 > Implementation spec split from the original Features.md (strategy fields such as pillar impact, personas, loops, monetization ideas and future expansion live in `planning/archive/product/Features.md`). Phase placement authority: `planning/product/Scope.md`.
 
 ## SHARE-01 Share Card System
+> ADR-0023: a lite version ships in Phase 1 — one rendered card (marker on a stylized map snippet, coarse area name, avatar, flavor, caption, short link/QR; never precise coordinates) through the OS share sheet, from the log success state and the user's own detail sheet.
+
 **Purpose**
 Generate screenshot-worthy, context-free artifacts that drive the viral loop.
 
@@ -22,7 +24,8 @@ Generate screenshot-worthy, context-free artifacts that drive the viral loop.
 Let users share individual fart posts as the smallest viral unit.
 
 **Phase**
-- Phase 2
+- Phase 1: deep link (App Links / Universal Links on an owned domain), web landing page with store badges, Play Install Referrer attribution (ADR-0023)
+- Phase 2: more share surfaces
 
 **Dependencies**
 - SHARE-01

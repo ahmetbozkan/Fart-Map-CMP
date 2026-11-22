@@ -1,6 +1,6 @@
 # ADR-0001: Room over SQLDelight
 
-- Status: Accepted
+- Status: Superseded by ADR-0022 (2026-11-22, owner) for Phases 1–2. Room returns only for a dataset that hits a trigger in `architecture/LocalData.md` §8, through a new ADR.
 - Date: 2026-06-20
 - Source: `planning/archive/meta/archive/PlanningAuditReport.md` §8
 

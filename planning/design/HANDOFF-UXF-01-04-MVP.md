@@ -7,7 +7,7 @@
 - flow: `UXF-01`, `UXF-02`, `UXF-03`, `UXF-04`, `UXF-08`, `UXF-11`, `UXF-12`, `UXF-13`
 - loop: `L1`, `L2`, `L3`, `L5` (seed), `L8` (seed)
 - journey stage: `2 -> 3 -> 4 -> 5 -> 7`
-- architecture links: `planning/architecture/Architecture.md`, `planning/architecture/DataContracts.md`, `planning/architecture/SyncStrategy.md`, `planning/architecture/Security.md`, ADR-0015–ADR-0020
+- architecture links: `planning/architecture/Architecture.md`, `planning/architecture/DataContracts.md`, `planning/architecture/LocalData.md`, `planning/architecture/Security.md`, ADR-0015–ADR-0020
 
 ## Included Design Artifacts
 - design spec sections: `planning/design/DesignSpecification.md` 2–10 and 12–16 (tokens, components, navigation, motion, accessibility); screen-level behavior is in the screen specs below (the old §11 is archived)
@@ -27,7 +27,7 @@
 - error/offline behavior: errors are user-visible and recoverable; offline create, react and delete are accepted with deferred sync; purchases and ads require a connection and say so
 
 ## Safety/Privacy UX Contract
-- visibility behavior: creation defaults to Followers (last-used thereafter) and exposes tier selection; Followers filter shows an empty state until Phase 2
+- visibility behavior: creation defaults to Public for 18+ / Followers for 13–17 (ADR-0023; last-used thereafter) and exposes tier selection; Followers filter shows an empty state until Phase 2
 - location display restrictions: precise coordinates are never shown for others' content; coarse area only; the owner sees their own exact pin (ADR-0019)
 - moderation/reporting affordances: Report and Block on every other user's detail sheet; own-fart Delete with confirmation; hidden content never opens for non-authors
 - age gate: 13+ self-declared birth year before the first session becomes Active; under-13 blocked
@@ -41,10 +41,10 @@
 1. Given a first-time user, when they tap "Continue without account", then an anonymous session starts and the Map tab opens with four tabs Map / Social / Rank / Profile.
 2. Given a first-time user without session, when Google or Apple auth succeeds, then the map opens as start destination and the auth graph is removed from the back stack.
 3. Given map markers are available, when the user taps a marker, then the detail sheet opens with the reaction bar, Report and Block, and no precise coordinate is displayed.
-4. Given the user opens Log Fart, when they submit with defaults, then visibility is Followers, the marker drops on the map, and the stored document carries fuzzed public coordinates plus an owner-only private location.
-5. Given submission fails or the device is offline, when the user retries or continues, then draft data is preserved and a recoverable status is shown; the operation syncs later through the single queue.
+4. Given the user opens Log Fart, when they submit with defaults, then visibility is Public for an 18+ user (Followers for 13–17, ADR-0023), the marker drops on the map, and the stored document carries fuzzed public coordinates plus an owner-only private location.
+5. Given submission fails or the device is offline, when the user retries or continues, then draft data is preserved and a recoverable status is shown; the operation syncs later through Firestore's offline write queue (ADR-0022).
 6. Given a locked avatar, when the user taps it, then the unlock sheet offers Buy and Watch Ad to Try Once only; the item becomes selectable only after the server-mirrored entitlement or token exists.
-7. Given the user's fart receives a reaction and notification permission was granted in context, when the push is opened, then the Map tab shows the detail sheet for that fart.
+7. Given the user granted notification permission when asked after their first log (ADR-0023) and their fart receives a reaction, when the push is opened, then the Map tab shows the detail sheet for that fart.
 8. Given an anonymous user links Google or Apple, when linking completes, then the uid, content and entitlements are unchanged and the session stays Active.
 9. Given the user deletes their own fart, when confirmed, then the marker disappears immediately and the deletion syncs later if offline.
 

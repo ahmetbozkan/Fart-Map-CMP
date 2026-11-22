@@ -64,7 +64,7 @@ Mapped to the outcome model in `Product.md`
 | **Social density** | Follow-graph formation | % of retained users with ≥ 3 connections | ≥ 50% | L4, Journey S6, M2 |
 | **Virality** | K-factor | New installs attributable per existing user (share → install) | ≥ 0.4 (→ 1.0 long-term) | L8, Journey S8, M7 |
 | **Identity** | Profile investment | % of retained users who customize Signature/Profile | ≥ 35% | Identity accretion, Journey S7, M4 |
-| **Monetization** | Conversion / ARPDAU | % paying; avg revenue per daily active user | set post-PMF | M4/M6, Personas §8 |
+| **Monetization** | Conversion / ARPDAU | % paying; avg revenue per daily active user (IAP + ads) | tracked weekly from Phase 1 (ADR-0024); targets set after the first 4 weeks | M4/M6, Personas §8 |
 
 > Targets are **provisional hypotheses** for a pre-launch product. The first job after launch is to replace them with observed baselines, then set improvement goals.
 

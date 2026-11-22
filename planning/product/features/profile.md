@@ -7,7 +7,7 @@
 Give each user a recognizable face/character identity beyond a username.
 
 **Phase**
-- Phase 1 (free tier plus a la carte purchases, ADR-0020); Phase 3 deeper economy
+- Phase 1 (free tier plus a la carte purchases, ADR-0020; Wardrobe shop entry in Profile, ADR-0024); Phase 3 deeper economy
 
 **Dependencies**
 - PROFILE-02 public profile

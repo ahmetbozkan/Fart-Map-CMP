@@ -70,7 +70,7 @@ It does not own full visual specification details (owned by `DesignSpecification
 ## UXF-12 Reaction Push Return
 
 - Goal: bring the author back to the exact marker after a reaction
-- Must request notification permission in context (after the first reaction received), never at launch
+- Must request notification permission in context (once, after the first successful log, ADR-0023), never at launch
 - Deep link `fartmap://fart/{fartId}` opens the Map tab with the Fart Detail Sheet; payload carries no private text or coordinates
 
 ## UXF-13 Anonymous Start and Account Linking

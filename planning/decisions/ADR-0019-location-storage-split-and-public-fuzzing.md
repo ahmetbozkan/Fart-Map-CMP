@@ -16,5 +16,5 @@
 6. No location-history collection in Phase 1; the author's precise history is exactly their own `private/location` documents.
 
 ## Consequences
-- `DataContracts.md` §3.2/§5/§6, `DataModel.md` §4.1, `Security.md` §3/§6, `ContentSafety.md` §3 and `DesignSpecification.md` §11.6 (the "precise location" toggle is removed) are updated.
+- `DataContracts.md` §3.2/§5/§6, `DataModel.md` §4.1 (now `LocalData.md` §7), `Security.md` §3/§6, `ContentSafety.md` §3 and `DesignSpecification.md` §11.6 (the "precise location" toggle is removed) are updated.
 - **Parameters confirmed (owner, 2026-10-15):** geohash precision 6 and no publication delay are settled and recorded in `ContentSafety.md` §3. Changing them is a privacy-default change under `WorkingAgreement.md` §5 and needs a superseding ADR.

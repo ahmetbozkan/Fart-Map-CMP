@@ -1,8 +1,6 @@
 # Growth, Store and Launch: Fart Map
 
-> **Status: Proposed (2026-11-21).** Nothing here changes scope, defaults or monetization until the owner accepts the matching ADR:
-> - ADR-0023: growth kernel;
-> - ADR-0024: monetization v2.
+> **Status: Accepted (2026-11-22)** through ADR-0023 (growth kernel, option A: Public default in Phase 1 for 18+) and ADR-0024 (monetization v2, single-use ads, no scope trims). The ADRs are authoritative where this text is less precise.
 >
 > Store-policy items (§2) are compliance requirements, not proposals; the `release` skill enforces them. The figures below are planning assumptions to validate, not market data. Use the `growth-analyst` agent to research them with sources.
 
@@ -53,15 +51,13 @@ A novelty app lives or dies on its first weeks of organic installs. This documen
 **The problem:** a map with no markers kills the L1/L3 loops. In Phase 1, the Followers default plus no follow graph means most farts are invisible to everyone else, so the Everyone filter and the Social tab stay empty and Gate 1's "first social touch ≥ 40% in 24 h" cannot be met.
 
 **Proposed fixes (ADR-0023):**
-1. **Default visibility for Phase 1.** Choose one (owner):
-   - (a) default **Public** in Phase 1, since the public projection is already fuzzed to geohash-6 (ADR-0019) and precise location stays owner-only;
-   - (b) keep **Followers**, but on the first log show a one-time choice card ("Let the world smell it?" Public / Followers / Private).
+1. **Default visibility for Phase 1 (decided: option A).** Default **Public** for the 18+ age band, since the public projection is already fuzzed to geohash-6 (ADR-0019) and precise location stays owner-only; **Followers** for 13–17; back to Followers for everyone when SOCIAL-03 ships.
 2. **Honest seeding.** "Fart Map Official" landmark markers (famous places, campuses, stadiums), clearly labeled as official, with jokes, created by the owner through an admin script. Never fake users.
 3. **Aggregated activity.** At low zoom, show counts per region ("312 farts in Berlin this week") from public farts. Cheap, honest, and the map always looks alive.
 4. **Launch geography.** Seed and market in one city or campus first to reach visible density, then expand.
 5. **Push timing.** Ask for notification permission after the user's **first log** ("Want to know when someone reacts?"), not after the first reaction. Without this, most users who never receive a reaction never get a push channel.
 
-## 5) Viral loop (SHARE-01-lite in Phase 1, ADR-0023)
+## 5) Viral loop (SHARE-01-lite in Phase 1, ADR-0023, accepted)
 
 - **Share card:** a rendered image of the user's marker on a stylized map snippet, coarse area name ("near Kreuzberg"), avatar, flavor and a funny caption, plus a QR code or short link. Never precise coordinates.
 - **Delivery:** the OS share sheet (Instagram Stories, TikTok, WhatsApp, iMessage). Entry points: the success state after logging and the detail sheet of your own fart.
@@ -74,14 +70,13 @@ A novelty app lives or dies on its first weeks of organic installs. This documen
 
 ## 6) Monetization levers (ADR-0024)
 
-See ADR-0024 for the decision options. In summary:
+Decided in ADR-0024 (rewarded ads stay single-use; no Phase 1 scope trims). In summary:
 - a shop surface;
 - a defined launch catalog with price tiers;
 - a starter pack after the first log (never in onboarding);
 - Remote Config for prices, caps and offers;
 - RevenueCat Offerings and Experiments;
 - a subscription ("Fart Map+") in Phase 2 once the catalog has 20 or more items;
-- a better rewarded-ad value (owner picks);
 - revenue as a tracked Gate 1 metric.
 
 All of it stays inside the hard rules in `Monetization.md` §2.
@@ -94,11 +89,11 @@ All of it stays inside the hard rules in `Monetization.md` §2.
   - share created → link opened → install (where attributable).
 - **Weekly owner dashboard:** installs by source, D1/D7 retention, first-session loop completion, share rate per logger, ARPDAU (IAP + ads), payer conversion, crash-free users.
 
-## 8) Launch checklist (proposed epic "Launch readiness")
+## 8) Launch checklist (epic "Launch readiness", EPIC-01-11)
 
 - [ ] Store listings + screenshots + preview video (`store-listing` skill)
 - [ ] Compliance items in §2 (`release` skill)
-- [ ] Share card + links + landing page (if ADR-0023 is accepted)
+- [ ] Share card + links + landing page (ADR-0023)
 - [ ] Official seed markers in the launch city or campus
 - [ ] Analytics funnels verified in DebugView
 - [ ] Closed test with 20 or more testers for 14 days (Google Play requires this for new personal developer accounts; check the current rule)

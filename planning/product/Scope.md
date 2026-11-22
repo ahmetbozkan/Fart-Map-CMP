@@ -185,7 +185,7 @@ MVP is the minimum scope that makes Phase 1 meaningful, safe, and shippable — 
 - Description field with emoji support (CREATE-06)
 - 2 free avatars minimum; remaining avatars purchasable a la carte (permanent, MON-01) or unlockable once via rewarded ad (MON-03) — ADR-0020
 - ≥3 free sounds; remaining sounds purchasable or ad-unlockable the same way (CREATE-07 free set plus MON-01/MON-03)
-- Visibility selector: Public / Followers / Private (ADR-0010), defaulting to last-used / Followers for new users
+- Visibility selector: Public / Followers / Private (ADR-0010). Default for a first log: **Public** for the 18+ age band, **Followers** for 13–17 (ADR-0023); last-used thereafter. The default for new users reverts to Followers when SOCIAL-03 ships
 - Delete own fart (CREATE-09; edit is Phase 2)
 
 **Social**
@@ -206,15 +206,22 @@ MVP is the minimum scope that makes Phase 1 meaningful, safe, and shippable — 
 - Content policy baseline enforced at account creation
 
 **Notifications**
-- Reaction received push notification (NOTIF-01 minimal, FCM/APNs, deep link to the marker; ADR-0020)
+- Reaction received push notification (NOTIF-01 minimal, FCM/APNs, deep link to the marker; ADR-0020); permission asked once after the first successful log (ADR-0023)
+
+**Growth (ADR-0023)**
+- SHARE-01-lite: share card (coarse area only) through the OS share sheet, App Links / Universal Links on an owned domain, web landing page, Play Install Referrer attribution
+- Cold start: labeled "Fart Map Official" landmark markers, aggregated regional counts at low zoom, one launch city or campus first
 
 **Onboarding**
 - First-launch flow: map orientation, first log guidance, concept explanation — runs on an anonymous session with full capability (ADR-0018); linking a Google or Apple account is nudged after the first log and never forced
 
 **Monetization (ADR-0016, ADR-0017, ADR-0020)**
 - A la carte purchase of avatars and sounds through RevenueCat over Apple IAP / Google Play Billing; entitlements verified server-side
-- Rewarded ads (AdMob, server-side verified) for single-use avatar/sound unlocks; maximum 3 views per user per day
-- No subscription, no passive ads
+- Rewarded ads (AdMob, server-side verified) for single-use avatar/sound unlocks; maximum 3 views per user per day (Remote Config tunable, enforced server-side; ADR-0024)
+- Wardrobe shop in Profile; launch catalog ≥ 2 free + 8 paid avatars, 3 free + 9 paid sounds, 2 themed packs; prices from RevenueCat Offerings (ADR-0024)
+- Starter pack offer once after the first successful log, never in onboarding (ADR-0024)
+- Remote Config for offering selection, ad cap, offer timing and copy (ADR-0024)
+- No subscription in Phase 1 (it ships in Phase 2, ADR-0024), no passive ads
 
 **Navigation (ADR-0020)**
 - Four root tabs: Map (default) / Social / Rank / Profile; Log is the map FAB
@@ -237,11 +244,11 @@ The following are explicitly out of MVP scope. Any proposal to include them befo
 | Achievement system | Requires activity history to award meaningfully | Phase 3 |
 | Signature / style system | Requires cosmetic catalog depth to be expressive | Phase 3 |
 | Profile stats / history | Requires accumulated activity to display | Phase 3 |
-| Share cards | High value but not blocking for Phase 1 fun | Phase 2 |
+| Share cards (full system) | SHARE-01-lite ships in Phase 1 (ADR-0023); richer templates and surfaces follow | Phase 2 |
 | Groups | Requires active social graph and community critical mass | Phase 4 |
 | Challenges | Requires leaderboard and competition infrastructure | Phase 4 |
 | Events | Requires community infrastructure | Phase 4 |
-| Premium subscription | Requires cosmetic catalog depth | Phase 4 |
+| Premium subscription | Requires cosmetic catalog depth (≥ 20 items) | Phase 2 (ADR-0024) |
 | Territory | Explicitly post-MVP (ADR-0011) | Phase 5 TBD |
 | Direct messaging | Explicitly a non-goal (see §7) | Never |
 | Map heatmaps / density layers | Nice-to-have map feature | Phase 2 |
@@ -277,7 +284,7 @@ This table covers every named feature system in `features/`. Phase = the primary
 | CREATE-05 Intensity Slider | 1 | Captured at log time; stored for future progression use | CREATE-01 |
 | CREATE-06 Story / Description | 1 | Optional text field; low cost, high humor value | CREATE-01 |
 | CREATE-07 Custom Sound Selection | 1 (picker with ≥3 free + purchasable/ad-unlockable sounds, ADR-0020), 2 (full library) | Requires audio pipeline and cosmetic catalog baseline | MON-01 (free tier), audio infra |
-| CREATE-08 Voice Recording | 4 | Premium-only; MON-02 is Phase 4; requires audio moderation coverage | MOD-02, MON-02, CREATE-03 |
+| CREATE-08 Voice Recording | 4 | Premium-only (part of MON-02 once it ships); requires audio moderation coverage | MOD-02, MON-02, CREATE-03 |
 | CREATE-09 Preview, Edit, Delete | 1 (delete), 2 (edit, preview) | Delete is a trust and privacy basic; edit follows | CREATE-01 |
 
 ### Social Systems
@@ -323,8 +330,8 @@ This table covers every named feature system in `features/`. Phase = the primary
 
 | Feature | Phase | Reason | Hard dependency |
 |---|---|---|---|
-| SHARE-01 Share Card System | 2 | Screenshot-worthy artifact; L8 viral loop seed; high Phase 2 value | CREATE-01, design assets |
-| SHARE-02 Fart Share Surfaces (incl. deep link / app-open attribution) | 2 | Smallest viral unit; required for the viral loop to produce installs | SHARE-01, attribution |
+| SHARE-01 Share Card System | 1 (lite: one card + OS share sheet, ADR-0023), 2 (full) | Screenshot-worthy artifact; L8 viral loop seed; high Phase 2 value | CREATE-01, design assets |
+| SHARE-02 Fart Share Surfaces (incl. deep link / app-open attribution) | 1 (deep link + landing page + install referrer, ADR-0023), 2 (more surfaces) | Smallest viral unit; required for the viral loop to produce installs | SHARE-01, attribution |
 | SHARE-03 Profile, Milestone, and Rank Shares | 3 | Requires identity investment to be worth sharing | PROFILE-02, PROG-03, ACH-02 |
 | SHARE-04 Challenge and Community Result Shares | 4 | Requires challenges and groups | PROG-04, COMMUNITY-01 |
 
@@ -334,7 +341,7 @@ This table covers every named feature system in `features/`. Phase = the primary
 |---|---|---|---|
 | MON-01 Cosmetic Economy (a la carte avatars and sounds) | 1 | Owner decision: purchase path live at launch (ADR-0016, ADR-0020) | PROFILE-01, CREATE-07 free set |
 | MON-01 Cosmetic Economy (full catalog) | 4 | Deeper catalog expansion after Phase 3 foundations | MON-01 foundations |
-| MON-02 Premium Subscription | 4 | Requires deep cosmetic catalog to justify recurring payment | MON-01 mature catalog |
+| MON-02 Premium Subscription | 2 (ADR-0024) | Gated on a catalog of ≥ 20 items, not on Gate 3; voice recording joins it when CREATE-08 ships | MON-01 catalog ≥ 20 items |
 | MON-03 Rewarded Ads | 1 | Single-use avatar/sound unlocks; AdMob with server-side verification (ADR-0017, ADR-0020) | MON-01 |
 
 ### Notification Systems
@@ -390,6 +397,7 @@ All metric targets reference `Metrics.md` §4–5. Counter-metrics reference `Me
 | L1 leak rate | Log abandonment < 30% on the detailed log screen | `Product.md` L1 leak points |
 | Safety baseline | MOD-01 report flow operational; PRIV-01 and PRIV-02 validated; no unmitigated T1/T2 threats | `ContentSafety.md` §2 |
 | Monetization integrity | Entitlement bypass impossible in rules tests; rewarded unlocks single-use and server-verified; daily cap enforced | ADR-0016, ADR-0017 |
+| Revenue (tracked, not pass/fail) | Payer conversion and ARPDAU (IAP + ads) measured and reported weekly | ADR-0024, `Metrics.md` |
 
 **Hard blockers (must be zero):** Unmitigated Critical threats (T1 doxxing, T2 stalking, T4 minor safety, T9 secrets). Any of these present = gate does not pass regardless of loop metrics.
 
@@ -519,4 +527,4 @@ Future agents using this document to make release or sequencing decisions must f
 
 7. **Phase completion is measured, not declared.** A phase is not complete because the code is shipped or the sprint is done. It is complete when the gate criteria in §6 are measurably passing. Use `Metrics.md` as the measurement authority.
 
-8. **When a gate is failing, fix the loop — do not add a new loop.** If Phase 1 activation is underperforming, the answer is to improve logging friction, marker feedback, or map density — not to ship Phase 2 social features to compensate. Adding a new loop to fix a broken loop creates compounding technical and product debt.
+8. **When a gate is failing, fix the loop — do not add a new loop.** (The Phase 1 growth kernel of ADR-0023 — share card, deep links, cold-start seeding — is part of Phase 1 scope, not a new loop.) If Phase 1 activation is underperforming, the answer is to improve logging friction, marker feedback, or map density — not to ship Phase 2 social features to compensate. Adding a new loop to fix a broken loop creates compounding technical and product debt.

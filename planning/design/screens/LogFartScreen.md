@@ -11,7 +11,7 @@
 - Loop link(s): `L1`, `L8`
 - Journey stage(s): `3 -> 4 -> 8`
 - Persona focus: primary persona set (`planning/product/Product.md`)
-- Architecture link(s): `planning/architecture/DataModel.md`, `planning/architecture/SyncStrategy.md`, `planning/architecture/DataContracts.md`, `planning/architecture/Security.md`
+- Architecture link(s): `planning/architecture/LocalData.md`, `planning/architecture/DataContracts.md`, `planning/architecture/Security.md`
 
 ## Screen Goal
 - Primary user outcome: complete a fart log quickly while supporting optional expressive depth.
@@ -40,7 +40,7 @@
 - Validation behavior: required fields and limits enforced inline; no silent submit failures.
 
 ## Safety and Privacy UX
-- Visibility/privacy defaults shown: default visibility is Followers and must be explicit.
+- Visibility/privacy defaults shown: default visibility is Public for 18+ and Followers for 13–17 in Phase 1 (ADR-0023), last-used thereafter; always shown explicitly with "your exact spot stays private".
 - Reporting/blocking affordance: N/A on creation form.
 - Sensitive data redaction/display rules: only coarse location confirmation visuals, no precise coordinate exposure.
 
