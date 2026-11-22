@@ -137,14 +137,14 @@ The Log Fart screen is a **10-step sequential creation flow**. Each step is defi
 
 - **Premium-only. No rewarded-ad unlock path for this feature.**
 - For premium users: a record button with a **10-second hard limit** (ADR-0014). MVP scope: record and attach only — no editing, no trimming, no effects.
-- For non-premium users: show a locked UI — display an audio waveform placeholder and a "Premium — coming later" CTA that opens an informational sheet until MON-02 ships (Phase 4). Do not silently hide the field; show it as locked to surface the premium value.
+- For non-premium users: show a locked UI — display an audio waveform placeholder and a "Premium — coming later" CTA that opens an informational sheet until voice recording ships (CREATE-08, Phase 4, part of the Phase 2 subscription once available). Do not silently hide the field; show it as locked to surface the premium value.
 - Voice clip is uploaded to remote storage; persisted as a URL (`voice_url`) on the Fart entity.
 
 **Step 9 — Visibility Selector**
 
 - Three options: **Public / Followers / Private** (ADR-0010).
 - Must default to the user's **last-used setting** (persisted in DataStore or equivalent).
-- For a first-time user with no stored preference: default is **Followers**.
+- For a first-time user with no stored preference: default is **Public** for the 18+ age band and **Followers** for 13–17 (ADR-0023). When SOCIAL-03 ships the no-preference default becomes **Followers** for everyone. The selector always shows the current value, with the note "your exact spot stays private".
 - Selected value must round-trip faithfully to the entity field `visibility_mode` — this was a known PoC failure; it must be covered by a unit test at implementation.
 
 **Step 10 — Submit**
@@ -162,9 +162,9 @@ The Log Fart screen is a **10-step sequential creation flow**. Each step is defi
   - Auto-save draft locally so no user input is lost.
   - Do not clear any fields.
 - On offline (ADR-0007 local-first):
-  - Accept the submission; store as a pending operation locally.
+  - Accept the submission: the Firestore batch is handed to the offline write queue (ADR-0022, `LocalData.md` §3) and the marker appears with the pending style.
   - Show a non-blocking toast: "Saved locally — will post when you're back online."
-  - Auto-sync on reconnect. User does not need to take any action.
+  - Firestore delivers it on reconnect. User does not need to take any action. A later rules rejection surfaces through `PendingWriteMonitor`.
 
 ---
 
@@ -180,7 +180,7 @@ The following table defines which creation features are gated and by which unloc
 
 **Mandatory UX rules for locked items (no silent defaults):**
 
-1. Tapping a locked avatar or sound always shows a bottom sheet. In Phase 1 the sheet offers exactly two options: "Buy" (permanent) and "Watch Ad to Try Once". When MON-02 ships (Phase 4) a third option, "Go Premium", is added. No dismiss-only sheet.
+1. Tapping a locked avatar or sound always shows a bottom sheet. In Phase 1 the sheet offers exactly two options: "Buy" (permanent) and "Watch Ad to Try Once". When MON-02 ships (Phase 2, ADR-0024) a third option, "Go Premium", is added. No dismiss-only sheet.
 2. Tapping the voice record button when locked always shows a bottom sheet. Until MON-02 ships it is informational ("Premium — coming later"); from Phase 4 it offers "Go Premium" only. No ad option is ever shown.
 3. If the user has an active premium subscription, rewarded-ad UI is hidden entirely for all items that premium unlocks. There must be no surface where premium and rewarded-ad options are shown together.
 4. After a rewarded-ad single-use unlock is consumed, the item must re-lock. It must never remain permanently unlocked as a result of watching an ad. This is a hard product rule (anti-pay-to-win / anti-subscription-undermining).
@@ -212,7 +212,7 @@ The Log Fart screen must implement the following states. Each state must be a di
 
 | State | Meaning | Required behavior |
 |---|---|---|
-| `DRAFT` | Screen open; fields partially or fully filled; not yet submitted | Persisted locally (DataStore or Room); survives app kill and process death |
+| `DRAFT` | Screen open; fields partially or fully filled; not yet submitted | Persisted locally in DataStore (`log_draft`, `LocalData.md` §5); survives app kill and process death |
 | `UPLOADING` | Submission in-flight | Dual progress indicators shown (media + location); Submit button disabled; back navigation disabled or shows a confirmation dialog |
 | `SUCCESS` | Fart posted; marker is live on map | Dismiss screen; animate marker drop at confirmed location; clear local draft |
 | `FAILED` | Upload or location resolution failed | Show retry CTA with error reason; preserve draft; do not clear any field |
@@ -222,7 +222,7 @@ The Log Fart screen must implement the following states. Each state must be a di
 
 - [ ] L1 Action element completable in <60s on first session (Product.md health bar)
 - [ ] Serves Journey Stage 3 (Activation) and Stage 4 (First Reward) per Product.md
-- [ ] PRIV-01: visibility selector present with correct defaults (last-used or Followers for new users)
+- [ ] PRIV-01: visibility selector present with correct defaults (last-used; else Public for 18+ / Followers for 13–17 in Phase 1, ADR-0023)
 - [ ] PRIV-02: precise lat/lng never displayed to user; only coarse map thumbnail shown
 - [ ] MON-01 / MON-02 / MON-03: all locked items are cosmetic only; no creation capability is gated behind monetization; only cosmetic selection within creation is gated
 - [ ] Unit test: visibility field round-trips faithfully (regression for PoC failure)

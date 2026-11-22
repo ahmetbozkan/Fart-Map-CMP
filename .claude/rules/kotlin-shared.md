@@ -34,10 +34,11 @@ Source: `planning/architecture/Architecture.md`. These are enforced by Konsist a
 
 ## Data
 - The domain ↔ DTO mapping round-trips **every** field. Add a mapper test for each new field; the `visibility` regression test is mandatory.
-- Visibility defaults to FOLLOWERS; an unknown enum value decodes to PRIVATE.
+- Visibility default (ADR-0023): PUBLIC in Phase 1 for the 18+ age band, FOLLOWERS for 13–17 and for everyone once SOCIAL-03 ships; last-used (DataStore) wins after the first log. An unknown enum value decodes to PRIVATE.
 - A fart write = public doc with fuzzed geohash-6 coordinates + `farts/{id}/private/location` with the precise coordinates, in one batch. Precise coordinates never enter presentation types for content the user doesn't own.
 - Never compute counters, ranks, entitlements or unlocks on the client.
-- Offline mechanism: follow `planning/architecture/DataModel.md` / `SyncStrategy.md` unless ADR-0022 is accepted. If it is: client-generated id, batch write launched in app scope (**never `await` GitLive `set()` on the UI path**, because it suspends until the server acknowledges), failures reported through `PendingWriteMonitor`.
+- Offline (ADR-0022, `planning/architecture/LocalData.md`): Firestore's persistent cache is the local layer; no Room, no sync engine. Client-generated id, one batch per user action launched in `AppWriteScope` (**never `await` GitLive `set()`/`commit()` on the UI path**, because it suspends until the server acknowledges), rejections reported through `PendingWriteMonitor`. Pending state comes from `hasPendingWrites`.
+- Runtime levers (prices, ad cap, offer timing) come from the `RemoteConfig` contract with safe defaults (ADR-0024); never trust a client-side value for anything the server enforces.
 - Purchases, rewarded ads and account linking are online-only; never queue them.
 
 ## Platform code (ADR-0008)

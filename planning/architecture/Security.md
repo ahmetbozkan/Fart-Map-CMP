@@ -4,7 +4,7 @@
 
 > **Planning spine position:** security, privacy, and secrets architecture contract.
 > Upstream: `product/ContentSafety.md`, `product/Product.md`, `architecture/Architecture.md`, ADR-0001/0002/0007/0008/0009/0010/0012/0014.
-> Downstream: `architecture/DataModel.md`, `architecture/DataContracts.md`, `architecture/SyncStrategy.md`, `architecture/Backend.md`, `architecture/Observability.md`, implementation code.
+> Downstream: `architecture/LocalData.md`, `architecture/DataContracts.md`, `architecture/Backend.md`, `architecture/Observability.md`, implementation code.
 > This document is architecture guidance and guardrails. It is not a legal/privacy policy.
 
 ---
@@ -41,7 +41,7 @@ This document defines security and privacy guardrails for the Fart Map architect
 
 - legal policy wording (privacy policy, terms of service),
 - exact Firestore schema and rule syntax (owned by `DataContracts.md`),
-- exact sync algorithm/retry implementation (owned by `SyncStrategy.md`),
+- local cache and write implementation (owned by `LocalData.md`),
 - exact analytics event taxonomy (owned by `Observability.md`).
 
 ### Why this is mandatory
@@ -59,7 +59,7 @@ These principles apply to all features and all phases.
 
 2. **Privacy-safe by default.**
    - Restrictive default choices must be encoded in data contracts and UI defaults.
-   - Visibility defaults to `FOLLOWERS` for new users.
+   - Visibility default per ADR-0023: `PUBLIC` in Phase 1 for the 18+ age band (public docs carry fuzzed coordinates only), `FOLLOWERS` for 13–17 and for everyone once SOCIAL-03 ships.
    - Following list visibility defaults to private (ADR-0012).
    - Anonymous sessions are full sessions (ADR-0018); every privacy default applies to them unchanged.
 
@@ -79,7 +79,7 @@ These principles apply to all features and all phases.
    - On auth failure, permission ambiguity, or rule evaluation failure, deny access.
 
 7. **Security applies to offline paths too.**
-   - Local caches and pending operation queues must obey visibility/privacy constraints.
+   - The Firestore offline cache and its pending writes must obey visibility/privacy constraints; persistence is cleared on sign-out (`LocalData.md` §7).
 
 8. **Auditability without leakage.**
    - Security-relevant actions are observable; sensitive payloads are not logged.
@@ -240,7 +240,7 @@ Offline-first is required, but local persistence must remain privacy-safe.
 ### Safe-to-cache categories
 
 - Public and follower-permitted content needed for active UI views,
-- user-owned drafts and pending operations,
+- user-owned drafts (DataStore) and pending Firestore writes,
 - non-sensitive UI preferences,
 - cosmetic catalog metadata.
 
@@ -251,7 +251,7 @@ Offline-first is required, but local persistence must remain privacy-safe.
 | Follower-only content | Cache only with access context; invalidate/prune on permission change (unfollow/block/revoke). |
 | Private posts | Owner-only cache; never exposed to shared/guest surfaces. |
 | Location history | Store minimally; avoid long retention in plaintext where not needed. |
-| Pending uploads | Keep until sync complete; include visibility/security metadata in queue item. |
+| Pending writes | Held by the Firestore SDK until acknowledged; dropped by `clearPersistence()` on sign-out. Storage uploads (Phase 4) need their own outbox (`LocalData.md` §8). |
 | Moderation-sensitive content | Avoid broad local persistence if content under review/removal. |
 | Auth/session state | Use secure storage boundaries; clear on sign-out/account switch. |
 
@@ -348,13 +348,13 @@ Use this checklist before approving any implementation touching security/privacy
 - [ ] Following-list privacy defaults match ADR-0012.
 - [ ] Location handling keeps precise coordinates private and public data coarse.
 - [ ] Offline cache behavior includes invalidation for auth/visibility/block changes.
-- [ ] Pending operation queue preserves visibility and ownership context.
+- [ ] Pending writes carry full visibility and ownership fields; sign-out clears persistence.
 - [ ] UGC/report/block/mute controls exist on applicable surfaces.
 - [ ] Audio constraints (10s max, async moderation, no raw-file share) are enforced.
 - [ ] Logs are redacted and do not include forbidden sensitive data.
 - [ ] Premium entitlement checks rely on authoritative backend/store-verified state.
 - [ ] Progression/ranking integrity not delegated to client-only calculations.
-- [ ] Security-relevant changes are reflected in `DataContracts.md`, `SyncStrategy.md`, and `Observability.md` as needed.
+- [ ] Security-relevant changes are reflected in `DataContracts.md`, `LocalData.md`, and `Observability.md` as needed.
 
 ---
 

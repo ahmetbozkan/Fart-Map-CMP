@@ -12,7 +12,7 @@ Agents prepare; the **owner** performs every console action, signing step and su
 - [ ] Bump `versionCode`/`versionName` (Android) and `CFBundleShortVersionString`/`CFBundleVersion` (iOS) together; tag `vX.Y.Z` after merge.
 - [ ] `prod` release builds: Android App Bundle (R8 on; Crashlytics mapping upload), iOS Archive with `Release-prod`. Signing material lives only in the owner's keychain or CI secrets.
 - [ ] Backend: rules and functions deployed to `prod` through the release workflow (reviewer approval) **before** the app goes live.
-- [ ] Remote Config defaults are in place (if ADR-0024 is accepted).
+- [ ] Remote Config defaults are in place and the server-side template matches (ADR-0024).
 
 ## 2. Store compliance (fart apps get extra scrutiny)
 - [ ] **App Store 4.3 (spam / saturated categories; Apple names fart apps).** The listing, screenshots and review notes lead with the social map and UGC community, not sound effects. The review notes explain the map, reactions, moderation and the anonymous start. Provide a demo account only if login is required (it isn't: anonymous start).

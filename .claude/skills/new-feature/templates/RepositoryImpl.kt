@@ -28,10 +28,10 @@ class ExampleRepositoryImpl(
     override suspend fun add(item: ExampleItem): AppResult<Unit> {
         // Client-generated id → idempotent. GitLive `set()` suspends until the SERVER acks,
         // so never await it on the UI path: launch in app scope and report failures through
-        // the monitor (ADR-0022 if accepted; otherwise route through the sync engine).
+        // PendingWriteMonitor (ADR-0022, planning/architecture/LocalData.md §3).
         val ref = firestore.collection("examples").document(item.id)
         writes.launchWrite(op = "example.add") { ref.set(ExampleDto.serializer(), item.toDto()) }
         return AppResult.Success(Unit)
     }
 }
-// `AppWriteScope` is a placeholder name for the app-scoped write launcher defined by STORY-01-01-03.
+// `AppWriteScope` is the app-scoped write launcher defined by STORY-01-01-03 (LocalData.md §3).

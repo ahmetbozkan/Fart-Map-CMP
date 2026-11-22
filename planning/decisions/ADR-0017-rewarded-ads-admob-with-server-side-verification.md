@@ -10,7 +10,7 @@
 ## Decision
 - Use the **Google Mobile Ads SDK (AdMob) rewarded format** on both platforms behind a shared `RewardedAdProvider` `expect`/`actual` contract (ADR-0008). No other ad format is integrated.
 - **Server-side verification (SSV):** AdMob's SSV callback hits a Cloud Function that issues a single-use unlock token in `rewarded_unlocks/{userId}/tokens/{tokenId}` naming the item. The client never grants itself an unlock.
-- The token is **consumed server-side** when the fart that uses the item is written (function trigger validates and deletes the token); the daily cap of three views is enforced in the same backend path.
+- The token is **consumed server-side** when the fart that uses the item is written (function trigger validates and deletes the token); the daily cap (default three views, owner-tunable through Remote Config per ADR-0024; the function reads the server-side value) is enforced in the same backend path. Reward value stays single-use for one action (confirmed by the owner when accepting ADR-0024, 2026-11-22).
 - Consent: the Google User Messaging Platform (UMP) flow runs before the first ad request; iOS App Tracking Transparency is requested only in that context. Ad requests are made with location disabled.
 - Dev builds use AdMob test ad units; `app-ads.txt` is published with the app's web presence.
 

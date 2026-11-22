@@ -11,7 +11,7 @@
 - Loop link(s): `L2`, `L3`
 - Journey stage(s): `3 -> 4`
 - Persona focus: Social Reactor, Explorer
-- Architecture link(s): `planning/architecture/DataContracts.md` §3.2/§6, `planning/architecture/DataModel.md` §8 (map feed by coarse key), `planning/architecture/Architecture.md`
+- Architecture link(s): `planning/architecture/DataContracts.md` §3.2/§6, `planning/architecture/LocalData.md` §2 (geohash range listeners), `planning/architecture/Architecture.md`
 
 ## Screen Goal
 - Primary user outcome: see what is happening nearby as a list when scanning the map is slower.

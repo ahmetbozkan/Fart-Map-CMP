@@ -11,7 +11,7 @@
 - Loop link(s): `L2`, `L3`
 - Journey stage(s): `4`
 - Persona focus: Social Reactor, Explorer, Instant Joker
-- Architecture link(s): `planning/architecture/DataContracts.md` §3.2/§3.3/§5, `planning/architecture/SyncStrategy.md`, `planning/architecture/Architecture.md` (deep link)
+- Architecture link(s): `planning/architecture/DataContracts.md` §3.2/§3.3/§5, `planning/architecture/LocalData.md`, `planning/architecture/Architecture.md` (deep link)
 
 ## Screen Goal
 - Primary user outcome: understand a moment and react to it in one tap.

@@ -100,13 +100,11 @@ Redaction happens at source before emission.
 
 ## 7) Sync and Auth Telemetry Requirements
 
-### Sync telemetry (required once a sync mechanism exists; with ADR-0022 this reduces to pending-write rejections and time-to-ack buckets)
+### Write telemetry (required; ADR-0022)
 
-- queue depth snapshots,
-- attempt outcomes (success/retry/terminal),
-- retry counts,
-- terminal failure categories,
-- convergence latency buckets.
+- pending write acknowledged: time-to-ack bucket and whether it was queued offline,
+- pending write rejected: operation and sanitized error category (from `PendingWriteMonitor`),
+- count of writes still pending at app background (bucketed).
 
 ### Monetization and notification telemetry (required, Phase 1)
 
@@ -181,7 +179,9 @@ The minimum event set that makes `Metrics.md` §4–§8 measurable in Phase 1. N
 | `cosmetic_sheet_shown` | locked item tapped | `item_type`, `options` (buy/ad) | Monetization funnel |
 | `purchase_started` / `purchase_completed` / `purchase_failed` | store flow | `item_type`, `result_category` | Conversion |
 | `rewarded_ad_requested` / `rewarded_ad_completed` / `rewarded_unlock_consumed` | ad flow | `item_type` | Ad funnel, cap monitoring |
-| `sync_terminal_failure` | queue gives up | `entity_type`, `error_category` | Correctness |
+| `write_rejected` | `PendingWriteMonitor` sees a server rejection | `operation`, `error_category` | Correctness |
+| `share_created` / `share_link_opened` | share sheet completed / landing page or app link opened | `surface` | Virality (ADR-0023) |
+| `wardrobe_opened` / `starter_offer_shown` / `starter_offer_result` | shop and offer funnel | `result_category` | Conversion (ADR-0024) |
 
 Funnel transitions in `Metrics.md` §7 are derived from these events; no additional events are added without updating this table.
 

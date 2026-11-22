@@ -7,7 +7,7 @@
 Monetize self-expression without harming fairness.
 
 **Phase**
-- Phase 1: a la carte avatars and sounds (ADR-0016, ADR-0020); Phase 3: catalog expansion; Phase 4: full catalog
+- Phase 1: a la carte avatars and sounds (ADR-0016, ADR-0020), Wardrobe shop, launch catalog (≥ 2 free + 8 paid avatars, 3 free + 9 paid sounds, 2 packs), starter pack after first log, Remote Config + RevenueCat Offerings (ADR-0024); Phase 3: catalog expansion; Phase 4: full catalog
 
 **Dependencies**
 - PROFILE-01 avatar system
@@ -22,7 +22,7 @@ Monetize self-expression without harming fairness.
 Offer a recurring premium layer for users who want deeper expression and status surfaces.
 
 **Phase**
-- Phase 4 or later
+- Phase 2 (ADR-0024), gated on a catalog of ≥ 20 items; voice recording joins it when CREATE-08 ships (Phase 4)
 
 **Dependencies**
 - MON-01 cosmetic economy

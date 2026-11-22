@@ -67,7 +67,7 @@ Any additional Firebase product adoption requires architecture review and, if it
 1. Auth state is session source for start-destination and capability gating (ADR-0006).
 2. Providers are Google, Apple and Anonymous only. An anonymous session is a full session (ADR-0018); linking Google or Apple upgrades the same uid and must use Firebase account linking, never a new sign-in that creates a second uid. The age gate (`ContentSafety.md` §5) runs before the first session becomes Active.
 3. User identity used in writes must come from auth context, never trusted raw client parameter.
-4. Sign-out/account-switch must trigger cache/session safety behavior defined in `SyncStrategy.md` and `DataModel.md`.
+4. Sign-out/account-switch must trigger the cache/session safety behavior in `LocalData.md` §7 (`terminate()` + `clearPersistence()`).
 
 ---
 
@@ -87,11 +87,15 @@ Any additional Firebase product adoption requires architecture review and, if it
 3. Phase 1 responsibilities: reaction counters, reaction push fan-out, report auto-hide, entitlement mirroring (RevenueCat webhook), rewarded-ad token issuance and consumption, location projection re-validation (ADR-0019).
 4. Every function has emulator-suite tests; rules tests run against the emulator in CI.
 
+## 6a2) Remote Config
+
+Firebase Remote Config holds the ADR-0024 levers (offering selection, rewarded-ad cap, offer timing, copy variants). Every key has a safe client default. Server-enforced values (the ad cap) are read by the enforcing function from the server-side template, never from client input.
+
 ## 6b) Messaging Rules
 
 1. Device tokens are registered under `users/{userId}/devices/{deviceId}` by the platform layer and removed on sign-out.
 2. Notification payloads are built server-side and contain no precise location, no private text and no secrets; they carry a deep link (`fartmap://fart/{fartId}`).
-3. Notification permission is requested in context (after the first reaction received), never at launch.
+3. Notification permission is requested in context (once, after the first successful log, ADR-0023), never at launch.
 
 ## 6c) App Check and Crashlytics
 
@@ -118,9 +122,9 @@ Any additional Firebase product adoption requires architecture review and, if it
 
 ## 9) Offline Coupling Rules
 
-1. Firebase availability must not block local writes.
-2. Firestore snapshot/backfill updates local source-of-truth through repository/sync boundaries.
-3. Remote failures classify into retryable/non-retryable per `SyncStrategy.md`.
+1. Firebase availability must not block local writes: writes are launched in app scope and queued by the Firestore SDK (ADR-0022, `LocalData.md` §3).
+2. Snapshot listeners serve cache first, then server deltas; there is no separate local store to backfill.
+3. Rules rejections are reported by `PendingWriteMonitor` and never retried; transient failures are retried by the SDK.
 
 ---
 
@@ -155,8 +159,7 @@ Minimum Firebase-related tests:
 
 This document does not define:
 
-- local Room schema (`DataModel.md`),
-- retry algorithm details (`SyncStrategy.md`),
+- local cache and write-pattern details (`LocalData.md`),
 - UI state machine contracts (`Architecture.md` + feature specs).
 
 ---

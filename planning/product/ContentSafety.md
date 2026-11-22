@@ -1,7 +1,7 @@
 # Content Safety: Fart Map
 
 > **Planning spine position:** cross-cutting safety/privacy governance; constrains all social, map, and identity features.
-> Upstream: `Product.md`, `Glossary.md`. Downstream: `features/`, `SocialSystems.md`, `architecture/DataModel.md`, `architecture/DataContracts.md`, `architecture/Security.md`, `design/*`.
+> Upstream: `Product.md`, `Glossary.md`. Downstream: `features/`, `SocialSystems.md`, `architecture/LocalData.md`, `architecture/DataContracts.md`, `architecture/Security.md`, `design/*`.
 > A viral, **location-based, social, user-generated-content** app carries real-world harm potential (doxxing, harassment, stalking, minor-safety, NSFW). This document encodes the non-negotiable safety, privacy, and moderation policy that features must obey **before** they are designed (per `planning/archive/meta/archive/PlanningStructureReview.md` §10).
 
 ---
@@ -58,7 +58,7 @@ Location is the product's core (Pillars §A) **and** its biggest danger (T1, T2,
 
 ### Visibility model (critical PoC lesson)
 The PoC **dropped the Visibility field** on persistence (every Fart became PRIVATE — Audit §6). The new system must:
-- **Faithfully round-trip Visibility** through the data model (`DataModel.md`).
+- **Faithfully round-trip Visibility** through the data model (`LocalData.md`, `DataContracts.md`).
 - Make **Visibility explicit at log time**, with the privacy-safest tier as default.
 - Use fixed MVP visibility tiers: **Public / Followers / Private**. Public visibility implies location fuzzing (above).
 

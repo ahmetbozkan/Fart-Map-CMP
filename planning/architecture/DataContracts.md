@@ -1,9 +1,9 @@
 # Data Contracts: Fart Map (Remote/Firestore Contract)
 
 > **Planning spine position:** authoritative remote data contract and security-rule intent.
-> Upstream: `architecture/Architecture.md`, `architecture/Security.md`, `architecture/DataModel.md`, `product/features/`, `product/SocialSystems.md`, `product/ProgressionSystems.md`, ADR-0002/0007/0009/0010/0012/0014.
+> Upstream: `architecture/Architecture.md`, `architecture/Security.md`, `architecture/LocalData.md`, `product/features/`, `product/SocialSystems.md`, `product/ProgressionSystems.md`, ADR-0002/0007/0009/0010/0012/0014.
 > Downstream: Firestore schema implementation, security rules, repository remote mappers, sync policy implementation.
-> This document defines canonical remote entities and rule intent. It does not define local Room tables (see `DataModel.md`).
+> This document defines canonical remote entities and rule intent. Documents defined here are also the local shape: Firestore's offline cache stores them as-is (ADR-0022, `LocalData.md`).
 
 ---
 
@@ -396,8 +396,8 @@ This section defines required behavior; exact rule code lives in implementation.
 
 ## 7) Sync Contract Coupling Rules
 
-1. Remote schema fields must be mappable 1:1 or explicitly transformable from local model.
-2. Sync state metadata is local concern and not persisted as canonical remote fields unless required for backend processes.
+1. Client DTOs in `firebaseData` map these documents 1:1; every field round-trips (ADR-0022: there is no separate local model).
+2. Pending-write state comes from snapshot metadata (`hasPendingWrites`) and is never persisted as a document field.
 3. Server timestamps are authoritative for conflict ordering where applicable.
 4. Deleted/removed states must converge across local and remote with explicit reason semantics.
 
@@ -433,8 +433,7 @@ Minimum required validation suite:
 
 This document does not define:
 
-- Room schema internals (`DataModel.md`),
-- exact sync retry/conflict implementation (`SyncStrategy.md`),
+- local cache configuration and write pattern (`LocalData.md`),
 - SDK initialization and environment wiring (`Backend.md`),
 - analytics taxonomy (`Observability.md`).
 

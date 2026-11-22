@@ -5,7 +5,7 @@ description: Design and implement a growth or monetization experiment (price tes
 
 # Growth experiment
 
-Only within accepted rules: experiments may tune prices, copy, timing and caps. They may never test forbidden mechanics (pay-to-win, passive ads, dark patterns, onboarding upsell). Remote Config and offer mechanics need ADR-0024 accepted.
+Only within accepted rules: experiments may tune prices, copy, timing and caps. They may never test forbidden mechanics (pay-to-win, passive ads, dark patterns, onboarding upsell). Remote Config and offer mechanics are authorized by ADR-0024 (accepted 2026-11-22).
 
 1. **Hypothesis card** in `planning/product/growth/experiments/EXP-NNN.md`:
    - hypothesis;

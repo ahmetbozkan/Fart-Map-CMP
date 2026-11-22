@@ -21,10 +21,7 @@ kotlinx-serialization = "1.12.0"
 kotlinx-datetime = "0.8.0"
 kotlinx-coroutines = "1.11.0"
 datastore = "1.3.0"
-# Catalog-only until the story that uses them (Room/KSP: STORY-01-01-03; GitLive: TASK-01-01-01-04; the rest: Phase 1 feature epics).
-room = "2.8.5"
-sqlite = "2.7.1"
-ksp = "2.3.12"
+# Catalog-only until the story that uses them (GitLive: TASK-01-01-01-04; the rest: Phase 1 feature epics). Room/KSP removed by ADR-0022.
 gitlive = "2.7.0"
 firebase-bom = "35.0.2"
 google-services = "4.5.0"
@@ -75,9 +72,6 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 
-androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
-androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
-androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
 
 gitlive-firebase-auth = { module = "dev.gitlive:firebase-auth", version.ref = "gitlive" }
 gitlive-firebase-firestore = { module = "dev.gitlive:firebase-firestore", version.ref = "gitlive" }
@@ -109,8 +103,6 @@ composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMul
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-room = { id = "androidx.room", version.ref = "room" }
 googleServices = { id = "com.google.gms.google-services", version.ref = "google-services" }
 firebaseCrashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebase-crashlytics-plugin" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }

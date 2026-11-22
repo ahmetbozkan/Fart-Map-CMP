@@ -46,10 +46,10 @@ scripts/check-no-secrets.sh
 ## Non-negotiables
 - **No secrets in git.** `google-services.json`, `GoogleService-Info*.plist` and `secrets.properties` are never tracked, read or printed; hooks block them.
 - **No swallowed errors.** Every catch becomes a typed State/Event or a structured log. No `printStackTrace`, no empty catch.
-- **Layering.** Presentation → Domain ← Data. Domain imports nothing from data, Room, Firebase or platform code. Features never import each other. Firebase lives only in `firebaseData`.
+- **Layering.** Presentation → Domain ← Data. Domain imports nothing from data, Firebase or platform code. Features never import each other. Firebase lives only in `firebaseData`.
 - **One pattern per concern:** StateViewModel, typed routes, Koin, `Result<T>`. A new pattern needs an ADR first.
 - **Privacy defaults:**
-  - visibility defaults to FOLLOWERS;
+  - visibility default (ADR-0023): PUBLIC in Phase 1 for the 18+ age band, FOLLOWERS for 13–17 and for everyone once SOCIAL-03 ships; last-used thereafter;
   - unknown values map to PRIVATE;
   - precise coordinates are owner-only (`farts/{id}/private/location`) and public docs carry fuzzed geohash-6 coordinates;
   - minimum age 13 (an age band, never a date of birth).
@@ -77,7 +77,7 @@ scripts/check-no-secrets.sh
 | State / roadmap / stories | `planning/STATE.md`, `planning/ROADMAP.md`, `planning/stories/` |
 | Product brief, scope and phases, features | `planning/product/Product.md`, `Scope.md`, `features/` |
 | Monetization / growth | `planning/product/Monetization.md`, `Growth.md` |
-| Architecture / Firestore schema + rules / security | `planning/architecture/Architecture.md`, `DataContracts.md`, `Security.md` |
+| Architecture / Firestore schema + rules / local data / security | `planning/architecture/Architecture.md`, `DataContracts.md`, `LocalData.md`, `Security.md` |
 | Stack versions and toolchain gotchas | `planning/architecture/TechStack.md`, `gradle/libs.versions.toml` |
 | Design tokens / screens | `planning/design/DesignSpecification.md`, `planning/design/screens/` |
 | Decisions | `planning/decisions/README.md` |

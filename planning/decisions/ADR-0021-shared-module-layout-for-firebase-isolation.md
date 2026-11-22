@@ -10,7 +10,7 @@
 ## Decision
 Three Gradle modules form the shared code, still one codebase with the feature-first package layout of `Architecture.md`:
 
-1. `shared` — everything except Firebase SDK types: features, `core/*`, repository interfaces, sync engine, Compose UI. No GitLive dependency. Its `commonTest`/`iosTest` run without Firebase.
+1. `shared` — everything except Firebase SDK types: features, `core/*`, repository interfaces, local-data contracts (`AppWriteScope`, `PendingWriteMonitor`; ADR-0022 replaced the planned sync engine), Compose UI. No GitLive dependency. Its `commonTest`/`iosTest` run without Firebase.
 2. `firebaseData` — the GitLive-based implementations of the repository and platform contracts declared in `shared` (`core/data` adapters, auth provider, Firestore/Storage gateways, messaging token registration). Depends on `shared`.
 3. `umbrella` — iOS-only KMP module that depends on `shared` and `firebaseData`, builds the static framework `Shared` consumed by `iosApp`, and hosts `MainViewController` plus the iOS Koin composition. `androidApp` depends on `shared` and `firebaseData` directly.
 

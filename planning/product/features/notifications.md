@@ -7,7 +7,7 @@
 Define the set of meaningful notification triggers that bring users back for value, not noise.
 
 **Phase**
-- Phase 1 minimal: reaction-received push only (ADR-0020); Phase 2: full framework
+- Phase 1 minimal: reaction-received push only (ADR-0020); permission asked once after the first successful log (ADR-0023); Phase 2: full framework
 
 **Dependencies**
 - SOCIAL-01
