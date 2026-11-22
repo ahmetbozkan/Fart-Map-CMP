@@ -38,6 +38,7 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.compose.uiTooling)
+            implementation(libs.koin.android) // androidContext() for the platform module
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)

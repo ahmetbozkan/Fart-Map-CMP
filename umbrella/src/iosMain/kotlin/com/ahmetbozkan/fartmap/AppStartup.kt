@@ -3,6 +3,7 @@ package com.ahmetbozkan.fartmap
 import com.ahmetbozkan.fartmap.core.di.sharedModules
 import com.ahmetbozkan.fartmap.core.platform.AppEnvironment
 import com.ahmetbozkan.fartmap.firebase.di.firebaseDataModules
+import com.ahmetbozkan.fartmap.firebase.firestore.FirestoreSetup
 import com.ahmetbozkan.fartmap.firebase.telemetry.FirebaseTelemetry
 import org.koin.core.context.startKoin
 import org.koin.mp.KoinPlatformTools
@@ -16,5 +17,6 @@ fun startApp(environmentName: String) {
     if (KoinPlatformTools.defaultContext().getOrNull() != null) return
     val environment = AppEnvironment.parse(environmentName)
     FirebaseTelemetry.configure(environment)
+    FirestoreSetup.configure()
     startKoin { modules(sharedModules(environment) + firebaseDataModules()) }
 }
