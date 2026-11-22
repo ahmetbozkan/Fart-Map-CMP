@@ -24,6 +24,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":shared"))
+            implementation(libs.koin.core)
             implementation(libs.kotlinx.coroutines.core)
             // implementation, not api: GitLive types must not leak into androidApp/umbrella (ADR-0021).
             implementation(libs.gitlive.firebase.auth)

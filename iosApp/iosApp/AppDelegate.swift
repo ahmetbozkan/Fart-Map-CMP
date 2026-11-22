@@ -1,5 +1,6 @@
 import UIKit
 import FirebaseCore
+import Shared
 
 final class AppDelegate: NSObject, UIApplicationDelegate {
     func application(
@@ -8,6 +9,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     ) -> Bool {
         // GoogleService-Info.plist is copied into the bundle per environment by the "Copy Firebase Config" build phase.
         FirebaseApp.configure()
+        // APP_ENV comes from the active xcconfig through Info.plist (dev | prod). Starts telemetry switch + Koin.
+        let env = Bundle.main.object(forInfoDictionaryKey: "APP_ENV") as? String ?? "prod"
+        AppStartupKt.startApp(environmentName: env)
         return true
     }
 }

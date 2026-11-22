@@ -27,6 +27,7 @@ kotlin {
 dependencies {
     implementation(project(":shared"))
     implementation(project(":firebaseData"))
+    implementation(libs.koin.android)
 
     implementation(libs.androidx.activity.compose)
 
@@ -55,12 +56,14 @@ android {
             versionNameSuffix = "-dev"
             resValue("string", "app_name", "Fart Map Dev")
             buildConfigField("String", "APP_ENV", "\"dev\"")
+            manifestPlaceholders["telemetryEnabled"] = "false"
             buildConfigField("String", "MAPS_API_KEY", "\"${secret("MAPS_API_KEY_DEV")}\"")
         }
         create("prod") {
             dimension = "env"
             resValue("string", "app_name", "Fart Map")
             buildConfigField("String", "APP_ENV", "\"prod\"")
+            manifestPlaceholders["telemetryEnabled"] = "true"
             buildConfigField("String", "MAPS_API_KEY", "\"${secret("MAPS_API_KEY_PROD")}\"")
         }
     }

@@ -1,6 +1,7 @@
 package com.ahmetbozkan.fartmap.feature.example.presentation
 
 import androidx.lifecycle.viewModelScope
+import com.ahmetbozkan.fartmap.core.observability.toAppError
 import com.ahmetbozkan.fartmap.core.presentation.StateViewModel
 import com.ahmetbozkan.fartmap.feature.example.domain.ExampleRepository
 import kotlinx.coroutines.flow.catch
@@ -42,4 +43,4 @@ class ExampleViewModel(
         }
     }
 }
-// `toAppError()` lives in core/observability and maps throwables to typed AppError (it rethrows CancellationException).
+// `toAppError()` (core/observability) maps throwables to typed AppError (it rethrows CancellationException).

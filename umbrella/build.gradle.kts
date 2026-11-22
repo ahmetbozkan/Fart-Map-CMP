@@ -21,6 +21,7 @@ kotlin {
         iosMain.dependencies {
             implementation(project(":shared"))
             implementation(project(":firebaseData"))
+            implementation(libs.koin.core)
             implementation(libs.compose.runtime)
             implementation(libs.compose.ui)
         }

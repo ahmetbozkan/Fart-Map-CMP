@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Product voice: humor first (planning/product/Product.md principle 2). -->
+    <string name="splash_loading">Warming up the wind tunnel…</string>
+
+    <string name="auth_title">Fart Map</string>
+    <string name="auth_tagline">Leave your mark on the world. Literally.</string>
+    <string name="auth_google">Continue with Google</string>
+    <string name="auth_apple">Continue with Apple</string>
+    <string name="auth_coming_soon">Coming soon. It's still brewing.</string>
+    <string name="auth_guest">Continue without account</string>
+
+    <string name="tab_map">Map</string>
+    <string name="tab_social">Social</string>
+    <string name="tab_rank">Rank</string>
+    <string name="tab_profile">Profile</string>
+
+    <string name="placeholder_map_title">The map is warming up</string>
+    <string name="placeholder_map_body">Something is brewing out there. Markers land here soon.</string>
+    <string name="placeholder_social_title">Your squad is still in the bathroom</string>
+    <string name="placeholder_social_body">Friends, follows and reactions are on their way.</string>
+    <string name="placeholder_rank_title">The leaderboard is taking a deep breath</string>
+    <string name="placeholder_rank_body">Rankings arrive once there is something worth ranking.</string>
+    <string name="placeholder_profile_title">Your legend starts here</string>
+    <string name="placeholder_profile_body">One brave log and this page becomes all about you.</string>
+
+    <string name="state_loading">Loading</string>
+    <string name="state_retry">Try again</string>
+    <string name="error_network">You're offline. The wind can't carry this one.</string>
+    <string name="error_timeout">That took too long. Even for us.</string>
+    <string name="error_permission">Not allowed. Rules are rules.</string>
+    <string name="error_validation">Something in there doesn't add up.</string>
+    <string name="error_conflict">Someone beat you to it.</string>
+    <string name="error_auth_expired">Your session went stale. Sign in again.</string>
+    <string name="error_unknown">Something went sideways. Try again?</string>
+</resources>

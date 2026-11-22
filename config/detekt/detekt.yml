@@ -73,6 +73,10 @@ formatting:
 Compose:
   ComposableAnnotationNaming:
     active: true
+  CompositionLocalAllowlist:
+    active: true
+    # Theme extension tokens only; anything else is passed explicitly.
+    allowedCompositionLocals: LocalSemanticColors
   ModifierMissing:
     active: true
   ModifierNaming:
