@@ -72,3 +72,7 @@ kotlin {
 dependencies {
     androidRuntimeClasspath(libs.compose.uiTooling)
 }
+// Generated resource accessors live under the app package (Res.string.*, Res.drawable.*).
+compose.resources {
+    packageOfResClass = "com.ahmetbozkan.fartmap.resources"
+}
