@@ -46,16 +46,18 @@ service cloud.firestore {
       return !(field in incoming()) || incoming()[field] == null || isText(incoming()[field], 0, maxSize);
     }
 
-    function doc(path) {
-      return /databases/$(database)/documents/$(path);
+    // Each path segment is interpolated on its own: $(x) with a '/' inside would become one segment.
+    function fartPath(fartId) {
+      return /databases/$(database)/documents/farts/$(fartId);
     }
 
     function blockedEitherWay(a, b) {
-      return exists(doc('blocks/' + a + '_' + b)) || exists(doc('blocks/' + b + '_' + a));
+      return exists(/databases/$(database)/documents/blocks/$(a + '_' + b))
+        || exists(/databases/$(database)/documents/blocks/$(b + '_' + a));
     }
 
     function approvedFollower(follower, author) {
-      let rel = doc('follow_relationships/' + follower + '_' + author);
+      let rel = /databases/$(database)/documents/follow_relationships/$(follower + '_' + author);
       return exists(rel) && get(rel).data.status == 'APPROVED';
     }
 
@@ -63,8 +65,8 @@ service cloud.firestore {
     // and free, or granted in their entitlements (ADR-0016). The rewarded-token path is added with EPIC-01-06
     // (ADR-0017). Fails closed: unknown items, wrong types and missing entitlements are denied.
     function cosmeticAllowed(itemId, type) {
-      let item = doc('cosmetic_items/' + itemId);
-      let entitlements = doc('user_entitlements/' + uid());
+      let item = /databases/$(database)/documents/cosmetic_items/$(itemId);
+      let entitlements = /databases/$(database)/documents/user_entitlements/$(uid());
       return itemId is string
         && exists(item)
         && get(item).data.type == type
@@ -211,11 +213,11 @@ service cloud.firestore {
       // Precise coordinates: author only (ADR-0019). getAfter() so the batch that creates the fart can write it.
       match /private/{docId} {
         allow read: if signedIn() && docId == 'location'
-          && get(doc('farts/' + fartId)).data.author_user_id == uid();
+          && get(fartPath(fartId)).data.author_user_id == uid();
         // Frozen once the fart is removed; purging it on removal is server work (projection function, EPIC-01-04).
         allow create, update: if signedIn() && docId == 'location'
-          && getAfter(doc('farts/' + fartId)).data.author_user_id == uid()
-          && getAfter(doc('farts/' + fartId)).data.is_removed == false
+          && getAfter(fartPath(fartId)).data.author_user_id == uid()
+          && getAfter(fartPath(fartId)).data.is_removed == false
           && hasExactly(['lat', 'lng', 'updated_at'], [])
           && incoming().lat is number && incoming().lat >= -90 && incoming().lat <= 90
           && incoming().lng is number && incoming().lng >= -180 && incoming().lng <= 180
@@ -233,11 +235,11 @@ service cloud.firestore {
             && isNow('created_at');
         }
 
-        allow read: if canReadFart(get(doc('farts/' + fartId)).data);
+        allow read: if canReadFart(get(fartPath(fartId)).data);
         // No reacting across a block in either direction (a blocked user can't reach the blocker's counters).
         allow create, update: if isUser(userId) && validReaction()
-          && canReadFart(get(doc('farts/' + fartId)).data)
-          && !blockedEitherWay(uid(), get(doc('farts/' + fartId)).data.author_user_id);
+          && canReadFart(get(fartPath(fartId)).data)
+          && !blockedEitherWay(uid(), get(fartPath(fartId)).data.author_user_id);
         allow delete: if isUser(userId);
       }
     }
