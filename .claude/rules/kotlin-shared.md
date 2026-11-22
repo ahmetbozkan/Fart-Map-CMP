@@ -28,7 +28,7 @@ Source: `planning/architecture/Architecture.md`. These are enforced by Konsist a
 - The UI renders State and dispatches Actions. No business logic in composables. ViewModels never touch Firebase or DAOs.
 
 ## Errors
-- Repository writes return `Result<T>` with a typed `AppError`. Reads expose `Flow`s of domain types.
+- Repository writes return `AppResult<T>` with a typed `AppError`. Reads expose `Flow`s of domain types.
 - A `catch` must map to State/Event or log a structured event through the logger. Never `printStackTrace`, an empty catch, or catch-and-ignore. Catch `CancellationException` separately and rethrow it.
 - Fail closed on auth, permissions and entitlement uncertainty.
 

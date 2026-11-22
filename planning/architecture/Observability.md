@@ -54,7 +54,7 @@ Use shared typed errors (for example sealed error hierarchy) with stable categor
 - `AuthExpired`,
 - `Unknown`.
 
-Repositories and use cases return typed outcomes (`Result<T>` or equivalent), not raw exception propagation.
+Repositories and use cases return typed outcomes (`AppResult<T>`, `core/observability`), not raw exception propagation.
 
 ### ViewModel contract
 

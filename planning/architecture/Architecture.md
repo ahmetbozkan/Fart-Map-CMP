@@ -90,7 +90,7 @@ core/observability            Result/AppError, logger, analytics event contracts
 | Local persistence | Firestore offline persistence behind repository interfaces (ADR-0022, `LocalData.md`); preferences and drafts in DataStore. Room only for a dataset that hits a trigger in `LocalData.md` §8, via a new ADR |
 | Runtime config | Firebase Remote Config behind a `RemoteConfig` contract in `core/platform`, every key with a safe in-app default (ADR-0024); values the server enforces (e.g. the rewarded-ad cap) are read by functions from the same source, never trusted from the client |
 | Remote | GitLive Firebase, called only from `firebaseData` (ADR-0002, ADR-0021) |
-| Errors | Repositories return `Result<T>` with a typed `AppError`; nothing is swallowed (§6) |
+| Errors | Repositories return `AppResult<T>` (`Success` / `Failure(AppError)`, `core/observability`) with a typed `AppError`; nothing is swallowed (§6) |
 | Backend compute | Cloud Functions (ADR-0015). Clients never compute counters, ranks, entitlements or unlocks |
 | Purchases | RevenueCat behind `PurchasesClient`. Entitlements are mirrored server-side to `user_entitlements/{uid}` (ADR-0016) |
 | Rewarded ads | AdMob behind `RewardedAdProvider`; the server-side-verification callback issues a single-use token (ADR-0017) |
@@ -103,7 +103,7 @@ core/observability            Result/AppError, logger, analytics event contracts
 
 ## 6) Error handling
 
-- Every failure path is a typed outcome (`Result`, sealed errors).
+- Every failure path is a typed outcome (`AppResult`, sealed errors).
 - A `catch` either produces a State or Event the UI can render, or emits a structured observability event (`Observability.md`).
 - Never use `printStackTrace()`, an empty catch, or a log-and-continue that changes no state.
 - Any unexpected error has a visible answer to "what does the user see?"
@@ -146,7 +146,7 @@ core/observability            Result/AppError, logger, analytics event contracts
 1. **Log a fart.** Screen Action → ViewModel validates → repository `addFart(fart)`. One batch (public doc with fuzzed coordinates + `farts/{id}/private/location` with the precise ones, ADR-0019) is launched in app scope; the cache shows the marker at once (`hasPendingWrites`) and Firestore delivers it when online.
 2. **Map.** ViewModel observes `observeMapFarts(viewport, filter)`: a snapshot listener on geohash ranges that emits from cache first, then server deltas (including removals).
 3. **Profile.** Cached profile renders first and remote refreshes it. Show an error only when there is no cache.
-4. **Error.** `Result.Failure(AppError)` → State error plus an observability event.
+4. **Error.** `AppResult.Failure(AppError)` → State error plus an observability event.
 
 ## 9) Multiplatform rules
 
