@@ -9,10 +9,11 @@ sealed interface AnalyticsEvent {
     val name: String
     val params: Map<String, Any>
 
-    /** Cold or warm start with an active session. `is_first_open` arrives with DataStore in STORY-01-01-03. */
-    data class AppOpen(val sessionKind: SessionKind) : AnalyticsEvent {
+    /** Start with an active session; [isFirstOpen] is true only for the first one after install. */
+    data class AppOpen(val sessionKind: SessionKind, val isFirstOpen: Boolean) : AnalyticsEvent {
         override val name = "app_open"
-        override val params: Map<String, Any> get() = mapOf("session_kind" to sessionKind.wireName)
+        override val params: Map<String, Any>
+            get() = mapOf("session_kind" to sessionKind.wireName, "is_first_open" to isFirstOpen)
     }
 
     enum class SessionKind(val wireName: String) { ANONYMOUS("anonymous"), LINKED("linked") }

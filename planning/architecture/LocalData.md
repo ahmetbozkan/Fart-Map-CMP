@@ -12,7 +12,8 @@
 
 ## 2) Cache configuration
 
-- Persistence is enabled with a cache size of **at least 200 MB** via GitLive `firestoreSettings` (or unlimited if measurement shows eviction of the user's own content). It is set once, at startup, before the first Firestore call.
+- Persistence is enabled with a cache size of **at least 200 MB** via GitLive `firestoreSettings` (or unlimited if measurement shows eviction of the user's own content). It is set once, at startup, before the first Firestore call: `FirestoreSetup.configure()` in `firebaseData`, called by `FartMapApplication` and umbrella `startApp`.
+- **Repositories never hold a `FirebaseFirestore`.** They take `FirestoreProvider` and call `get()` per use: GitLive's `Firebase.firestore` returns the platform's current instance, and after `terminate()` (§7) that is a new instance.
 - **Reads come from snapshot listeners** (`snapshots`). They emit from cache first, then from the server. A one-shot read uses the default source; `Source.CACHE` is used only for explicit offline-only paths.
 - **No full-collection listeners.** The map listens to geohash-prefix range queries for the viewport (public geohash field in `DataContracts.md` §3.2; composite indexes in `backend/firestore.indexes.json`). The profile listens by `owner_id`.
 
@@ -21,7 +22,7 @@
 1. **Generate the document id on the client** (`collection.document`, a random id). Retries and re-delivery stay idempotent. Reactions and follows use the deterministic composite ids from `DataContracts.md`.
 2. **One batch per user action.** For a fart, the batch holds the public doc with fuzzed geohash-6 coordinates plus `farts/{id}/private/location` with the precise coordinates (ADR-0019).
 3. **Launch the commit in the app-scoped `AppWriteScope`, never awaited on the UI path.** GitLive `set()`/`commit()` suspend until the server acknowledges, so awaiting them offline would hang. The repository returns `AppResult.Success` once the write is handed off. The cache then shows the doc immediately with `metadata.hasPendingWrites = true`.
-4. **`PendingWriteMonitor`** observes every launched write:
+4. **`PendingWriteMonitor`** observes every launched write (contracts in `core/domain/write`; `DefaultAppWriteScope` in `shared` implements both, with the Firestore error mapping from `firebaseData`):
    - **acknowledged:** emit a `write_acked` latency bucket;
    - **rejected** (permission denied, invalid argument): emit a typed `WriteRejected(op, AppError)` event that ViewModels and the UI can surface ("We couldn't post that"), plus a structured log. Never retry a rejection.
    - Transient failures are retried by the Firestore SDK itself.
@@ -37,6 +38,7 @@
 
 | Key | Default / notes |
 |---|---|
+| `first_open_done` | Device-scoped; gives `is_first_open` on `app_open` (Observability.md §11) |
 | `last_visibility_mode` | Unset → the Phase 1 default **PUBLIC** for the 18+ age band (ADR-0023); the 13–17 band never defaults to PUBLIC and uses FOLLOWERS until the owner sets minor defaults (`Scope.md` §7a). Once the user picks a value, the last-used value wins |
 | `log_draft` | Serialized Log Fart draft; survives process death; cleared on successful hand-off (CREATE-03 `DRAFT`) |
 | `play_marker_sounds_enabled` | true |
@@ -59,7 +61,13 @@ Never store secrets, auth tokens or precise coordinates of other users in DataSt
 ## 7) Privacy, session and retention
 
 - **Precise coordinates:** the user's own come from `private/location`, which only the owner can read (rules). Other users' farts carry fuzzed coordinates only.
-- **Sign-out and account switch:** `terminate()` → `clearPersistence()` → re-initialize. Clear the user-scoped DataStore keys (draft, nudges, offers). Pending unsynced writes from the old account are dropped. On sign-out of an anonymous account, warn the user first (ADR-0018).
+- **Sign-out and account switch:** the `SignOut` use case:
+  1. `SessionRepository.signOut()`; if it fails, nothing is wiped (the user is still signed in);
+  2. `AppWriteScope.cancelPending()`, so the old account's writes neither race the wipe nor surface as the next user's rejections;
+  3. `LocalDataReset`: `terminate()` → `clearPersistence()` → `FirestoreSetup.configure()` (settings are re-applied even after a failed wipe);
+  4. clears the user-scoped DataStore keys (draft, nudges, offers, last visibility), always, even if the wipe failed. Device-scoped keys (`first_open_done`) are kept.
+
+  **Rule for features:** Firestore listeners are scoped to the active session and stop when it leaves `Active`, so nothing touches Firestore during the reset. A failed wipe is returned as a typed failure for the caller (Settings, EPIC-01-07) to surface; there is no automatic retry yet. Pending unsynced writes from the old account are dropped. On sign-out of an anonymous account, warn the user first (ADR-0018).
 - **Server-side changes:** content that loses visibility (block, unfollow, moderation hide, delete) disappears from listeners automatically. The server is authoritative and no tombstones are needed.
 - **Entitlements and unlock tokens:** the listener mirrors of `user_entitlements/{uid}` and `rewarded_unlocks/{uid}/tokens`. They are read-only for the client and cleared with persistence on sign-out.
 

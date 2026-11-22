@@ -4,6 +4,7 @@ import com.ahmetbozkan.fartmap.core.observability.AnalyticsEvent
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsTracker
 import com.ahmetbozkan.fartmap.core.observability.LogRecord
 import com.ahmetbozkan.fartmap.core.observability.LogSink
+import com.ahmetbozkan.fartmap.core.observability.Logger
 import com.ahmetbozkan.fartmap.core.observability.Severity
 import com.ahmetbozkan.fartmap.core.observability.format
 import com.ahmetbozkan.fartmap.core.platform.AppEnvironment
@@ -50,6 +51,13 @@ internal class CrashlyticsLogSink(private val crashlytics: FirebaseCrashlytics) 
 /** Stand-in throwable for an ERROR record that had no exception, so Crashlytics still groups it by event name. */
 internal class LoggedError(eventName: String) : Exception(eventName)
 
-internal class FirebaseAnalyticsTracker(private val analytics: FirebaseAnalytics) : AnalyticsTracker {
-    override fun track(event: AnalyticsEvent) = analytics.logEvent(event.name, event.params)
+/** Sends events to Firebase Analytics and mirrors them as DEBUG logs (visible in the dev console, not in prod). */
+internal class FirebaseAnalyticsTracker(
+    private val analytics: FirebaseAnalytics,
+    private val logger: Logger,
+) : AnalyticsTracker {
+    override fun track(event: AnalyticsEvent) {
+        analytics.logEvent(event.name, event.params)
+        logger.debug("analytics", "track", event.name, event.params.mapValues { it.value.toString() })
+    }
 }

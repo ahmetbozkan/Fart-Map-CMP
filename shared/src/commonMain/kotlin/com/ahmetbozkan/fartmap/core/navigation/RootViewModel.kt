@@ -1,6 +1,7 @@
 package com.ahmetbozkan.fartmap.core.navigation
 
 import androidx.lifecycle.viewModelScope
+import com.ahmetbozkan.fartmap.core.domain.preferences.PreferencesRepository
 import com.ahmetbozkan.fartmap.core.domain.session.SessionRepository
 import com.ahmetbozkan.fartmap.core.domain.session.SessionState
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsEvent
@@ -21,6 +22,7 @@ sealed interface RootEvent
 class RootViewModel(
     private val sessions: SessionRepository,
     private val analytics: AnalyticsTracker,
+    private val preferences: PreferencesRepository,
 ) : StateViewModel<RootState, RootAction, RootEvent>(RootState()) {
 
     private var appOpenLogged = false
@@ -31,7 +33,8 @@ class RootViewModel(
                 setState { copy(session = session) }
                 if (session is SessionState.Active && !appOpenLogged) {
                     appOpenLogged = true
-                    analytics.track(AnalyticsEvent.AppOpen(session.kind.toAnalytics()))
+                    val isFirstOpen = preferences.consumeFirstOpen()
+                    analytics.track(AnalyticsEvent.AppOpen(session.kind.toAnalytics(), isFirstOpen))
                 }
             }
         }
