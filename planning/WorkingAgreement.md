@@ -33,13 +33,13 @@ The same loop without the owner's approvals. One fresh headless session per stor
 | Plan | Owner approves plan mode | `## Plan` in the story, reviewed by the `plan-reviewer` agent (up to 2 revisions) |
 | PR review | Owner reads the PR | `code-reviewer` (+ `security-reviewer` when relevant) posts findings on the PR; the agent fixes them (up to 2 more rounds) |
 | CI | Owner checks | Agent watches `gh pr checks`, fixes failures through the retry ladder (§6) |
-| Merge | Owner merges | `gh pr ready`, then `gh pr merge <n> --auto --squash`; GitHub merges once the required checks pass |
+| Merge | Owner merges | `gh pr ready`, then `gh pr merge <n> --squash --match-head-commit <sha>`; the guard hook lets it through only if GitHub reports every required check green on that exact sha |
 
-The story is set to `Done` and STATE updated inside the PR, since it merges only on green CI. By default the driver stops at each epic boundary (`--cross-epics` lets the agent split and start the next epic) and auto-merges every PR that passes review and CI (`--hold-sensitive` holds PRs touching rules, functions, entitlements or location for the owner). Setup: `.claude/README.md` "Autopilot".
+The story is set to `Done` and STATE updated inside the PR, since it merges only on green CI. By default the driver stops at each epic boundary (`--cross-epics` lets the agent split and start the next epic) and merges every PR that passes review and CI (`--hold-sensitive` holds PRs touching rules, functions, entitlements or location for the owner). Setup: `.claude/README.md` "Autopilot".
 
 ## 3) States
 
-`Todo` → `In progress` → `Review` (draft PR open, CI running) → `Done` (merged, CI green: by the owner, or by GitHub auto-merge under autopilot). `Blocked` carries a one-line reason and who unblocks it. No other states.
+`Todo` → `In progress` → `Review` (draft PR open, CI running) → `Done` (merged, CI green: by the owner, or by the agent under autopilot). `Blocked` carries a one-line reason and who unblocks it. No other states.
 
 ## 4) Story file (`planning/stories/STORY-PP-EE-SS.md`)
 
@@ -97,5 +97,5 @@ When docs leave room for interpretation, choose the option that is safer for pri
 - Plan or ship pay-to-win, paywalls on core actions, passive ads, or weaker privacy defaults.
 - Turn the map-first product into a feed-first one.
 - Delete passing tests or skip hooks.
-- Merge any way other than GitHub auto-merge on green checks: no `--admin`, no API merges, no changes to branch protection or repository settings.
+- Merge any way other than the hook-checked squash merge on green checks: no `--admin`, no `--auto`, no API merges, no changes to branch protection or repository settings.
 - Treat PoC code as precedent. Classify each pattern you borrow as Preserve, Evolve or Reject.

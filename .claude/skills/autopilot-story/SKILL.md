@@ -1,6 +1,6 @@
 ---
 name: autopilot-story
-description: Unattended version of implement-story. Takes one story from planning to a merged PR with no owner approvals, using automatic checks in their place (plan-reviewer, code/security review on the PR, CI, GitHub auto-merge). Escalates through a GitHub issue only when it must. Run by scripts/autopilot.sh in a headless session; use only when the owner types /autopilot-story.
+description: Unattended version of implement-story. Takes one story from planning to a merged PR with no owner approvals, using automatic checks in their place (plan-reviewer, code/security review on the PR, CI, a hook-checked squash merge). Escalates through a GitHub issue only when it must. Run by scripts/autopilot.sh in a headless session; use only when the owner types /autopilot-story.
 disable-model-invocation: true
 argument-hint: "[next | STORY-PP-EE-SS] [--cross-epics] [--hold-sensitive]"
 ---
@@ -11,7 +11,7 @@ You run headless (`claude -p`), launched by `scripts/autopilot.sh`. **Nobody is 
 
 Arguments: `next` (default) or a story id. `--cross-epics`: you may open the next epic when the active one is finished (default: stop at the epic boundary). `--hold-sensitive`: don't merge a PR whose diff touches security-sensitive paths (§7).
 
-Everything in `CLAUDE.md` and `planning/WorkingAgreement.md` still holds, except that the owner's approvals are replaced by the checks below. Hooks still block secrets, pushes to `main`, force-pushes and any merge other than `gh pr merge <n> --auto --squash`.
+Everything in `CLAUDE.md` and `planning/WorkingAgreement.md` still holds, except that the owner's approvals are replaced by the checks below. Hooks still block secrets, pushes to `main`, force-pushes and any merge other than the hook-checked form in §7.
 
 ## 0. Resume before starting anything new
 
@@ -54,7 +54,7 @@ Do **not** use plan mode: nobody can approve it.
 
 ## 5. Record and open the PR
 
-1. Tick the story tasks, fill `## Evidence`, set the story to `Done`, tick it in `ROADMAP.md`, and update `planning/STATE.md` (Now / Next) as if the PR were merged. Auto-merge only happens on green CI, so "merged" and "Done" are the same event and no follow-up commit is needed. If the PR ends up not merging, you set these back before escalating.
+1. Tick the story tasks, fill `## Evidence`, set the story to `Done`, tick it in `ROADMAP.md`, and update `planning/STATE.md` (Now / Next) as if the PR were merged. The guard only lets the merge through on green CI, so "merged" and "Done" are the same event and no follow-up commit is needed. If the PR ends up not merging, you set these back before escalating.
 2. Commit, push, `gh pr create --draft` with the body from `.github/pull_request_template.md`: summary, story link, DoD checklist, "Decisions made by the agent" (copied from the story), "iOS verified by CI" on Windows, and "Not verified".
 3. Add the PR link to the story's Evidence and push.
 
@@ -72,8 +72,8 @@ Do **not** use plan mode: nobody can approve it.
 3. **`main` moved and the PR conflicts** → `git fetch origin && git merge origin/main`, resolve, verify, push (never rebase a pushed branch, never force-push).
 4. **All checks green:**
    - With `--hold-sensitive`, if `gh pr diff <pr> --name-only` touches `backend/firestore.rules`, `backend/storage.rules`, `backend/functions/`, anything with `entitlement`, `unlock`, `purchase` or `location` in its path: run `gh pr ready <pr>`, then escalate with "ready for your review, not merged" (§8) instead of merging.
-   - Otherwise: `gh pr ready <pr>`, then `gh pr merge <pr> --auto --squash`. GitHub merges once the required checks pass. Never pass `--admin`, never merge any other way.
-5. Wait for the merge: `gh pr view <pr> --json state,mergedAt,mergeCommit`, re-checking every few minutes (a short `sleep 60` between checks is fine) for up to 30 minutes. If it doesn't merge, find out why (`gh pr view <pr> --json mergeStateStatus,statusCheckRollup`); a fixable cause goes through §8, anything else is an escalation.
+   - Otherwise: `gh pr ready <pr>`, then read the head with `gh pr view <pr> --json headRefOid --jq .headRefOid` and merge with `gh pr merge <pr> --squash --match-head-commit <sha> --delete-branch`. The guard hook asks GitHub itself and refuses the merge unless the PR is open, not a draft, mergeable, its head is that sha and all four required checks passed on it; gh refuses too if the head moved. Never pass `--admin` or `--auto`, never merge any other way.
+5. If the guard refuses, its message says why. Checks still running or mergeability not computed yet: wait (`sleep 60`) and retry. Anything else (a red check, conflicts, a moved head): fix it through §8, wait for CI on the new head, and retry with the new sha. Confirm with `gh pr view <pr> --json state,mergeCommit` that the state is `MERGED`.
 6. After the merge: `git switch main && git pull --ff-only`, then write status `merged` (§9).
 
 ## 8. Retry ladder and escalation
