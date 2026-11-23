@@ -2,6 +2,7 @@ package com.ahmetbozkan.fartmap.core.domain.preferences
 
 import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
 import com.ahmetbozkan.fartmap.core.observability.AppResult
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Local preferences (DataStore, LocalData.md §5). Keys are added by the feature that first needs them.
@@ -19,4 +20,9 @@ interface PreferencesRepository {
 
     /** Removes everything tied to the signed-in user (sign-out, account switch). */
     suspend fun clearUserScoped(): AppResult<Unit>
+
+    /** True once an under-13 birth year was declared on this install (device-scoped, survives sign-out). */
+    val ageGateBlocked: Flow<Boolean>
+
+    suspend fun blockAgeGate(): AppResult<Unit>
 }

@@ -8,12 +8,13 @@
 - Backend deploys to `fart-map-dev` from CI on every merge to `main` (first green run 2026-11-22: rules, indexes, `health`, `onFartCreated`, `europe-west1`).
 - STORY-01-01-02 Done (PR #6 merged as `ceb2c71`): Koin, typed navigation shell, theme tokens, observability base, `StateViewModel`.
 - STORY-01-01-03 Done (PR #7 merged as `30aa4fa`): Firestore cache, write path, preferences, sign-out wipe, Remote Config contract.
-- STORY-01-01-04 (Firestore rules for Phase 1, ADR-0025 user doc split, `runOnce` fix) in Review: draft PR #8 from `08-backend-rules`; emulator suites run in CI.
+- STORY-01-01-04 Done (PR #8 merged as `fb275fd`; dev deploy green: rules, indexes + `function_runs` TTL, functions). **EPIC-01-01 complete.**
+- EPIC-01-02: STORY-01-02-01 (anonymous session + 13+ age gate) in Review: draft PR from `09-anonymous-session`; verified on the Android emulator against `fart-map-dev`.
 
 ## Next
-1. Owner reviews and merges PR #8 (STORY-01-01-04); the dev deploy then publishes the rules and the `function_runs` TTL policy.
+1. Owner reviews and merges the STORY-01-02-01 PR. Before release: set up Authentication + Anonymous on `fart-map-1a558` too.
 2. On the Mac, run `FartMap Dev` once to confirm the STORY-01-01-02/03 shell on iOS.
-3. EPIC-01-02 (session and identity) replaces the in-memory session stub.
+3. STORY-01-02-02 to -05 (profile + starter catalog seed, Google/Apple, linking, App Check), then EPIC-01-03 (map).
 
 ## Pending owner decisions
 - Further minor-safe defaults for the 13–17 band (PUBLIC is already blocked for them) and the other Phase 1 launch items in `planning/product/Scope.md` §7a.

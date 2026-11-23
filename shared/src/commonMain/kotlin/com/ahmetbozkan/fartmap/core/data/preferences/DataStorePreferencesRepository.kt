@@ -14,7 +14,10 @@ import com.ahmetbozkan.fartmap.core.observability.AppError
 import com.ahmetbozkan.fartmap.core.observability.AppResult
 import com.ahmetbozkan.fartmap.core.observability.Logger
 import com.ahmetbozkan.fartmap.core.observability.toAppError
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import okio.FileSystem
 import okio.IOException
 import okio.Path.Companion.toPath
@@ -49,6 +52,20 @@ class DataStorePreferencesRepository(
         store.edit { prefs -> USER_SCOPED_KEYS.forEach { prefs.remove(it) } }
     }
 
+    // A storage error reads as "not blocked": the age gate still runs for every new session, while a false "blocked"
+    // would lock every user out on a disk error.
+    override val ageGateBlocked: Flow<Boolean> = store.data
+        .map { it[AGE_GATE_BLOCKED] == true }
+        .catch { failure ->
+            if (failure !is IOException) throw failure
+            logFailure("read_age_gate", failure)
+            emit(false)
+        }
+
+    override suspend fun blockAgeGate(): AppResult<Unit> = write("block_age_gate") {
+        store.edit { it[AGE_GATE_BLOCKED] = true }
+    }
+
     private suspend fun write(operation: String, block: suspend () -> Unit): AppResult<Unit> = try {
         block()
         AppResult.Success(Unit)
@@ -81,6 +98,7 @@ class DataStorePreferencesRepository(
 
         // Device-scoped: survives sign-out.
         private val FIRST_OPEN_DONE = booleanPreferencesKey("first_open_done")
+        private val AGE_GATE_BLOCKED = booleanPreferencesKey("age_gate_blocked")
 
         // User-scoped: wiped on sign-out. Every new user key must be added to USER_SCOPED_KEYS.
         private val LAST_VISIBILITY_MODE = stringPreferencesKey("last_visibility_mode")

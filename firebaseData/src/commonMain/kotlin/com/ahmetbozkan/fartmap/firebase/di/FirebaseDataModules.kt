@@ -1,12 +1,16 @@
 package com.ahmetbozkan.fartmap.firebase.di
 
 import com.ahmetbozkan.fartmap.core.data.write.WriteErrorMapper
+import com.ahmetbozkan.fartmap.core.domain.session.AccountRepository
+import com.ahmetbozkan.fartmap.core.domain.session.AuthGateway
 import com.ahmetbozkan.fartmap.core.domain.session.LocalDataReset
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsTracker
 import com.ahmetbozkan.fartmap.core.observability.LogSink
 import com.ahmetbozkan.fartmap.firebase.firestore.FirestoreLocalDataReset
 import com.ahmetbozkan.fartmap.firebase.firestore.FirestoreProvider
 import com.ahmetbozkan.fartmap.firebase.firestore.FirestoreWriteErrorMapper
+import com.ahmetbozkan.fartmap.firebase.session.FirebaseAuthGateway
+import com.ahmetbozkan.fartmap.firebase.session.FirestoreAccountRepository
 import com.ahmetbozkan.fartmap.firebase.telemetry.CrashlyticsLogSink
 import com.ahmetbozkan.fartmap.firebase.telemetry.FirebaseAnalyticsTracker
 import dev.gitlive.firebase.Firebase
@@ -18,7 +22,12 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 
 /** Firebase implementations of the `shared` contracts (ADR-0021). Composed at startup next to `sharedModules`. */
-fun firebaseDataModules(): List<Module> = listOf(telemetryModule, firestoreModule)
+fun firebaseDataModules(): List<Module> = listOf(telemetryModule, firestoreModule, sessionModule)
+
+private val sessionModule = module {
+    single<AuthGateway> { FirebaseAuthGateway(get()) }
+    single<AccountRepository> { FirestoreAccountRepository(get(), get(), get()) }
+}
 
 private val telemetryModule = module {
     single(named("crashlytics")) { CrashlyticsLogSink(Firebase.crashlytics) } bind LogSink::class

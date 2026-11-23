@@ -91,17 +91,29 @@ class Logger(
 private fun systemNowMillis(): Long = Clock.System.now().toEpochMilliseconds()
 
 /** Development sink: one line per record on stdout (logcat / Xcode console). */
-class ConsoleLogSink(private val minSeverity: Severity = Severity.DEBUG) : LogSink {
+/**
+ * Console sink (logcat / Xcode console). [showThrowableMessage] adds the redacted exception message for debugging;
+ * it is on for dev builds only, so prod consoles and crash breadcrumbs carry the exception type alone.
+ */
+class ConsoleLogSink(
+    private val minSeverity: Severity = Severity.DEBUG,
+    private val showThrowableMessage: Boolean = false,
+) : LogSink {
     override fun emit(record: LogRecord) {
         if (record.severity < minSeverity) return
-        println(record.format())
+        println(record.format(showThrowableMessage))
     }
 }
 
-fun LogRecord.format(): String = buildString {
+fun LogRecord.format(includeThrowableMessage: Boolean = false): String = buildString {
     append(severity.name).append(' ').append(feature).append('/').append(operation).append(' ').append(eventName)
     errorCategory?.let { append(" error=").append(it) }
     correlationId?.let { append(" id=").append(it) }
     attributes.forEach { (k, v) -> append(' ').append(k).append('=').append(v) }
-    throwable?.let { append(" throwable=").append(it::class.simpleName) }
+    // The throwable is already a RedactedThrowable whose message reads "OriginalType: redacted message".
+    throwable?.let {
+        append(
+            " throwable="
+        ).append(if (includeThrowableMessage) it.message ?: it::class.simpleName else it::class.simpleName)
+    }
 }

@@ -39,11 +39,16 @@
 - [x] STORY-01-01-01: Project bootstrap and build pipeline (`stories/STORY-01-01-01.md`)
 - [x] STORY-01-01-02 (`stories/STORY-01-01-02.md`): Core packages: Koin modules, typed navigation shell (four tabs + auth entry), theme tokens → `core/design`, observability base (`AppError`, `AppResult`, logger, Crashlytics/Analytics init, event contract), `StateViewModel` base class (makes the `new-feature` skill templates compile)
 - [x] STORY-01-01-03 (`stories/STORY-01-01-03.md`): Local data layer (ADR-0022, `architecture/LocalData.md`): Firestore persistence settings at startup, `AppWriteScope` + `PendingWriteMonitor` (contracts in `shared`, implementation in `firebaseData`), sign-out `clearPersistence()`, DataStore keys from `LocalData.md` §5 including the age-band-aware visibility default, tests from §9. Also adds the `RemoteConfig` contract + GitLive config adapter with safe defaults (ADR-0024), and the `is_first_open` parameter of `app_open` (needs DataStore; deferred from STORY-01-01-02)
-- [ ] STORY-01-01-04 (`stories/STORY-01-01-04.md`, Review): Backend: real rules skeleton per `DataContracts.md` §5 with a rules test per case, CI deploy to `dev`. Also fix `backend/functions/src/lib/idempotency.ts`, which claims the key before running the work (a failure is never retried) and has no TTL on `function_runs`; add tests for `runOnce` and `onFartCreated`. Keep `onFartCreated` out of prod until it does real work
+- [x] STORY-01-01-04 (`stories/STORY-01-01-04.md`): Backend: real rules skeleton per `DataContracts.md` §5 with a rules test per case, CI deploy to `dev`. Also fix `backend/functions/src/lib/idempotency.ts`, which claims the key before running the work (a failure is never retried) and has no TTL on `function_runs`; add tests for `runOnce` and `onFartCreated`. Keep `onFartCreated` out of prod until it does real work
 
 ### Planned epics (instantiate one at a time)
 
 - **EPIC-01-02:** Session and identity: anonymous, Google, Apple, linking, 13+ age band.
+  - [ ] STORY-01-02-01: Anonymous session + 13+ age gate + private account doc (`stories/STORY-01-02-01.md`, Review)
+  - [ ] STORY-01-02-02: Public profile (generated display name, free starter avatar) + dev seed of free starter catalog items
+  - [ ] STORY-01-02-03: Google and Apple sign-in
+  - [ ] STORY-01-02-04: Link anonymous → Google/Apple (same uid, ADR-0018)
+  - [ ] STORY-01-02-05: App Check (Play Integrity / App Attest) + enforcement
 - **EPIC-01-03:** Map and markers on both platforms: filters, fuzzed projection, marker parity.
 - **EPIC-01-04:** Log Fart: quick log + detailed log, drafts, offline (Firestore queue), delete, visibility default per ADR-0023.
 - **EPIC-01-05:** Reactions, detail sheet and safety: report, block, auto-hide at 3.
