@@ -4,6 +4,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
 import com.ahmetbozkan.fartmap.core.observability.Logger
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import okio.FileSystem
 import kotlin.random.Random
@@ -40,6 +41,15 @@ class DataStorePreferencesRepositoryTest {
 
         store.edit { it[stringPreferencesKey("last_visibility_mode")] = "EVERYONE" }
         assertEquals(VisibilityMode.PRIVATE, repo.lastVisibilityMode())
+    }
+
+    @Test
+    fun ageGateBlockIsRememberedAndSurvivesSignOutClearing() = runTest {
+        val repo = DataStorePreferencesRepository(newStore(), logger)
+        assertFalse(repo.ageGateBlocked.first())
+        repo.blockAgeGate()
+        repo.clearUserScoped()
+        assertTrue(repo.ageGateBlocked.first())
     }
 
     @Test

@@ -1,8 +1,9 @@
 package com.ahmetbozkan.fartmap.core.navigation
 
-import com.ahmetbozkan.fartmap.core.data.session.InMemorySessionRepository
 import com.ahmetbozkan.fartmap.core.domain.session.SessionState
+import com.ahmetbozkan.fartmap.core.domain.visibility.AgeBand
 import com.ahmetbozkan.fartmap.core.fakes.FakePreferencesRepository
+import com.ahmetbozkan.fartmap.core.fakes.InMemorySessionRepository
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsEvent
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsEvent.SessionKind.ANONYMOUS
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsTracker
@@ -39,7 +40,7 @@ class RootViewModelTest {
         sessions.signOut()
         sessions.continueAnonymously()
 
-        assertEquals(SessionState.Active(SessionState.Kind.ANONYMOUS), vm.state.value.session)
+        assertEquals(SessionState.Active(SessionState.Kind.ANONYMOUS, AgeBand.ADULT), vm.state.value.session)
         assertEquals(listOf<AnalyticsEvent>(AnalyticsEvent.AppOpen(ANONYMOUS, isFirstOpen = true)), tracked)
         assertEquals(
             mapOf<String, Any>("session_kind" to "anonymous", "is_first_open" to true),

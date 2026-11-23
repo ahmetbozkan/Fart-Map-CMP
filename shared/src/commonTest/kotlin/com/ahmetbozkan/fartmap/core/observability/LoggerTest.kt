@@ -90,8 +90,23 @@ class LoggerTest {
     @Test
     fun opaqueTokensAndSensitiveKeysAreDetected() {
         assertEquals(Redaction.MASK, Redaction.redactValue("x".repeat(40)))
+        assertEquals(
+            "users/[redacted]/private/account",
+            Redaction.redactValue("users/AbCdEfGhIjKlMnOpQrStUvWxYz12/private/account")
+        )
         assertTrue(Redaction.isSensitiveKey("Longitude"))
         assertFalse(Redaction.isSensitiveKey("feature"))
+    }
+
+    @Test
+    fun formatShowsTheThrowableMessageOnlyWhenAsked() {
+        val throwable = RedactedThrowable("FirebaseException: boom", null)
+        val record = LogRecord("e", Severity.ERROR, "f", "o", "unknown", null, 0, emptyMap(), throwable)
+        assertEquals("ERROR f/o e error=unknown throwable=RedactedThrowable", record.format())
+        assertEquals(
+            "ERROR f/o e error=unknown throwable=FirebaseException: boom",
+            record.format(includeThrowableMessage = true)
+        )
     }
 
     @Test

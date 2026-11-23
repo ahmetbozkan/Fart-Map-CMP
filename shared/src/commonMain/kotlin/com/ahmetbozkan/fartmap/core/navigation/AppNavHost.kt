@@ -13,11 +13,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.ahmetbozkan.fartmap.core.design.components.LoadingState
 import com.ahmetbozkan.fartmap.feature.auth.presentation.AuthEntryRoute
+import com.ahmetbozkan.fartmap.feature.onboarding.presentation.AgeBlockedScreen
+import com.ahmetbozkan.fartmap.feature.onboarding.presentation.AgeGateEntry
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * Root graph: Splash → Auth → Main, driven by the session (Architecture.md §7). Each session change that moves the
- * root replaces the whole back stack, so Back never returns to auth after sign-in or into the app after sign-out.
+ * Root graph: Splash → Auth → Age gate → Main (or Age blocked), driven by the session (Architecture.md §7).
+ * Each session change that moves the root replaces the whole back stack, so Back never returns to auth after
+ * sign-in or into the app after sign-out.
  */
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier, viewModel: RootViewModel = koinViewModel()) {
@@ -38,6 +41,8 @@ fun AppNavHost(modifier: Modifier = Modifier, viewModel: RootViewModel = koinVie
     NavHost(navController = navController, startDestination = SplashRoute, modifier = modifier) {
         composable<SplashRoute> { LoadingState() }
         composable<AuthRoute> { AuthEntryRoute() }
+        composable<AgeGateRoute> { AgeGateEntry() }
+        composable<AgeBlockedRoute> { AgeBlockedScreen() }
         composable<MainRoute> { MainShell() }
     }
 }

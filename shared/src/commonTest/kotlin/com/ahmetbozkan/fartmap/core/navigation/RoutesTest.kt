@@ -3,6 +3,7 @@ package com.ahmetbozkan.fartmap.core.navigation
 import com.ahmetbozkan.fartmap.core.domain.session.SessionState
 import com.ahmetbozkan.fartmap.core.domain.session.SessionState.Kind.ANONYMOUS
 import com.ahmetbozkan.fartmap.core.domain.session.SessionState.Kind.LINKED
+import com.ahmetbozkan.fartmap.core.domain.visibility.AgeBand
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -13,18 +14,27 @@ class RoutesTest {
     fun sessionMapsToRootDestination() {
         assertEquals(SplashRoute, SessionState.Loading.rootRoute())
         assertEquals(AuthRoute, SessionState.SignedOut.rootRoute())
-        assertEquals(MainRoute, SessionState.Active(ANONYMOUS).rootRoute())
-        assertEquals(MainRoute, SessionState.Active(LINKED).rootRoute())
+        assertEquals(MainRoute, SessionState.Active(ANONYMOUS, AgeBand.ADULT).rootRoute())
+        assertEquals(MainRoute, SessionState.Active(LINKED, AgeBand.ADULT).rootRoute())
+        assertEquals(AgeGateRoute, SessionState.NeedsAgeBand(ANONYMOUS).rootRoute())
+        assertEquals(AgeBlockedRoute, SessionState.AgeBlocked.rootRoute())
+    }
+
+    @Test
+    fun passingTheAgeGateResetsToMainAndUnder13ResetsToBlocked() {
+        assertEquals(AgeGateRoute, rootNavigationFor(AuthRoute, SessionState.NeedsAgeBand(ANONYMOUS)))
+        assertEquals(MainRoute, rootNavigationFor(AgeGateRoute, SessionState.Active(ANONYMOUS, AgeBand.ADULT)))
+        assertEquals(AgeBlockedRoute, rootNavigationFor(AgeGateRoute, SessionState.AgeBlocked))
     }
 
     @Test
     fun finishingAuthResetsToMain() {
-        assertEquals(MainRoute, rootNavigationFor(AuthRoute, SessionState.Active(ANONYMOUS)))
+        assertEquals(MainRoute, rootNavigationFor(AuthRoute, SessionState.Active(ANONYMOUS, AgeBand.ADULT)))
     }
 
     @Test
     fun anonymousToLinkedKeepsTheBackStack() {
-        assertNull(rootNavigationFor(MainRoute, SessionState.Active(LINKED)))
+        assertNull(rootNavigationFor(MainRoute, SessionState.Active(LINKED, AgeBand.ADULT)))
     }
 
     @Test
@@ -46,7 +56,7 @@ class RoutesTest {
 
     @Test
     fun everyRouteRoundTrips() {
-        listOf(SplashRoute, AuthRoute, MainRoute).forEach { route ->
+        listOf(SplashRoute, AuthRoute, AgeGateRoute, AgeBlockedRoute, MainRoute).forEach { route ->
             assertEquals(route, RouteCodec.decode(RouteCodec.encode(route)))
         }
     }

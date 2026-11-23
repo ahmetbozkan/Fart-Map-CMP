@@ -28,8 +28,9 @@ object Redaction {
     // Any lone decimal with 4+ fraction digits (~10 m): treat as a coordinate.
     private val preciseDecimal = Regex("""-?\d{1,3}\.\d{4,}""")
 
-    // Long opaque runs (JWT parts, API keys, push tokens). Firestore ids are 20 chars and stay readable.
-    private val opaqueToken = Regex("""[A-Za-z0-9_\-.]{32,}""")
+    // Long opaque runs: JWT parts, API keys, push tokens and 28-char Firebase Auth uids (an account identifier).
+    // Firestore document ids are 20 chars and stay readable for debugging.
+    private val opaqueToken = Regex("""[A-Za-z0-9_\-.]{28,}""")
 
     private val keySplit = Regex("""[^A-Za-z0-9]+|(?<=[a-z0-9])(?=[A-Z])""")
 

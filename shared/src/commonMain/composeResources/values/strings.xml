@@ -10,6 +10,14 @@
     <string name="auth_coming_soon">Coming soon. It's still brewing.</string>
     <string name="auth_guest">Continue without account</string>
 
+    <string name="age_gate_title">One quick question</string>
+    <string name="age_gate_body">What year were you born? We only keep your age group, never the year.</string>
+    <string name="age_gate_hint">Birth year</string>
+    <string name="age_gate_continue">Continue</string>
+    <string name="age_gate_invalid">That year doesn't look right. Time travel isn't supported yet.</string>
+    <string name="age_blocked_title">Come back when you're 13</string>
+    <string name="age_blocked_body">Fart Map is for ages 13 and up. The map will still be here, we promise.</string>
+
     <string name="tab_map">Map</string>
     <string name="tab_social">Social</string>
     <string name="tab_rank">Rank</string>

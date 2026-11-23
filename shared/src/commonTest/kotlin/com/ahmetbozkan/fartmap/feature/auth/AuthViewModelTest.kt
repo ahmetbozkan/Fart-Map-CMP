@@ -1,7 +1,9 @@
 package com.ahmetbozkan.fartmap.feature.auth
 
+import com.ahmetbozkan.fartmap.core.domain.session.AgeGateOutcome
 import com.ahmetbozkan.fartmap.core.domain.session.SessionRepository
 import com.ahmetbozkan.fartmap.core.domain.session.SessionState
+import com.ahmetbozkan.fartmap.core.domain.visibility.AgeBand
 import com.ahmetbozkan.fartmap.core.observability.AppError
 import com.ahmetbozkan.fartmap.core.observability.AppResult
 import com.ahmetbozkan.fartmap.feature.auth.presentation.AuthAction
@@ -29,9 +31,12 @@ private class FakeSessionRepository : SessionRepository {
 
     override suspend fun continueAnonymously(): AppResult<Unit> {
         nextError?.let { return AppResult.Failure(it) }
-        state.value = SessionState.Active(SessionState.Kind.ANONYMOUS)
+        state.value = SessionState.Active(SessionState.Kind.ANONYMOUS, AgeBand.ADULT)
         return AppResult.Success(Unit)
     }
+
+    override suspend fun declareBirthYear(birthYear: Int): AppResult<AgeGateOutcome> =
+        AppResult.Success(AgeGateOutcome.ADMITTED)
 
     override suspend fun signOut(): AppResult<Unit> {
         state.value = SessionState.SignedOut
@@ -56,7 +61,7 @@ class AuthViewModelTest {
     fun continueWithoutAccountStartsAnAnonymousSession() = runTest {
         val vm = AuthViewModel(sessions)
         vm.onAction(AuthAction.ContinueWithoutAccount)
-        assertEquals(SessionState.Active(SessionState.Kind.ANONYMOUS), sessions.state.value)
+        assertEquals(SessionState.Active(SessionState.Kind.ANONYMOUS, AgeBand.ADULT), sessions.state.value)
         assertFalse(vm.state.value.isWorking)
     }
 

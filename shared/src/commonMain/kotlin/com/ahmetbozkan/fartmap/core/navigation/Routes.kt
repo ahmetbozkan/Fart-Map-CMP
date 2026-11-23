@@ -15,6 +15,14 @@ data object SplashRoute : Route
 @Serializable
 data object AuthRoute : Route
 
+/** The 13+ age gate before the first Active session (ContentSafety.md §5). */
+@Serializable
+data object AgeGateRoute : Route
+
+/** Shown when an under-13 birth year was declared on this install. */
+@Serializable
+data object AgeBlockedRoute : Route
+
 @Serializable
 data object MainRoute : Route
 
@@ -43,6 +51,8 @@ sealed interface TabRoute {
 fun SessionState.rootRoute(): Route = when (this) {
     SessionState.Loading -> SplashRoute
     SessionState.SignedOut -> AuthRoute
+    is SessionState.NeedsAgeBand -> AgeGateRoute
+    SessionState.AgeBlocked -> AgeBlockedRoute
     is SessionState.Active -> MainRoute
 }
 

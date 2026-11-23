@@ -1,6 +1,6 @@
 package com.ahmetbozkan.fartmap.core.domain
 
-import com.ahmetbozkan.fartmap.core.data.session.InMemorySessionRepository
+import com.ahmetbozkan.fartmap.core.domain.session.AgeGateOutcome
 import com.ahmetbozkan.fartmap.core.domain.session.LocalDataReset
 import com.ahmetbozkan.fartmap.core.domain.session.SessionRepository
 import com.ahmetbozkan.fartmap.core.domain.session.SessionState
@@ -11,6 +11,7 @@ import com.ahmetbozkan.fartmap.core.domain.visibility.allowedVisibilities
 import com.ahmetbozkan.fartmap.core.domain.visibility.defaultVisibility
 import com.ahmetbozkan.fartmap.core.domain.write.AppWriteScope
 import com.ahmetbozkan.fartmap.core.fakes.FakePreferencesRepository
+import com.ahmetbozkan.fartmap.core.fakes.InMemorySessionRepository
 import com.ahmetbozkan.fartmap.core.observability.AppError
 import com.ahmetbozkan.fartmap.core.observability.AppResult
 import com.ahmetbozkan.fartmap.core.platform.DefaultsRemoteConfig
@@ -32,8 +33,12 @@ private class RecordingWrites : AppWriteScope {
 }
 
 private class FailingSessions : SessionRepository {
-    override val session: StateFlow<SessionState> = MutableStateFlow(SessionState.Active(SessionState.Kind.ANONYMOUS))
+    override val session: StateFlow<SessionState> = MutableStateFlow(
+        SessionState.Active(SessionState.Kind.ANONYMOUS, AgeBand.ADULT)
+    )
     override suspend fun continueAnonymously(): AppResult<Unit> = AppResult.Success(Unit)
+    override suspend fun declareBirthYear(birthYear: Int): AppResult<AgeGateOutcome> =
+        AppResult.Success(AgeGateOutcome.ADMITTED)
     override suspend fun signOut(): AppResult<Unit> = AppResult.Failure(AppError.NetworkUnavailable)
 }
 
@@ -73,7 +78,7 @@ class LocalDomainTest {
 
     @Test
     fun signOutEndsSessionCancelsWritesResetsAndClearsUserKeys() = runTest {
-        val sessions = InMemorySessionRepository(SessionState.Active(SessionState.Kind.ANONYMOUS))
+        val sessions = InMemorySessionRepository(SessionState.Active(SessionState.Kind.ANONYMOUS, AgeBand.ADULT))
         val writes = RecordingWrites()
         val prefs = FakePreferencesRepository().apply {
             firstOpenDone = true
