@@ -42,3 +42,6 @@ backend/functions/lib/
 # Claude Code personal overrides
 .claude/settings.local.json
 CLAUDE.local.md
+
+# Autopilot run state and logs (scripts/autopilot.sh)
+.claude/loop/

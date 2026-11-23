@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // PreToolUse guard (Read | Edit | Write | MultiEdit | Bash). Exit 2 = block (stderr is shown to Claude).
 // 1. Never read/edit/print real Firebase configs or secrets (templates are fine).
-// 2. Never push to main/master or force-push; never merge PRs.
+// 2. Never push to main/master or force-push; merge only via `gh pr merge <n> --auto --squash` (GitHub
+//    merges once the required checks pass); no API merges or repo-setting changes.
 // 3. Before `git commit`, run scripts/check-no-secrets.sh on the index.
 import { readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
@@ -33,7 +34,17 @@ if (tool === 'Bash') {
     if (/(--force\b|\s-f\b|--force-with-lease)/.test(cmd)) block('force-push is not allowed.');
     if (/(\s|:)(main|master)(\s|$)/.test(cmd) || /HEAD:(refs\/heads\/)?(main|master)\b/.test(cmd)) block('pushing to main is not allowed; push a feature branch and open a draft PR.');
   }
-  if (/\bgh\s+pr\s+merge\b/.test(cmd)) block('agents never merge PRs; the owner merges.');
+  // Merging: only GitHub auto-merge, which waits for the required CI checks. Exactly one form is allowed:
+  // `gh pr merge <number> --auto --squash` (flags in either order), alone, never with --admin.
+  if (/\bgh\s+pr\s+merge\b/.test(cmd)) {
+    const AUTO_MERGE = /^\s*gh\s+pr\s+merge\s+\d+\s+(--auto\s+--squash|--squash\s+--auto)\s*$/;
+    if (!AUTO_MERGE.test(cmd)) block('the only allowed merge is `gh pr merge <number> --auto --squash` on its own (GitHub merges once required checks pass). No --admin, no other forms.');
+  }
+  // No merging or branch-protection changes through the raw API.
+  if (/\bgh\s+api\b/.test(cmd) && /(\/merge\b|\/protection\b|\/rulesets\b|auto[_-]?merge|enablePullRequestAutoMerge|mergePullRequest)/i.test(cmd)) {
+    block('merges and branch-protection changes through `gh api` are not allowed; use `gh pr merge <number> --auto --squash`.');
+  }
+  if (/\bgh\s+(repo\s+edit|ruleset)\b/.test(cmd)) block('repository settings and rulesets are owner-only.');
   if (/\bgit\s+commit\b/.test(cmd)) {
     const r = spawnSync('bash', [path.join(projectDir, 'scripts', 'check-no-secrets.sh')], { cwd: projectDir, encoding: 'utf8' });
     if (r.status !== 0) block(`check-no-secrets failed:\n${r.stderr || r.stdout}`);

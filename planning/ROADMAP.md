@@ -44,7 +44,7 @@
 ### Planned epics (instantiate one at a time)
 
 - **EPIC-01-02:** Session and identity: anonymous, Google, Apple, linking, 13+ age band.
-  - [ ] STORY-01-02-01: Anonymous session + 13+ age gate + private account doc (`stories/STORY-01-02-01.md`, Review)
+  - [x] STORY-01-02-01: Anonymous session + 13+ age gate + private account doc (`stories/STORY-01-02-01.md`)
   - [ ] STORY-01-02-02: Public profile (generated display name, free starter avatar) + dev seed of free starter catalog items
   - [ ] STORY-01-02-03: Google and Apple sign-in
   - [ ] STORY-01-02-04: Link anonymous → Google/Apple (same uid, ADR-0018)

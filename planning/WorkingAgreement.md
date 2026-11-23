@@ -20,11 +20,26 @@
 4. Implement within the rules (`.claude/rules/` loads them by path).
 5. Run `scripts/verify.sh` (or `/verify`) until it is green.
 6. Tick the story checklist, add evidence (commands run plus PR link), and update `STATE.md`.
-7. Commit (message ends with the Co-Authored-By line), push the branch, and open a **draft** PR. Never push to `main`, never merge, never force-push.
+7. Commit (message ends with the Co-Authored-By line), push the branch, and open a **draft** PR. Never push to `main`, never force-push. In this interactive loop the agent never merges; the owner does.
+
+### Autopilot (the `/autopilot-story` skill, driven by `scripts/autopilot.sh`)
+
+The same loop without the owner's approvals. One fresh headless session per story; each owner gate is replaced by a check:
+
+| Gate | Interactive | Autopilot |
+|---|---|---|
+| Story authored | Owner confirms | Agent checks it against "Ready when" (§4) |
+| Open questions | Owner answers | Agent decides from the docs (§1, §6 tie-break) and lists each answer under `## Decisions` in the story |
+| Plan | Owner approves plan mode | `## Plan` in the story, reviewed by the `plan-reviewer` agent (up to 2 revisions) |
+| PR review | Owner reads the PR | `code-reviewer` (+ `security-reviewer` when relevant) posts findings on the PR; the agent fixes them (up to 2 more rounds) |
+| CI | Owner checks | Agent watches `gh pr checks`, fixes failures through the retry ladder (§6) |
+| Merge | Owner merges | `gh pr ready`, then `gh pr merge <n> --auto --squash`; GitHub merges once the required checks pass |
+
+The story is set to `Done` and STATE updated inside the PR, since it merges only on green CI. By default the driver stops at each epic boundary (`--cross-epics` lets the agent split and start the next epic) and auto-merges every PR that passes review and CI (`--hold-sensitive` holds PRs touching rules, functions, entitlements or location for the owner). Setup: `.claude/README.md` "Autopilot".
 
 ## 3) States
 
-`Todo` → `In progress` → `Review` (draft PR open, CI running) → `Done` (merged by the owner, CI green). `Blocked` carries a one-line reason and who unblocks it. No other states.
+`Todo` → `In progress` → `Review` (draft PR open, CI running) → `Done` (merged, CI green: by the owner, or by GitHub auto-merge under autopilot). `Blocked` carries a one-line reason and who unblocks it. No other states.
 
 ## 4) Story file (`planning/stories/STORY-PP-EE-SS.md`)
 
@@ -70,10 +85,17 @@ Phase, pillar, loop and persona traceability is not repeated per story; it lives
 
 When docs leave room for interpretation, choose the option that is safer for privacy, consistent with the ADRs, simpler and phase-appropriate, and easiest for the next agent to understand.
 
+**Retry ladder (technical problems).** A failing test, build or CI job, a reviewer finding, a plan blocker: the first fix plus **at most 2 retries, each with a different approach** (a new root-cause hypothesis or design, not the same fix again). Log each as `attempt N: <approach> → <result>` in the story's Evidence. After the third failed attempt, escalate. Weakening tests, adding suppressions or baselines, or widening rules to get green is never an attempt.
+
+**Escalate rows skip the ladder.** Anything in the Escalate row above, a dependency on a Proposed ADR, or a step that needs an owner console action goes to the owner at once, without retries.
+
+**How autopilot escalates:** push the work to the story branch, set the story to `Blocked (<reason>; owner)` and update STATE, then open a GitHub issue labelled `needs-owner` with what's blocked, every attempt, the options, a recommended default and the reply that unblocks it. The owner answers in the issue (agent comments start with `<!-- autopilot -->`, so any other comment is the owner's) and re-runs the driver; the next session reads the answer and continues.
+
 ## 7) Never
 
 - Commit secrets or real Firebase configs; read or print them either (hooks block it).
 - Plan or ship pay-to-win, paywalls on core actions, passive ads, or weaker privacy defaults.
 - Turn the map-first product into a feed-first one.
 - Delete passing tests or skip hooks.
+- Merge any way other than GitHub auto-merge on green checks: no `--admin`, no API merges, no changes to branch protection or repository settings.
 - Treat PoC code as precedent. Classify each pattern you borrow as Preserve, Evolve or Reject.
