@@ -89,6 +89,13 @@ while [[ $merged -lt $max ]]; do
       merged=$((merged + 1)); crashes=0 ;;
     crashed)
       crashes=$((crashes + 1))
+      # Show why claude stopped (its final `result` text), and stop at once on errors a retry can't fix.
+      reason="$(node -e 'try { const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")); process.stdout.write(String(r.result || r.terminal_reason || "").slice(0, 300)); } catch { }' "$log")"
+      [[ -n "$reason" ]] && echo "[autopilot]   claude said: $reason"
+      if grep -qiE 'authenticat|oauth|login|credit balance|usage limit' <<<"$reason"; then
+        notify "Stopped: Claude Code can't run ($reason). Run 'claude' once to sign in again, then re-run."
+        exit 1
+      fi
       if [[ $crashes -ge 2 ]]; then
         notify "Stopped: two sessions in a row ended without a status file. See $log and $loop_dir/run-$stamp.err."
         exit 1
