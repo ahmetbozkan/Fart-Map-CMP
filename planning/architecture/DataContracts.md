@@ -36,7 +36,7 @@ It ensures:
 
 Collection names are canonical for planning; implementation may add namespace prefixes by environment.
 
-## 3.1 `users/{userId}`
+## 3.1 `users/{userId}` (public profile, ADR-0025)
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -45,15 +45,26 @@ Collection names are canonical for planning; implementation may add namespace pr
 | `avatar_id` | String | Yes | Profile avatar |
 | `bio` | String? | No | Optional |
 | `signature_style_id` | String? | No | ADR-0013 single style |
-| `follower_count` | Int | Yes | Denormalized |
-| `following_count` | Int | Yes | Denormalized |
+| `follower_count` | Int | Yes | Denormalized, server-written |
+| `following_count` | Int | Yes | Denormalized, server-written |
 | `is_following_list_public` | Boolean | Yes | ADR-0012 flag; default false |
-| `is_suspended` | Boolean | Yes | Moderation enforcement |
-| `is_anonymous` | Boolean | Yes | ADR-0018; flips to false on account linking |
-| `linked_providers` | Array<String> | Yes | e.g. `google`, `apple`; empty for anonymous |
-| `age_band` | String enum | Yes | AGE_13_17 / AGE_18_PLUS (under-13 is blocked at sign-up; `ContentSafety.md` §5) |
 | `created_at` | Timestamp | Yes | Server timestamp |
 | `updated_at` | Timestamp | Yes | Server timestamp |
+
+Readable by any signed-in user. The owner creates it and edits only `display_name`, `avatar_id`, `bio`, `signature_style_id`, `is_following_list_public`.
+
+### 3.1.1 `users/{userId}/private/account` (owner-only, ADR-0025)
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `age_band` | String enum | Yes | AGE_13_17 / AGE_18_PLUS (under-13 is blocked at sign-up; `ContentSafety.md` §5). Set once by the owner, immutable |
+| `linked_providers` | Array<String> | Yes | e.g. `google`, `apple`; empty for anonymous. Server-managed |
+| `is_anonymous` | Boolean | Yes | ADR-0018; flips to false on account linking. Server-managed |
+| `is_suspended` | Boolean | Yes | Moderation enforcement. Server-managed |
+| `created_at` | Timestamp | Yes | Server timestamp |
+| `updated_at` | Timestamp | Yes | Server timestamp |
+
+Readable by the owner only; never readable by other users (it reveals whether a user is a minor).
 
 ---
 
@@ -65,7 +76,7 @@ Collection names are canonical for planning; implementation may add namespace pr
 | `author_user_id` | String | Yes | Owner uid |
 | `public_lat` | Double | Yes | Fuzzed coordinate (ADR-0019); never the true position |
 | `public_lng` | Double | Yes | Fuzzed coordinate (ADR-0019) |
-| `coarse_location_key` | String | Yes | Public-safe bucket |
+| `coarse_location_key` | String | Yes | Public-safe bucket: a geohash-6 cell (rules enforce the format) |
 | `timestamp_epoch_ms` | Long | Yes | Event time |
 | `avatar_id` | String | Yes | CREATE-03.3 |
 | `flavor_level` | Int | Yes | 1..5 |
@@ -245,7 +256,7 @@ Client must not compute ranks.
 
 ## 3.12 `moderation_reports/{reportId}`
 
-Restricted moderation collection.
+Restricted moderation collection. The document id is `{reporter_user_id}_{target_type}_{target_id}`, so one account files at most one report per target (rules enforce it); auto-hide counts distinct reporters.
 
 | Field | Type | Required |
 |---|---|---|
@@ -324,6 +335,7 @@ Owner read/write only; removed on sign-out.
 9. A fart using a non-free `avatar_id` or `sound_id` is accepted only if `user_entitlements` grants the item or an unconsumed `rewarded_unlocks` token names it; the token is consumed by the write trigger (ADR-0016, ADR-0017).
 10. `public_lat`/`public_lng` must lie inside the `coarse_location_key` cell; a function re-validates from the private location (ADR-0019).
 11. `description_text` is rejected above 500 characters (`features/` CREATE-03.1 Step 6).
+12. `visibility_mode == PUBLIC` is accepted only when the author's `users/{uid}/private/account.age_band == AGE_18_PLUS` (ADR-0023 amendment); a missing account doc means no PUBLIC.
 
 ---
 
@@ -344,6 +356,10 @@ This section defines required behavior; exact rule code lives in implementation.
 2. If `fart.visibility_mode == FOLLOWERS`: allow only if approved follow relation exists from requester -> author and no block relation either direction.
 3. If `fart.visibility_mode == PRIVATE`: allow only author.
 
+**Writing PUBLIC:** only authors in the 18+ band (from `users/{uid}/private/account`) may create a PUBLIC fart or switch one to PUBLIC (ADR-0023 amendment, 2026-11-23).
+
+**Queries (implemented in STORY-01-01-04):** rules can only authorize a query from its constraints, so list reads are allowed for exactly two shapes: `visibility_mode == PUBLIC && is_hidden == false && is_removed == false` (the map, plus the geohash range of EPIC-01-03) and `author_user_id == auth.uid` (own profile). Hidden or removed farts are visible to their author only. FOLLOWERS content is fetched per author once follows exist (SOCIAL-03, Phase 2). PUBLIC reads are not block-filtered by rules; the client hides blocked authors.
+
 ### 5.3 Follow and block constraints
 
 - User can create follow request only as self (`from_user_id == auth.uid`).
@@ -359,7 +375,7 @@ This section defines required behavior; exact rule code lives in implementation.
 
 ### 5.5 User profile and following-list privacy
 
-- Public profile fields readable as defined by policy.
+- `users/{userId}` (public profile fields only) is readable by any signed-in user; `users/{userId}/private/account` (age band, providers, anonymity, suspension) only by its owner (ADR-0025).
 - Following list identities readable only when owner opted in (`is_following_list_public == true`) or by owner.
 - Follower count may remain public.
 

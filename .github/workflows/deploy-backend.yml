@@ -51,4 +51,9 @@ jobs:
       - name: Deploy rules, indexes, storage rules and functions
         env:
           TARGET: ${{ (github.event_name == 'release' || github.event.inputs.environment == 'prod') && 'prod' || 'dev' }}
-        run: firebase deploy --only firestore:rules,firestore:indexes,storage,functions -P "$TARGET" --non-interactive --force
+          # Prod gets only the functions named here: a new function reaches prod when it is added on purpose.
+          # Dev gets every exported function (skeletons such as onFartCreated stay dev-only until they do real work).
+          PROD_FUNCTIONS: functions:health
+        run: |
+          if [ "$TARGET" = "prod" ]; then FUNCTIONS="$PROD_FUNCTIONS"; else FUNCTIONS="functions"; fi
+          firebase deploy --only "firestore:rules,firestore:indexes,storage,$FUNCTIONS" -P "$TARGET" --non-interactive --force

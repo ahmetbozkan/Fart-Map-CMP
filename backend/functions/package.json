@@ -10,9 +10,9 @@
   "scripts": {
     "build": "tsc",
     "lint": "eslint src test",
-    "test:unit": "vitest run --exclude test/rules.test.ts",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-fartmap \"vitest run test/rules.test.ts\"",
-    "test": "npm run test:unit && npm run test:rules"
+    "test:unit": "vitest run --exclude \"test/emulator/**\"",
+    "test": "npm run test:unit && npm run test:emulator",
+    "test:emulator": "firebase emulators:exec --only firestore --project demo-fartmap \"vitest run test/emulator --no-file-parallelism\""
   },
   "dependencies": {
     "firebase-admin": "^13.0.0",

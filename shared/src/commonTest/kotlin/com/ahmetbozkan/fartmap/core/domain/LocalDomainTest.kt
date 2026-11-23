@@ -7,6 +7,7 @@ import com.ahmetbozkan.fartmap.core.domain.session.SessionState
 import com.ahmetbozkan.fartmap.core.domain.session.SignOut
 import com.ahmetbozkan.fartmap.core.domain.visibility.AgeBand
 import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
+import com.ahmetbozkan.fartmap.core.domain.visibility.allowedVisibilities
 import com.ahmetbozkan.fartmap.core.domain.visibility.defaultVisibility
 import com.ahmetbozkan.fartmap.core.domain.write.AppWriteScope
 import com.ahmetbozkan.fartmap.core.fakes.FakePreferencesRepository
@@ -54,6 +55,13 @@ class LocalDomainTest {
         assertEquals(VisibilityMode.PUBLIC, defaultVisibility(VisibilityMode.PUBLIC, AgeBand.ADULT))
         assertEquals(VisibilityMode.FOLLOWERS, defaultVisibility(VisibilityMode.PUBLIC, AgeBand.TEEN))
         assertEquals(VisibilityMode.FOLLOWERS, defaultVisibility(VisibilityMode.PUBLIC, AgeBand.UNKNOWN))
+    }
+
+    @Test
+    fun publicIsOfferedToAdultsOnly() {
+        assertEquals(VisibilityMode.entries.toList(), allowedVisibilities(AgeBand.ADULT))
+        assertEquals(listOf(VisibilityMode.FOLLOWERS, VisibilityMode.PRIVATE), allowedVisibilities(AgeBand.TEEN))
+        assertEquals(listOf(VisibilityMode.FOLLOWERS, VisibilityMode.PRIVATE), allowedVisibilities(AgeBand.UNKNOWN))
     }
 
     @Test

@@ -39,7 +39,7 @@
 | Key | Default / notes |
 |---|---|
 | `first_open_done` | Device-scoped; gives `is_first_open` on `app_open` (Observability.md §11) |
-| `last_visibility_mode` | Unset → the Phase 1 default **PUBLIC** for the 18+ age band (ADR-0023); the 13–17 band never defaults to PUBLIC and uses FOLLOWERS until the owner sets minor defaults (`Scope.md` §7a). Once the user picks a value, the last-used value wins |
+| `last_visibility_mode` | Unset → the Phase 1 default **PUBLIC** for the 18+ age band (ADR-0023); the 13–17 band and an unknown band get FOLLOWERS and are never offered PUBLIC (enforced by rules, ADR-0023 amendment). Once the user picks a value, the last-used value wins if it is still allowed |
 | `log_draft` | Serialized Log Fart draft; survives process death; cleared on successful hand-off (CREATE-03 `DRAFT`) |
 | `play_marker_sounds_enabled` | true |
 | `map_filter_last_selected` | EVERYONE |
@@ -85,6 +85,6 @@ Never store secrets, auth tokens or precise coordinates of other users in DataSt
    - `add` returns success without awaiting the server;
    - the batch contains both the public doc and the private-location doc;
    - a rejection reaches `PendingWriteMonitor` as a typed event.
-3. Visibility default resolution: unset → PUBLIC for the adult band and FOLLOWERS for 13–17; the last-used value wins after that.
+3. Visibility default resolution: unset → PUBLIC for the adult band and FOLLOWERS for 13–17 or unknown; the last-used value wins after that if allowed; PUBLIC is never offered below 18.
 4. Sign-out clears persistence and the user-scoped keys.
 5. Entitlement cache: a non-free item is never rendered as owned without a mirrored entitlement or token.

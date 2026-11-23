@@ -15,15 +15,25 @@ enum class VisibilityMode(val wireName: String) {
 enum class AgeBand { ADULT, TEEN, UNKNOWN }
 
 /**
- * The visibility preselected in Log Fart (ADR-0023, LocalData.md §5). The user's last choice wins; before that,
- * Phase 1 defaults to PUBLIC for adults only. Teens and an unknown band get FOLLOWERS (fail safe for minors), and a
- * remembered PUBLIC is never preselected for them either — they can still pick PUBLIC explicitly each time.
+ * The visibilities a user may choose (ADR-0023 amendment, 2026-11-23): PUBLIC is for the 18+ band only, and an
+ * unknown band is treated like a minor (fail closed). Firestore rules enforce the same; this drives the UI.
  */
-fun defaultVisibility(lastUsed: VisibilityMode?, ageBand: AgeBand): VisibilityMode {
-    val isAdult = ageBand == AgeBand.ADULT
-    return when {
-        lastUsed == null -> if (isAdult) VisibilityMode.PUBLIC else VisibilityMode.FOLLOWERS
-        lastUsed == VisibilityMode.PUBLIC && !isAdult -> VisibilityMode.FOLLOWERS
-        else -> lastUsed
+fun allowedVisibilities(ageBand: AgeBand): List<VisibilityMode> =
+    if (ageBand == AgeBand.ADULT) {
+        VisibilityMode.entries.toList()
+    } else {
+        listOf(
+            VisibilityMode.FOLLOWERS,
+            VisibilityMode.PRIVATE
+        )
     }
+
+/**
+ * The visibility preselected in Log Fart (ADR-0023, LocalData.md §5). The user's last choice wins when it is still
+ * allowed; before that, Phase 1 defaults to PUBLIC for adults and FOLLOWERS for everyone else.
+ */
+fun defaultVisibility(lastUsed: VisibilityMode?, ageBand: AgeBand): VisibilityMode = when {
+    lastUsed != null && lastUsed in allowedVisibilities(ageBand) -> lastUsed
+    ageBand == AgeBand.ADULT -> VisibilityMode.PUBLIC
+    else -> VisibilityMode.FOLLOWERS
 }
