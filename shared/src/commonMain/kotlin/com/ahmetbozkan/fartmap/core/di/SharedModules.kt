@@ -1,6 +1,7 @@
 package com.ahmetbozkan.fartmap.core.di
 
 import com.ahmetbozkan.fartmap.core.data.preferences.DataStorePreferencesRepository
+import com.ahmetbozkan.fartmap.core.data.profile.ProfileBootstrap
 import com.ahmetbozkan.fartmap.core.data.session.DefaultSessionRepository
 import com.ahmetbozkan.fartmap.core.data.write.DefaultAppWriteScope
 import com.ahmetbozkan.fartmap.core.domain.preferences.PreferencesRepository
@@ -38,7 +39,7 @@ import kotlin.time.ExperimentalTime
  * `sharedModules(env) + firebaseDataModules()`: Android in `FartMapApplication`, iOS in umbrella `startApp`.
  * The [Logger] collects every [LogSink] bound by any module (console here, Crashlytics in `firebaseData`).
  * `firebaseData` supplies the Firebase-backed contracts used here (`AuthGateway`, `AccountRepository`,
- * `WriteErrorMapper`, `LocalDataReset`).
+ * `ProfileRepository`, `WriteErrorMapper`, `LocalDataReset`).
  */
 fun sharedModules(environment: AppEnvironment): List<Module> =
     listOf(coreModule(environment), dataModule, featureModule, platformModule)
@@ -62,6 +63,13 @@ private val dataModule = module {
             scope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
             currentYear = ::currentYear,
         )
+    }
+    // Eager: starts watching the session at app start (needs ProfileRepository from firebaseData; startKoin builds
+    // eager singles after every module is loaded).
+    single(createdAtStart = true) {
+        ProfileBootstrap(session = get(), profiles = get(), logger = get()).also {
+            it.start(CoroutineScope(SupervisorJob() + Dispatchers.Default))
+        }
     }
     single<PreferencesRepository> { DataStorePreferencesRepository(store = get(), logger = get()) }
     single { DefaultAppWriteScope(logger = get(), errorMapper = get()) } binds

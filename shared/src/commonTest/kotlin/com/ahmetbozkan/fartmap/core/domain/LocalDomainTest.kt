@@ -34,7 +34,7 @@ private class RecordingWrites : AppWriteScope {
 
 private class FailingSessions : SessionRepository {
     override val session: StateFlow<SessionState> = MutableStateFlow(
-        SessionState.Active(SessionState.Kind.ANONYMOUS, AgeBand.ADULT)
+        SessionState.Active("u1", SessionState.Kind.ANONYMOUS, AgeBand.ADULT)
     )
     override suspend fun continueAnonymously(): AppResult<Unit> = AppResult.Success(Unit)
     override suspend fun declareBirthYear(birthYear: Int): AppResult<AgeGateOutcome> =
@@ -78,7 +78,7 @@ class LocalDomainTest {
 
     @Test
     fun signOutEndsSessionCancelsWritesResetsAndClearsUserKeys() = runTest {
-        val sessions = InMemorySessionRepository(SessionState.Active(SessionState.Kind.ANONYMOUS, AgeBand.ADULT))
+        val sessions = InMemorySessionRepository(SessionState.Active("u1", SessionState.Kind.ANONYMOUS, AgeBand.ADULT))
         val writes = RecordingWrites()
         val prefs = FakePreferencesRepository().apply {
             firstOpenDone = true

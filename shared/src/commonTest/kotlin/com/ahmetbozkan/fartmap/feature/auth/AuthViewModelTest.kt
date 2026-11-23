@@ -31,7 +31,7 @@ private class FakeSessionRepository : SessionRepository {
 
     override suspend fun continueAnonymously(): AppResult<Unit> {
         nextError?.let { return AppResult.Failure(it) }
-        state.value = SessionState.Active(SessionState.Kind.ANONYMOUS, AgeBand.ADULT)
+        state.value = SessionState.Active("u1", SessionState.Kind.ANONYMOUS, AgeBand.ADULT)
         return AppResult.Success(Unit)
     }
 
@@ -61,7 +61,7 @@ class AuthViewModelTest {
     fun continueWithoutAccountStartsAnAnonymousSession() = runTest {
         val vm = AuthViewModel(sessions)
         vm.onAction(AuthAction.ContinueWithoutAccount)
-        assertEquals(SessionState.Active(SessionState.Kind.ANONYMOUS, AgeBand.ADULT), sessions.state.value)
+        assertEquals(SessionState.Active("u1", SessionState.Kind.ANONYMOUS, AgeBand.ADULT), sessions.state.value)
         assertFalse(vm.state.value.isWorking)
     }
 

@@ -37,8 +37,9 @@ configs_present=1
 for env in dev prod; do [[ -f "androidApp/src/$env/google-services.json" ]] || configs_present=0; done
 
 gradle_tasks=()
-if has '^(shared|firebaseData|umbrella|androidApp)/|^gradle/|\.gradle\.kts$|^config/detekt/'; then
-  gradle_tasks+=(detekt :shared:testAndroidHostTest)
+# backend/catalog/ is included because StarterCatalogParityTest (shared host test) reads it.
+if has '^(shared|firebaseData|umbrella|androidApp)/|^gradle/|\.gradle\.kts$|^config/detekt/|^backend/catalog/'; then
+  gradle_tasks+=(detekt :shared:testAndroidHostTest :firebaseData:testAndroidHostTest)
   if (( configs_present )); then gradle_tasks+=(:androidApp:assembleDevDebug :androidApp:assembleProdDebug)
   else results+=("SKIP  android assemble/lint (Firebase configs not injected: run scripts/inject-config.sh; CI verifies)"); fi
 fi

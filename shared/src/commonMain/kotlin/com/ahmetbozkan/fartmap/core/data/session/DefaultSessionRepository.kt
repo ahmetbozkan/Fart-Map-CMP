@@ -78,7 +78,7 @@ class DefaultSessionRepository(
                                 kind
                             )
                         } else {
-                            SessionState.Active(kind, band)
+                            SessionState.Active(user.uid, kind, band)
                         }
                     }
                     .onStart { emit(SessionState.Loading) }

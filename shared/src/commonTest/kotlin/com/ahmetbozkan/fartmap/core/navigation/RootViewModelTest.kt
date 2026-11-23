@@ -40,7 +40,7 @@ class RootViewModelTest {
         sessions.signOut()
         sessions.continueAnonymously()
 
-        assertEquals(SessionState.Active(SessionState.Kind.ANONYMOUS, AgeBand.ADULT), vm.state.value.session)
+        assertEquals(SessionState.Active("u1", SessionState.Kind.ANONYMOUS, AgeBand.ADULT), vm.state.value.session)
         assertEquals(listOf<AnalyticsEvent>(AnalyticsEvent.AppOpen(ANONYMOUS, isFirstOpen = true)), tracked)
         assertEquals(
             mapOf<String, Any>("session_kind" to "anonymous", "is_first_open" to true),
