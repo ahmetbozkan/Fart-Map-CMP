@@ -40,8 +40,9 @@ scripts/check-no-secrets.sh
 3. Implement, then make `scripts/verify.sh` green.
 4. Tick the story, add evidence, update `planning/STATE.md`.
 5. Commit, push the branch, open a **draft** PR with `gh pr create --draft`.
-6. **Never** push to `main`, merge, force-push, or skip hooks. The owner merges.
+6. **Never** push to `main`, force-push, or skip hooks. In an interactive session the owner merges. Under autopilot (`scripts/autopilot.sh` → `/autopilot-story`) the agent merges only with `gh pr merge <n> --auto --squash` after review and green CI; GitHub does the merge.
 7. Keep a decision you'd change as a **Proposed** ADR (`adr` skill); don't apply it.
+8. Autopilot retries a technical failure at most twice, each time with a different approach, then escalates through a `needs-owner` GitHub issue. Owner decisions (see below) escalate at once.
 
 ## Non-negotiables
 - **No secrets in git.** `google-services.json`, `GoogleService-Info*.plist` and `secrets.properties` are never tracked, read or printed; hooks block them.
