@@ -1,12 +1,25 @@
 #!/usr/bin/env node
 // PreToolUse guard (Read | Edit | Write | MultiEdit | Bash). Exit 2 = block (stderr is shown to Claude).
 // 1. Never read/edit/print real Firebase configs or secrets (templates are fine).
-// 2. Never push to main/master or force-push; merge only via `gh pr merge <n> --auto --squash` (GitHub
-//    merges once the required checks pass); no API merges or repo-setting changes.
+// 2. Never push to main/master or force-push. Merge only with
+//    `gh pr merge <n> --squash --match-head-commit <sha>`, and only after GitHub confirms every required
+//    check passed on that sha (merge-check.mjs); no API merges or repo-setting changes.
 // 3. Before `git commit`, run scripts/check-no-secrets.sh on the index.
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
+import { MERGE_FORM, MERGE_USAGE, evaluateMerge } from './merge-check.mjs';
+
+// gh may not be on the PATH Claude Code was started with (fresh install on Windows); try the default location.
+const runGh = (args) => {
+  const candidates = ['gh', 'C:\\Program Files\\GitHub CLI\\gh.exe', '/opt/homebrew/bin/gh', '/usr/local/bin/gh'];
+  for (const bin of candidates) {
+    if (bin !== 'gh' && !existsSync(bin)) continue;
+    const r = spawnSync(bin, args, { cwd: projectDir, encoding: 'utf8', timeout: 30000 });
+    if (!r.error) return r;
+  }
+  return null;
+};
 
 let input;
 try { input = JSON.parse(readFileSync(0, 'utf8')); } catch { process.exit(0); }
@@ -34,15 +47,23 @@ if (tool === 'Bash') {
     if (/(--force\b|\s-f\b|--force-with-lease)/.test(cmd)) block('force-push is not allowed.');
     if (/(\s|:)(main|master)(\s|$)/.test(cmd) || /HEAD:(refs\/heads\/)?(main|master)\b/.test(cmd)) block('pushing to main is not allowed; push a feature branch and open a draft PR.');
   }
-  // Merging: only GitHub auto-merge, which waits for the required CI checks. Exactly one form is allowed:
-  // `gh pr merge <number> --auto --squash` (flags in either order), alone, never with --admin.
+  // Merging: one exact form, and only after this hook has confirmed with GitHub that every required check
+  // passed on the exact head commit (merge-check.mjs). Fails closed if gh can't be run or read.
   if (/\bgh\s+pr\s+merge\b/.test(cmd)) {
-    const AUTO_MERGE = /^\s*gh\s+pr\s+merge\s+\d+\s+(--auto\s+--squash|--squash\s+--auto)\s*$/;
-    if (!AUTO_MERGE.test(cmd)) block('the only allowed merge is `gh pr merge <number> --auto --squash` on its own (GitHub merges once required checks pass). No --admin, no other forms.');
+    const m = cmd.match(MERGE_FORM);
+    if (!m) block(`the only allowed merge is ${MERGE_USAGE}. No --admin, no --auto, no other forms.`);
+    const [, number, sha] = m;
+    const fields = 'state,isDraft,baseRefName,mergeable,headRefOid,statusCheckRollup';
+    const r = runGh(['pr', 'view', number, '--json', fields]);
+    if (!r || r.status !== 0) block(`could not read PR #${number} with gh (${r ? (r.stderr || '').trim() : 'gh not found'}); merge refused.`);
+    let pr;
+    try { pr = JSON.parse(r.stdout); } catch { block(`could not parse gh output for PR #${number}; merge refused.`); }
+    const reason = evaluateMerge(pr, sha);
+    if (reason) block(`merge of PR #${number} refused: ${reason}`);
   }
   // No merging or branch-protection changes through the raw API.
   if (/\bgh\s+api\b/.test(cmd) && /(\/merge\b|\/protection\b|\/rulesets\b|auto[_-]?merge|enablePullRequestAutoMerge|mergePullRequest)/i.test(cmd)) {
-    block('merges and branch-protection changes through `gh api` are not allowed; use `gh pr merge <number> --auto --squash`.');
+    block(`merges and branch-protection changes through \`gh api\` are not allowed; use ${MERGE_USAGE}.`);
   }
   if (/\bgh\s+(repo\s+edit|ruleset)\b/.test(cmd)) block('repository settings and rulesets are owner-only.');
   if (/\bgit\s+commit\b/.test(cmd)) {

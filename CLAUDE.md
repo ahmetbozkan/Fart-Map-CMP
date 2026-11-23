@@ -40,7 +40,7 @@ scripts/check-no-secrets.sh
 3. Implement, then make `scripts/verify.sh` green.
 4. Tick the story, add evidence, update `planning/STATE.md`.
 5. Commit, push the branch, open a **draft** PR with `gh pr create --draft`.
-6. **Never** push to `main`, force-push, or skip hooks. In an interactive session the owner merges. Under autopilot (`scripts/autopilot.sh` → `/autopilot-story`) the agent merges only with `gh pr merge <n> --auto --squash` after review and green CI; GitHub does the merge.
+6. **Never** push to `main`, force-push, or skip hooks. In an interactive session the owner merges. Under autopilot (`scripts/autopilot.sh` → `/autopilot-story`) the agent merges only with `gh pr merge <n> --squash --match-head-commit <sha>` after review, and the guard hook refuses it unless GitHub reports all required checks green on that sha.
 7. Keep a decision you'd change as a **Proposed** ADR (`adr` skill); don't apply it.
 8. Autopilot retries a technical failure at most twice, each time with a different approach, then escalates through a `needs-owner` GitHub issue. Owner decisions (see below) escalate at once.
 

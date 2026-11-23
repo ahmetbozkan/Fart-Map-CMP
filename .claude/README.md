@@ -10,7 +10,7 @@ This folder is for the owner and future contributors. Claude Code does not load 
 | Path rules | `.claude/rules/*.md` with `paths:` frontmatter | Only when Claude reads or edits a matching file | Coding rules for one area: Kotlin shared code, Compose UI, backend, shells, planning docs |
 | Skills | `.claude/skills/<name>/SKILL.md` (+ templates) | Only the `description` line is always present; the body loads when the task matches or you type `/<name>` | Repeatable procedures: the story loop, feature scaffolding, Firestore changes, functions, monetization, release, ASO, experiments |
 | Subagents | `.claude/agents/*.md` | Run in their **own** context window; only their final report comes back | Isolating heavy reading (`spec-scout`), fresh-eyes review (`plan-reviewer`, `code-reviewer`, `security-reviewer`), parallel work (`backend-engineer`), web research (`growth-analyst`) |
-| Hooks | `.claude/hooks/*.mjs`, wired in `settings.json` | Run deterministically by the harness, not by the model | Rules that must never depend on memory: block reading or committing real configs, block pushes to main and force-pushes, allow only `gh pr merge <n> --auto --squash`; print STATE at session start |
+| Hooks | `.claude/hooks/*.mjs`, wired in `settings.json` | Run deterministically by the harness, not by the model | Rules that must never depend on memory: block reading or committing real configs, block pushes to main and force-pushes, allow a merge only in one form and only after checking with GitHub that all required checks are green (`merge-check.mjs`); print STATE at session start |
 | Permissions | `.claude/settings.json` | Always | Pre-approve safe commands (gradle, git read/commit/branch push, draft PRs) and deny dangerous ones |
 | Personal overrides | `.claude/settings.local.json`, `CLAUDE.local.md` (gitignored) | Always, for you only | Machine-specific tweaks; never commit them |
 
@@ -28,7 +28,7 @@ Subagents are not a "team of roles" handing work to each other. Each one starts 
 | Skill | Trigger |
 |---|---|
 | `/implement-story [id\|next]` | Full loop: spec → plan → branch → code → verify → review agents → STATE → commit → draft PR |
-| `/autopilot-story [next\|id]` | Unattended loop for one story, ending in a GitHub auto-merge or a `needs-owner` issue. Run it through `scripts/autopilot.sh` (see "Autopilot") |
+| `/autopilot-story [next\|id]` | Unattended loop for one story, ending in a hook-checked squash merge or a `needs-owner` issue. Run it through `scripts/autopilot.sh` (see "Autopilot") |
 | `/verify [--quick\|--full]` | Path- and OS-aware checks (`scripts/verify.sh`) |
 | `new-feature` | Screen + ViewModel + repository + fake + firebaseData impl + DI + route + tests from `templates/` |
 | `platform-capability` | Native capability behind a shared contract on both platforms |
@@ -60,9 +60,10 @@ Subagents are not a "team of roles" handing work to each other. Each one starts 
 
 **One-time setup:**
 1. Install `gh` and run `gh auth login`.
-2. GitHub → Settings → General: turn on **Allow auto-merge** and squash merging.
-3. Branch protection (or a ruleset) on `main`: require a pull request and the status checks **Secret scan**, **Android build, shared tests, lint**, **iOS framework, shared tests, app build** and **Backend build, lint, emulator tests**. **Don't** require an approving review: the agent acts as you, GitHub won't let you approve your own PR, and auto-merge would wait forever. Without required checks `--auto` merges immediately, which is why the skill also waits for green CI itself.
-4. Optional phone ping: GitHub doesn't notify you about issues you opened yourself, and the agent opens them as you. Set `AUTOPILOT_NOTIFY_CMD` (for example an ntfy.sh `curl`). The script also shows a desktop notification.
+2. Keep squash merging enabled (GitHub → Settings → General).
+3. Optional phone ping: GitHub doesn't notify you about issues you opened yourself, and the agent opens them as you. Set `AUTOPILOT_NOTIFY_CMD` (for example an ntfy.sh `curl`). The script also shows a desktop notification.
+
+**How merging is kept safe.** The repository is private on GitHub Free, which offers neither branch protection nor auto-merge, so the check runs in the guard hook instead. The agent may only run `gh pr merge <n> --squash --match-head-commit <sha>`. Before letting it through, `.claude/hooks/merge-check.mjs` asks GitHub for the PR and refuses unless it is open, not a draft, based on `main`, mergeable, its head is exactly `<sha>`, all four CI jobs passed on that sha and no other check failed or is still running. `--match-head-commit` makes gh refuse the merge if anything was pushed after the check. The required job names live in `merge-check.mjs`: rename a job in `ci.yml` and you must update that list, or every merge is refused. This protects against agent mistakes, not against a manual merge from the GitHub UI. With GitHub Pro you could add real branch protection on top.
 
 **Run** from a clean tree, ideally in a dedicated clone so you can keep working elsewhere:
 

@@ -10,10 +10,10 @@
 - STORY-01-01-03 Done (PR #7 merged as `30aa4fa`): Firestore cache, write path, preferences, sign-out wipe, Remote Config contract.
 - STORY-01-01-04 Done (PR #8 merged as `fb275fd`; dev deploy green: rules, indexes + `function_runs` TTL, functions). **EPIC-01-01 complete.**
 - EPIC-01-02: STORY-01-02-01 Done (PR #9 merged as `96ac220`): anonymous session + 13+ age gate.
-- Autopilot workflow (`scripts/autopilot.sh` + `/autopilot-story`) in Review on `10-autopilot`; usable once the setup in `.claude/README.md` "Autopilot" is done.
+- Autopilot workflow (`scripts/autopilot.sh` + `/autopilot-story`) merged (PR #10). GitHub Free has no auto-merge or branch protection on private repos, so merges move to a hook-checked squash merge: in Review on `11-hook-checked-merge`.
 
 ## Next
-1. Owner reviews and merges the autopilot PR, then does the one-time GitHub setup (Owner actions). Before release: set up Authentication + Anonymous on `fart-map-1a558` too.
+1. Owner merges the hook-checked merge PR, then runs `bash scripts/autopilot.sh --max 1` once and watches it. Before release: set up Authentication + Anonymous on `fart-map-1a558` too.
 2. On the Mac, run `FartMap Dev` once to confirm the STORY-01-01-02/03 shell on iOS.
 3. STORY-01-02-02 to -05 (profile + starter catalog seed, Google/Apple, linking, App Check), then EPIC-01-03 (map). -03 and -05 need owner console setup first.
 
@@ -28,13 +28,11 @@
 - Add the iOS configs on the Mac (`~/.fartmap/` + `scripts/inject-config.sh`) and `androidApp/secrets.properties` once the map lands.
 - Inter and JetBrains Mono font files (OFL) for `core/design`, or approve the download.
 - Later epics: Auth providers + App Check (EPIC-01-02); RevenueCat project + Offerings, AdMob app + test units, Remote Config template, App Store Connect / Play Console products (EPIC-01-06); a domain for links + landing page (EPIC-01-10).
-- Install `gh` (GitHub CLI) on this Windows machine and `gh auth login`, so agents can open PRs and autopilot can run.
-- For autopilot: enable "Allow auto-merge" and protect `main` with the four CI checks required and no required approval (`.claude/README.md` "Autopilot").
 
 ## Decided (owner, 2026-11-22)
 - Crash and analytics collection stays on in `prod` until the consent screen (EPIC-01-06) exists; then collection moves behind consent.
 - PUBLIC is adults-only, enforced in rules (2026-11-23, ADR-0023 amendment): 13–17 users post FOLLOWERS or PRIVATE only.
-- Autopilot may merge its own PRs through GitHub auto-merge after review and green CI (2026-11-23). Defaults: stop at each epic boundary, auto-merge everything that passes (flags `--cross-epics`, `--hold-sensitive`).
+- Autopilot may merge its own PRs after review and green CI, checked by the guard hook (2026-11-23; GitHub Free, no auto-merge). Defaults: stop at each epic boundary, merge everything that passes (flags `--cross-epics`, `--hold-sensitive`).
 - Phase 1 implementation prioritizes functionality; visual design (contrast, `surfaceContainer*` roles, fonts, icons) is revisited after implementation.
 
 ## Provisional

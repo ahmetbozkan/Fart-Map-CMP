@@ -4,7 +4,7 @@
 #   --max N           stop after N merged stories (default 5)
 #   --max-turns N     turn cap per session (default 400); hitting it counts as a crash
 #   --cross-epics     let the agent open the next epic (default: stop at each epic boundary)
-#   --hold-sensitive  don't auto-merge PRs touching rules, functions, entitlements or location; escalate instead
+#   --hold-sensitive  don't merge PRs touching rules, functions, entitlements or location; escalate instead
 #   --story ID        start with this story instead of "next" (first iteration only)
 # Each session runs the autopilot-story skill (.claude/skills/autopilot-story/SKILL.md) and writes
 # .claude/loop/status.json: merged | escalated | epic-boundary | roadmap-done. A missing file = crashed.
