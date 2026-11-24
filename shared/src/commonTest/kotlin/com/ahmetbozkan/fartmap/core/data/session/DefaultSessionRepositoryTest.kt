@@ -6,13 +6,16 @@ import com.ahmetbozkan.fartmap.core.domain.session.DeclaredAge
 import com.ahmetbozkan.fartmap.core.domain.session.SessionState
 import com.ahmetbozkan.fartmap.core.domain.session.SessionState.Kind.ANONYMOUS
 import com.ahmetbozkan.fartmap.core.domain.session.SessionState.Kind.LINKED
+import com.ahmetbozkan.fartmap.core.domain.session.SignInOutcome
 import com.ahmetbozkan.fartmap.core.domain.session.declaredAge
 import com.ahmetbozkan.fartmap.core.domain.visibility.AgeBand
 import com.ahmetbozkan.fartmap.core.fakes.FakeAccountRepository
 import com.ahmetbozkan.fartmap.core.fakes.FakeAuthGateway
+import com.ahmetbozkan.fartmap.core.fakes.FakeGoogleIdTokenProvider
 import com.ahmetbozkan.fartmap.core.fakes.FakePreferencesRepository
 import com.ahmetbozkan.fartmap.core.observability.AppError
 import com.ahmetbozkan.fartmap.core.observability.AppResult
+import com.ahmetbozkan.fartmap.core.platform.GoogleTokenResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
@@ -20,6 +23,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 private const val THIS_YEAR = 2026
 
@@ -28,12 +32,14 @@ class DefaultSessionRepositoryTest {
     private val auth = FakeAuthGateway()
     private val accounts = FakeAccountRepository()
     private val prefs = FakePreferencesRepository()
+    private val google = FakeGoogleIdTokenProvider()
 
     // Eager state collection runs in the test's background scope, dispatched immediately.
     private fun TestScope.repo() = DefaultSessionRepository(
         auth,
         accounts,
         prefs,
+        googleTokens = google,
         scope = CoroutineScope(backgroundScope.coroutineContext + UnconfinedTestDispatcher(testScheduler)),
         currentYear = { THIS_YEAR },
     )
@@ -143,6 +149,65 @@ class DefaultSessionRepositoryTest {
         auth.users.emit(null)
         assertEquals(AppResult.Failure(AppError.NetworkUnavailable), repo.continueAnonymously())
         assertEquals(SessionState.SignedOut, repo.session.value)
+    }
+
+    @Test
+    fun googleSignInOfANewUserNeedsTheAgeGateThenWritesANonAnonymousAccount() = runTest {
+        val repo = repo()
+        auth.users.emit(null)
+        assertEquals(AppResult.Success(SignInOutcome.SIGNED_IN), repo.signInWithGoogle())
+        assertEquals("id-token", auth.googleIdToken)
+        assertEquals(SessionState.NeedsAgeBand(LINKED), repo.session.value)
+
+        repo.declareBirthYear(1990)
+        assertEquals(SessionState.Active("google-1", LINKED, AgeBand.ADULT), repo.session.value)
+        assertEquals(listOf(Triple("google-1", AgeBand.ADULT, false)), accounts.created)
+    }
+
+    @Test
+    fun googleSignInOfAnExistingAccountGoesStraightToActive() = runTest {
+        accounts.createAccount("google-1", AgeBand.TEEN, isAnonymous = false)
+        val repo = repo()
+        auth.users.emit(null)
+        repo.signInWithGoogle()
+        assertEquals(SessionState.Active("google-1", LINKED, AgeBand.TEEN), repo.session.value)
+    }
+
+    @Test
+    fun cancellingTheGoogleSheetIsNotAnErrorAndSignsNothingIn() = runTest {
+        google.next = GoogleTokenResult.Cancelled
+        val repo = repo()
+        auth.users.emit(null)
+        assertEquals(AppResult.Success(SignInOutcome.CANCELLED), repo.signInWithGoogle())
+        assertNull(auth.googleIdToken)
+        assertEquals(SessionState.SignedOut, repo.session.value)
+    }
+
+    @Test
+    fun aGoogleProviderFailureIsTypedAndSkipsFirebase() = runTest {
+        google.next = GoogleTokenResult.Failed(AppError.NetworkUnavailable)
+        val repo = repo()
+        auth.users.emit(null)
+        assertEquals(AppResult.Failure(AppError.NetworkUnavailable), repo.signInWithGoogle())
+        assertNull(auth.googleIdToken)
+        assertEquals(SessionState.SignedOut, repo.session.value)
+    }
+
+    @Test
+    fun aRejectedGoogleCredentialIsTypedAndStaysSignedOut() = runTest {
+        auth.signInError = AppError.Unknown
+        val repo = repo()
+        auth.users.emit(null)
+        assertEquals(AppResult.Failure(AppError.Unknown), repo.signInWithGoogle())
+        assertEquals(SessionState.SignedOut, repo.session.value)
+    }
+
+    @Test
+    fun aBlockedInstallStaysBlockedAfterGoogleSignIn() = runTest {
+        prefs.blocked.value = true
+        val repo = repo()
+        repo.signInWithGoogle()
+        assertEquals(SessionState.AgeBlocked, repo.session.value)
     }
 
     @Test

@@ -14,6 +14,7 @@
 		FB0000000000000000000205 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = FB0000000000000000000105 /* FirebaseCrashlytics */; };
 		FB0000000000000000000206 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = FB0000000000000000000106 /* FirebaseMessaging */; };
 		FB0000000000000000000207 /* FirebaseAppCheck in Frameworks */ = {isa = PBXBuildFile; productRef = FB0000000000000000000107 /* FirebaseAppCheck */; };
+		FB0000000000000000000208 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = FB0000000000000000000108 /* GoogleSignIn */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -58,6 +59,7 @@
 				FB0000000000000000000205 /* FirebaseCrashlytics in Frameworks */,
 				FB0000000000000000000206 /* FirebaseMessaging in Frameworks */,
 				FB0000000000000000000207 /* FirebaseAppCheck in Frameworks */,
+				FB0000000000000000000208 /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -93,6 +95,7 @@
 				E6CEFB3173325A6463B5899B /* Frameworks */,
 				AC3570783A54D9B356262BC8 /* Resources */,
 				75A74A8512BD22F0579D00F8 /* Copy Firebase Config */,
+				75A74A8512BD22F0579D00F9 /* Register Google URL Scheme */,
 			);
 			buildRules = (
 			);
@@ -110,6 +113,7 @@
 				FB0000000000000000000105 /* FirebaseCrashlytics */,
 				FB0000000000000000000106 /* FirebaseMessaging */,
 				FB0000000000000000000107 /* FirebaseAppCheck */,
+				FB0000000000000000000108 /* GoogleSignIn */,
 			);
 			productName = iosApp;
 			productReference = 20D886B9944516BB0E2D06F3 /* Fart Map.app */;
@@ -141,6 +145,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				FB0000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				FB0000000000000000000002 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 345B4071DE3026CA02646F3F /* Products */;
@@ -201,6 +206,25 @@
 			shellPath = /bin/sh;
 			shellScript = "set -e\nSRC=\"$SRCROOT/Configuration/GoogleService-Info-$APP_ENV.plist\"\nif [ ! -f \"$SRC\" ]; then\n  echo \"error: missing $SRC. Run scripts/inject-config.sh (see README, Config injection).\" >&2\n  exit 1\nfi\nmkdir -p \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH\"\ncp \"$SRC\" \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/GoogleService-Info.plist\"\necho \"Copied Firebase config for APP_ENV=$APP_ENV\"\n";
 		};
+		75A74A8512BD22F0579D00F9 /* Register Google URL Scheme */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Register Google URL Scheme";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# GoogleSignIn needs the reversed client id as a URL scheme. It lives in the injected (untracked) config, so it is\n# copied into the built Info.plist here. The value is never printed.\nset -e\nPB=/usr/libexec/PlistBuddy\nCONFIG=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/GoogleService-Info.plist\"\nINFO=\"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\nSCHEME=$(\"$PB\" -c \"Print :REVERSED_CLIENT_ID\" \"$CONFIG\" 2>/dev/null || true)\nif [ -z \"$SCHEME\" ]; then\n  echo \"warning: GoogleService-Info-$APP_ENV.plist has no REVERSED_CLIENT_ID. Google sign-in stays off until the Google provider is enabled and the config re-downloaded.\"\n  exit 0\nfi\nif \"$PB\" -c \"Print :CFBundleURLTypes\" \"$INFO\" 2>/dev/null | grep -qF \"$SCHEME\"; then\n  exit 0\nfi\n\"$PB\" -c \"Print :CFBundleURLTypes\" \"$INFO\" >/dev/null 2>&1 || \"$PB\" -c \"Add :CFBundleURLTypes array\" \"$INFO\"\n\"$PB\" -c \"Add :CFBundleURLTypes:0 dict\" \"$INFO\"\n\"$PB\" -c \"Add :CFBundleURLTypes:0:CFBundleURLSchemes array\" \"$INFO\"\n\"$PB\" -c \"Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string $SCHEME\" \"$INFO\"\necho \"Registered the Google sign-in URL scheme for APP_ENV=$APP_ENV\"\n";
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -220,6 +244,14 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 13.0.1;
+			};
+		};
+		FB0000000000000000000002 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -259,6 +291,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FB0000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAppCheck;
+		};
+		FB0000000000000000000108 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FB0000000000000000000002 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
 		};
 /* End XCSwiftPackageProductDependency section */
 

@@ -60,6 +60,7 @@ private val dataModule = module {
             auth = get(),
             accounts = get(),
             preferences = get(),
+            googleTokens = get(),
             scope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
             currentYear = ::currentYear,
         )

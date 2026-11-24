@@ -1,4 +1,5 @@
 import SwiftUI
+import GoogleSignIn
 
 @main
 struct iOSApp: App {
@@ -7,6 +8,8 @@ struct iOSApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                // The GoogleSignIn redirect (reversed client id scheme) returns here.
+                .onOpenURL { url in _ = GIDSignIn.sharedInstance.handle(url) }
         }
     }
 }

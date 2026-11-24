@@ -14,6 +14,9 @@ interface AuthGateway {
 
     suspend fun signInAnonymously(): AppResult<Unit>
 
+    /** Signs in to Firebase with Google tokens from the native sheet. Online-only. */
+    suspend fun signInWithGoogle(idToken: String, accessToken: String?): AppResult<Unit>
+
     suspend fun signOut(): AppResult<Unit>
 }
 

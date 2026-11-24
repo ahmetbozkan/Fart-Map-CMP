@@ -6,8 +6,6 @@
     <string name="auth_title">Fart Map</string>
     <string name="auth_tagline">Leave your mark on the world. Literally.</string>
     <string name="auth_google">Continue with Google</string>
-    <string name="auth_apple">Continue with Apple</string>
-    <string name="auth_coming_soon">Coming soon. It's still brewing.</string>
     <string name="auth_guest">Continue without account</string>
 
     <string name="age_gate_title">One quick question</string>
