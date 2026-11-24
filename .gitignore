@@ -44,4 +44,5 @@ backend/functions/lib/
 CLAUDE.local.md
 
 # Autopilot run state and logs (scripts/autopilot.sh)
-.claude/loop/
+.autopilot/
+scripts/autopilot.local.env
