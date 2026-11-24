@@ -297,7 +297,7 @@ Readable by all authenticated users; writable by backend/admin only.
 
 **Free starter items:**
 - They are defined once, in `backend/catalog/starter-catalog.json`.
-- Seed them into dev or an emulator with `npm run seed:catalog -- --project <id>` in `backend/functions`. This uses Admin SDK + ADC, and the script refuses prod.
+- Seed them into dev or an emulator with `npm run seed:catalog -- --project <id>` in `backend/functions`. This uses Admin SDK + ADC, and the script only accepts `fart-map-dev` or `demo-*` emulator projects and free items.
 - The app's starter avatar list must match the file; `StarterCatalogParityTest` checks this.
 - The prod catalog ships with EPIC-01-06.
 

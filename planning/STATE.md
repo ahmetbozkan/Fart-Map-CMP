@@ -11,7 +11,7 @@
 - STORY-01-01-04 Done (PR #8 merged as `fb275fd`; dev deploy green: rules, indexes + `function_runs` TTL, functions). **EPIC-01-01 complete.**
 - EPIC-01-02: STORY-01-02-01 Done (PR #9 merged as `96ac220`): anonymous session + 13+ age gate.
 - Autopilot workflow merged (PR #10), with the hook-checked squash merge (PR #11, `4ddec11`).
-- STORY-01-02-02 Done (PR #12): public profile `users/{uid}` (generated name + free starter avatar, created on Active), starter catalog in `backend/catalog/starter-catalog.json` + `npm run seed:catalog`.
+- STORY-01-02-02 Done (PR #13): public profile `users/{uid}` (generated name + free starter avatar, created on Active), starter catalog in `backend/catalog/starter-catalog.json` + `npm run seed:catalog`.
 
 ## Next
 1. Owner: seed the dev catalog once (Owner actions), then check `users/{uid}` on a fresh dev install.
@@ -30,7 +30,7 @@
   2. `cd backend/functions && npm run seed:catalog -- --project fart-map-dev`.
 
   Until then, profile creates on dev are logged as `write_rejected`.
-- **Release-blocking:** seed the prod catalog before any prod release (EPIC-01-06; the seed script refuses prod). Also set up Authentication + Anonymous on `fart-map-1a558`.
+- **Release-blocking:** seed the prod catalog before any prod release (EPIC-01-06; the seed script only seeds `fart-map-dev` and emulators). Also set up Authentication + Anonymous on `fart-map-1a558`.
 - Prod (`fart-map-1a558`) before the first release deploy: the same setup as dev (deploy roles incl. Service Account User, APIs incl. Cloud Run / Eventarc / Cloud Billing, the three service-agent roles, Blaze); expect one retry for Eventarc propagation.
 - Add the iOS configs on the Mac (`~/.fartmap/` + `scripts/inject-config.sh`) and `androidApp/secrets.properties` once the map lands.
 - Inter and JetBrains Mono font files (OFL) for `core/design`, or approve the download.

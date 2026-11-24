@@ -2,7 +2,8 @@
 // never deployed. Run by the owner with Application Default Credentials:
 //   gcloud auth application-default login
 //   npm run seed:catalog -- --project fart-map-dev
-// Idempotent: upserts each starter item and leaves every other catalog doc alone. Refuses prod.
+// Idempotent: upserts each starter item and leaves every other catalog doc alone. Only fart-map-dev or demo-*
+// emulator projects are accepted, and only free items are written.
 import { initializeApp } from "firebase-admin/app";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import { logError, logInfo } from "../lib/log";

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  PROD_PROJECT_ID, assertSeedTarget, catalogDocs, loadStarterCatalog, validateCatalog,
+  assertSeedTarget, assertStarterItemsFree, catalogDocs, loadStarterCatalog, validateCatalog,
 } from "../src/admin/starterCatalog";
 
 describe("starter catalog (backend/catalog/starter-catalog.json)", () => {
@@ -43,14 +43,31 @@ describe("validateCatalog", () => {
   });
 });
 
-describe("assertSeedTarget", () => {
-  it("returns a dev project", () => {
+describe("assertSeedTarget (allowlist)", () => {
+  it("accepts dev and emulator projects, normalized", () => {
     expect(assertSeedTarget("fart-map-dev")).toBe("fart-map-dev");
+    expect(assertSeedTarget(" Fart-Map-Dev ")).toBe("fart-map-dev");
+    expect(assertSeedTarget("demo-fartmap")).toBe("demo-fartmap");
   });
 
-  it("refuses a missing project and prod", () => {
+  it("refuses a missing project, prod, and anything else", () => {
     expect(() => assertSeedTarget(undefined)).toThrow(/--project/);
     expect(() => assertSeedTarget(" ")).toThrow(/--project/);
-    expect(() => assertSeedTarget(PROD_PROJECT_ID)).toThrow(/prod/);
+    expect(() => assertSeedTarget("fart-map-1a558")).toThrow(/only seeds/);
+    expect(() => assertSeedTarget("FART-MAP-1A558")).toThrow(/only seeds/);
+    expect(() => assertSeedTarget("fart-map-staging")).toThrow(/only seeds/);
+  });
+});
+
+describe("assertStarterItemsFree", () => {
+  const free = {
+    item_id: "avatar_x", type: "AVATAR" as const, name: "X", asset_ref: "avatar_x",
+    is_free: true, rewarded_unlockable: false, sort_order: 1, is_active: true,
+  };
+
+  it("passes free items and refuses paid or rewarded ones", () => {
+    expect(assertStarterItemsFree([free])).toEqual([free]);
+    expect(() => assertStarterItemsFree([{ ...free, is_free: false }])).toThrow(/avatar_x/);
+    expect(() => assertStarterItemsFree([{ ...free, rewarded_unlockable: true }])).toThrow(/free-only/);
   });
 });

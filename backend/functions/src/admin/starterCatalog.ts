@@ -24,7 +24,7 @@ export function loadStarterCatalog(path: string = STARTER_CATALOG_PATH): Catalog
   const parsed: unknown = JSON.parse(readFileSync(path, "utf8"));
   const items = (parsed as { items?: unknown }).items;
   if (!Array.isArray(items)) throw new Error("starter catalog: `items` must be an array");
-  return validateCatalog(items);
+  return assertStarterItemsFree(validateCatalog(items));
 }
 
 /** Checks every field and the uniqueness of ids; returns the items typed. */
@@ -65,12 +65,27 @@ export function catalogDocs<T>(items: CatalogItem[], updatedAt: T): Record<strin
   return docs;
 }
 
-/** Prod's catalog (paid items, Offerings) ships with EPIC-01-06; this seed is for dev and emulators only. */
-export const PROD_PROJECT_ID = "fart-map-1a558";
+/**
+ * Projects the seed may write to: dev and local emulator projects (`demo-*`) only. An allowlist, so a typo, a new
+ * staging project or prod (whose catalog ships with EPIC-01-06) can never receive privileged catalog writes.
+ */
+export const DEV_PROJECT_ID = "fart-map-dev";
 
-/** Returns the project to seed, or throws when it is missing or prod. */
+/** Returns the normalized project to seed, or throws when it is missing or not allowed. */
 export function assertSeedTarget(project: string | undefined): string {
-  if (!project || project.trim().length === 0) throw new Error("seed:catalog needs --project <id>");
-  if (project === PROD_PROJECT_ID) throw new Error(`seed:catalog refuses prod (${PROD_PROJECT_ID}); see EPIC-01-06`);
-  return project;
+  const id = project?.trim().toLowerCase() ?? "";
+  if (id.length === 0) throw new Error("seed:catalog needs --project <id>");
+  if (id !== DEV_PROJECT_ID && !id.startsWith("demo-")) {
+    throw new Error(`seed:catalog only seeds ${DEV_PROJECT_ID} or demo-* emulator projects, not "${id}"`);
+  }
+  return id;
+}
+
+/** The starter catalog is free items only; a paid or rewarded item here would be a free grant to everyone. */
+export function assertStarterItemsFree(items: CatalogItem[]): CatalogItem[] {
+  const paid = items.filter((item) => !item.is_free || item.rewarded_unlockable);
+  if (paid.length > 0) {
+    throw new Error(`starter catalog must be free-only; offending: ${paid.map((item) => item.item_id).join(", ")}`);
+  }
+  return items;
 }
