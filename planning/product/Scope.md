@@ -213,7 +213,7 @@ MVP is the minimum scope that makes Phase 1 meaningful, safe, and shippable — 
 - Cold start: labeled "Fart Map Official" landmark markers, aggregated regional counts at low zoom, one launch city or campus first
 
 **Onboarding**
-- First-launch flow: map orientation, first log guidance, concept explanation — runs on an anonymous session with full capability (ADR-0018); linking a Google or Apple account is nudged after the first log and never forced
+- First-launch flow: map orientation, first log guidance, concept explanation — runs on an anonymous session with full capability (ADR-0018); linking a Google account is nudged after the first log and never forced. Sign-in providers in Phase 1: anonymous and Google. Apple is Phase 2 (owner, 2026-11-25), and App Store guideline 4.8 must be met before the iOS store release (`Growth.md` §2)
 
 **Monetization (ADR-0016, ADR-0017, ADR-0020)**
 - A la carte purchase of avatars and sounds through RevenueCat over Apple IAP / Google Play Billing; entitlements verified server-side
@@ -255,6 +255,7 @@ The following are explicitly out of MVP scope. Any proposal to include them befo
 | Map history / personal replay | Requires activity accumulation | Phase 3 |
 | Social discovery / search | Requires follow graph population | Phase 2 |
 | Push notification system (full) | Requires social graph events to trigger | Phase 2 |
+| Sign in with Apple (sign-in and linking) | Needs a paid Apple Developer account (owner, 2026-11-25). Guideline 4.8 must still be met before the iOS store release | Phase 2 |
 
 ---
 
