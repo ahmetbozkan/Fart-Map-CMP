@@ -1,6 +1,7 @@
 package com.ahmetbozkan.fartmap.firebase.profile
 
 import com.ahmetbozkan.fartmap.core.domain.profile.NewProfile
+import dev.gitlive.firebase.firestore.Timestamp
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -35,5 +36,16 @@ class ProfileDtoTest {
         assertEquals(0, dto.followerCount)
         assertEquals(0, dto.followingCount)
         assertEquals(false, dto.isFollowingListPublic)
+        assertEquals(Timestamp.ServerTimestamp, dto.createdAt)
+        assertEquals(Timestamp.ServerTimestamp, dto.updatedAt)
+    }
+
+    /** No defaults: every rules-required field is encoded even if `encodeDefaults` is off. */
+    @Test
+    fun noFieldReliesOnADefault() {
+        val descriptor = ProfileDto.serializer().descriptor
+        val optional = (0 until descriptor.elementsCount).filter(descriptor::isElementOptional)
+            .map(descriptor::getElementName)
+        assertEquals(emptyList(), optional)
     }
 }

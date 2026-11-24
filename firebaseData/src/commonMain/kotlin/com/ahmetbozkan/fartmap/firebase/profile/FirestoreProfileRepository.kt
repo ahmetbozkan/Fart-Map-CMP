@@ -21,23 +21,33 @@ import kotlin.coroutines.cancellation.CancellationException
 /**
  * `users/{uid}` as the owner creates it (DataContracts.md §3.1). The field set is exactly the rules' create set:
  * counters start at 0 (server-written afterwards), the following list starts private (ADR-0012), timestamps are
- * server timestamps. `bio` and `signature_style_id` are optional and not set at creation. GitLive encodes defaults.
+ * server timestamps. `bio` and `signature_style_id` are optional and not set at creation. No property has a default,
+ * so every create field is encoded whatever the serializer's `encodeDefaults` setting is.
  */
 @Serializable
 internal data class ProfileDto(
     @SerialName("user_id") val userId: String,
     @SerialName("display_name") val displayName: String,
     @SerialName("avatar_id") val avatarId: String,
-    @SerialName("follower_count") val followerCount: Int = 0,
-    @SerialName("following_count") val followingCount: Int = 0,
-    @SerialName("is_following_list_public") val isFollowingListPublic: Boolean = false,
+    @SerialName("follower_count") val followerCount: Int,
+    @SerialName("following_count") val followingCount: Int,
+    @SerialName("is_following_list_public") val isFollowingListPublic: Boolean,
     @SerialName("created_at") @Serializable(with = BaseTimestampSerializer::class)
-    val createdAt: BaseTimestamp = Timestamp.ServerTimestamp,
+    val createdAt: BaseTimestamp,
     @SerialName("updated_at") @Serializable(with = BaseTimestampSerializer::class)
-    val updatedAt: BaseTimestamp = Timestamp.ServerTimestamp,
+    val updatedAt: BaseTimestamp,
 )
 
-internal fun NewProfile.toDto(uid: String) = ProfileDto(userId = uid, displayName = displayName, avatarId = avatarId)
+internal fun NewProfile.toDto(uid: String) = ProfileDto(
+    userId = uid,
+    displayName = displayName,
+    avatarId = avatarId,
+    followerCount = 0,
+    followingCount = 0,
+    isFollowingListPublic = false,
+    createdAt = Timestamp.ServerTimestamp,
+    updatedAt = Timestamp.ServerTimestamp,
+)
 
 class FirestoreProfileRepository(
     private val firestore: FirestoreProvider,
