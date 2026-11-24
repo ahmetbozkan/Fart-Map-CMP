@@ -53,6 +53,12 @@ Collection names are canonical for planning; implementation may add namespace pr
 
 Readable by any signed-in user. The owner creates it and edits only `display_name`, `avatar_id`, `bio`, `signature_style_id`, `is_following_list_public`.
 
+**Creation (STORY-01-02-02):** the app creates the doc once the session is Active and the server confirms the doc is missing. It writes:
+- a generated display name, `<Adjective> <Noun> <10–99>`;
+- a free starter avatar.
+
+It does not set `bio` or `signature_style_id`. The create is tried once per uid per app process.
+
 ### 3.1.1 `users/{userId}/private/account` (owner-only, ADR-0025)
 
 | Field | Type | Required | Notes |
@@ -288,6 +294,12 @@ Restricted moderation collection. The document id is `{reporter_user_id}_{target
 | `updated_at` | Timestamp | Yes | |
 
 Readable by all authenticated users; writable by backend/admin only.
+
+**Free starter items:**
+- They are defined once, in `backend/catalog/starter-catalog.json`.
+- Seed them into dev or an emulator with `npm run seed:catalog -- --project <id>` in `backend/functions`. This uses Admin SDK + ADC, and the script only accepts `fart-map-dev` or `demo-*` emulator projects and free items.
+- The app's starter avatar list must match the file; `StarterCatalogParityTest` checks this.
+- The prod catalog ships with EPIC-01-06.
 
 ## 3.14 `user_entitlements/{userId}` (backend-written, ADR-0016)
 

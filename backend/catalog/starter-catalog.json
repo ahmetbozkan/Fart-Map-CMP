@@ -1,0 +1,55 @@
+{
+  "_comment": "Free starter cosmetics (DataContracts.md §3.13, Monetization.md free minimums, ADR-0024). Single source: seeded by `npm run seed:catalog` in backend/functions; the free avatar ids are mirrored in shared StarterAvatars and checked by StarterCatalogParityTest.",
+  "items": [
+    {
+      "item_id": "avatar_free_bean",
+      "type": "AVATAR",
+      "name": "Bean Bandit",
+      "asset_ref": "avatar_free_bean",
+      "is_free": true,
+      "rewarded_unlockable": false,
+      "sort_order": 10,
+      "is_active": true
+    },
+    {
+      "item_id": "avatar_free_cloud",
+      "type": "AVATAR",
+      "name": "Cloud Nine",
+      "asset_ref": "avatar_free_cloud",
+      "is_free": true,
+      "rewarded_unlockable": false,
+      "sort_order": 20,
+      "is_active": true
+    },
+    {
+      "item_id": "sound_free_classic",
+      "type": "SOUND",
+      "name": "The Classic",
+      "asset_ref": "sound_free_classic",
+      "is_free": true,
+      "rewarded_unlockable": false,
+      "sort_order": 10,
+      "is_active": true
+    },
+    {
+      "item_id": "sound_free_squeak",
+      "type": "SOUND",
+      "name": "Polite Squeak",
+      "asset_ref": "sound_free_squeak",
+      "is_free": true,
+      "rewarded_unlockable": false,
+      "sort_order": 20,
+      "is_active": true
+    },
+    {
+      "item_id": "sound_free_thunder",
+      "type": "SOUND",
+      "name": "Rolling Thunder",
+      "asset_ref": "sound_free_thunder",
+      "is_free": true,
+      "rewarded_unlockable": false,
+      "sort_order": 30,
+      "is_active": true
+    }
+  ]
+}

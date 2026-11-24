@@ -14,8 +14,12 @@ class InMemorySessionRepository(initial: SessionState = SessionState.SignedOut) 
     private val state = MutableStateFlow(initial)
     override val session: StateFlow<SessionState> = state.asStateFlow()
 
+    fun set(value: SessionState) {
+        state.value = value
+    }
+
     override suspend fun continueAnonymously(): AppResult<Unit> {
-        state.value = SessionState.Active(SessionState.Kind.ANONYMOUS, AgeBand.ADULT)
+        state.value = SessionState.Active("u1", SessionState.Kind.ANONYMOUS, AgeBand.ADULT)
         return AppResult.Success(Unit)
     }
 

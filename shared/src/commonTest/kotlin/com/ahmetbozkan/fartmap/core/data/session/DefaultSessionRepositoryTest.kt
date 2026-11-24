@@ -54,7 +54,7 @@ class DefaultSessionRepositoryTest {
         assertEquals(SessionState.NeedsAgeBand(ANONYMOUS), repo.session.value)
 
         assertEquals(AppResult.Success(AgeGateOutcome.ADMITTED), repo.declareBirthYear(1990))
-        assertEquals(SessionState.Active(ANONYMOUS, AgeBand.ADULT), repo.session.value)
+        assertEquals(SessionState.Active("anon-1", ANONYMOUS, AgeBand.ADULT), repo.session.value)
         assertEquals(listOf(Triple("anon-1", AgeBand.ADULT, true)), accounts.created)
     }
 
@@ -63,7 +63,7 @@ class DefaultSessionRepositoryTest {
         val repo = repo()
         repo.continueAnonymously()
         repo.declareBirthYear(THIS_YEAR - 15)
-        assertEquals(SessionState.Active(ANONYMOUS, AgeBand.TEEN), repo.session.value)
+        assertEquals(SessionState.Active("anon-1", ANONYMOUS, AgeBand.TEEN), repo.session.value)
     }
 
     @Test
@@ -123,7 +123,7 @@ class DefaultSessionRepositoryTest {
         accounts.createAccount("u1", AgeBand.ADULT, isAnonymous = false)
         val repo = repo()
         auth.users.emit(AuthUser("u1", isAnonymous = false))
-        assertEquals(SessionState.Active(LINKED, AgeBand.ADULT), repo.session.value)
+        assertEquals(SessionState.Active("u1", LINKED, AgeBand.ADULT), repo.session.value)
     }
 
     @Test

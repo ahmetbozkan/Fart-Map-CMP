@@ -62,7 +62,7 @@ jobs:
         run: scripts/inject-config.sh --require-all
       - name: Build and test
         # detekt = static analysis (no swallowed errors, Compose rules); testAndroidHostTest includes the Konsist architecture tests.
-        run: ./gradlew detekt :androidApp:assembleDevDebug :androidApp:assembleProdDebug :shared:testAndroidHostTest :androidApp:lintDevDebug --stacktrace
+        run: ./gradlew detekt :androidApp:assembleDevDebug :androidApp:assembleProdDebug :shared:testAndroidHostTest :firebaseData:testAndroidHostTest :androidApp:lintDevDebug --stacktrace
       - name: Upload reports
         if: failure()
         uses: actions/upload-artifact@v7

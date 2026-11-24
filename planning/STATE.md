@@ -1,7 +1,7 @@
 # STATE
 
 > Live operating state. Keep it under about 40 lines; history belongs in git and PRs, decisions in `planning/decisions/`. The SessionStart hook prints the "Now" block. Update it with every story status change.
-> Last updated: 2026-11-23.
+> Last updated: 2026-11-24.
 
 ## Now
 - Phase 1, EPIC-01-01. STORY-01-01-01 Done. Planning consolidation, `.claude/` setup, static analysis and ADR-0022/0023/0024 acceptance merged (PRs #2–#5).
@@ -10,12 +10,13 @@
 - STORY-01-01-03 Done (PR #7 merged as `30aa4fa`): Firestore cache, write path, preferences, sign-out wipe, Remote Config contract.
 - STORY-01-01-04 Done (PR #8 merged as `fb275fd`; dev deploy green: rules, indexes + `function_runs` TTL, functions). **EPIC-01-01 complete.**
 - EPIC-01-02: STORY-01-02-01 Done (PR #9 merged as `96ac220`): anonymous session + 13+ age gate.
-- Autopilot workflow (`scripts/autopilot.sh` + `/autopilot-story`) merged (PR #10). GitHub Free has no auto-merge or branch protection on private repos, so merges move to a hook-checked squash merge: in Review on `11-hook-checked-merge`.
+- Autopilot workflow merged (PR #10), with the hook-checked squash merge (PR #11, `4ddec11`).
+- STORY-01-02-02 Done (PR #13): public profile `users/{uid}` (generated name + free starter avatar, created on Active), starter catalog in `backend/catalog/starter-catalog.json` + `npm run seed:catalog`.
 
 ## Next
-1. Owner merges the hook-checked merge PR, then runs `bash scripts/autopilot.sh --max 1` once and watches it. Before release: set up Authentication + Anonymous on `fart-map-1a558` too.
-2. On the Mac, run `FartMap Dev` once to confirm the STORY-01-01-02/03 shell on iOS.
-3. STORY-01-02-02 to -05 (profile + starter catalog seed, Google/Apple, linking, App Check), then EPIC-01-03 (map). -03 and -05 need owner console setup first.
+1. Owner: seed the dev catalog once (Owner actions), then check `users/{uid}` on a fresh dev install.
+2. On the Mac, run `FartMap Dev` once to confirm the shell on iOS.
+3. STORY-01-02-03 to -05 (Google/Apple, linking, App Check), then EPIC-01-03 (map). -03 and -05 need owner console setup first.
 
 ## Pending owner decisions
 - Further minor-safe defaults for the 13–17 band (PUBLIC is already blocked for them) and the other Phase 1 launch items in `planning/product/Scope.md` §7a.
@@ -24,6 +25,12 @@
 - Open items in `planning/product/Scope.md` §7a marked "Phase 1 launch": push preferences, sensitive zones.
 
 ## Owner actions (external consoles)
+- **Dev catalog seed (unblocks profile creation on dev):**
+  1. `gcloud auth application-default login`;
+  2. `cd backend/functions && npm run seed:catalog -- --project fart-map-dev`.
+
+  Until then, profile creates on dev are logged as `write_rejected`.
+- **Release-blocking:** seed the prod catalog before any prod release (EPIC-01-06; the seed script only seeds `fart-map-dev` and emulators). Also set up Authentication + Anonymous on `fart-map-1a558`.
 - Prod (`fart-map-1a558`) before the first release deploy: the same setup as dev (deploy roles incl. Service Account User, APIs incl. Cloud Run / Eventarc / Cloud Billing, the three service-agent roles, Blaze); expect one retry for Eventarc propagation.
 - Add the iOS configs on the Mac (`~/.fartmap/` + `scripts/inject-config.sh`) and `androidApp/secrets.properties` once the map lands.
 - Inter and JetBrains Mono font files (OFL) for `core/design`, or approve the download.

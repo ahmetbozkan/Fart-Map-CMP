@@ -14,8 +14,8 @@ class RoutesTest {
     fun sessionMapsToRootDestination() {
         assertEquals(SplashRoute, SessionState.Loading.rootRoute())
         assertEquals(AuthRoute, SessionState.SignedOut.rootRoute())
-        assertEquals(MainRoute, SessionState.Active(ANONYMOUS, AgeBand.ADULT).rootRoute())
-        assertEquals(MainRoute, SessionState.Active(LINKED, AgeBand.ADULT).rootRoute())
+        assertEquals(MainRoute, SessionState.Active("u1", ANONYMOUS, AgeBand.ADULT).rootRoute())
+        assertEquals(MainRoute, SessionState.Active("u1", LINKED, AgeBand.ADULT).rootRoute())
         assertEquals(AgeGateRoute, SessionState.NeedsAgeBand(ANONYMOUS).rootRoute())
         assertEquals(AgeBlockedRoute, SessionState.AgeBlocked.rootRoute())
     }
@@ -23,18 +23,18 @@ class RoutesTest {
     @Test
     fun passingTheAgeGateResetsToMainAndUnder13ResetsToBlocked() {
         assertEquals(AgeGateRoute, rootNavigationFor(AuthRoute, SessionState.NeedsAgeBand(ANONYMOUS)))
-        assertEquals(MainRoute, rootNavigationFor(AgeGateRoute, SessionState.Active(ANONYMOUS, AgeBand.ADULT)))
+        assertEquals(MainRoute, rootNavigationFor(AgeGateRoute, SessionState.Active("u1", ANONYMOUS, AgeBand.ADULT)))
         assertEquals(AgeBlockedRoute, rootNavigationFor(AgeGateRoute, SessionState.AgeBlocked))
     }
 
     @Test
     fun finishingAuthResetsToMain() {
-        assertEquals(MainRoute, rootNavigationFor(AuthRoute, SessionState.Active(ANONYMOUS, AgeBand.ADULT)))
+        assertEquals(MainRoute, rootNavigationFor(AuthRoute, SessionState.Active("u1", ANONYMOUS, AgeBand.ADULT)))
     }
 
     @Test
     fun anonymousToLinkedKeepsTheBackStack() {
-        assertNull(rootNavigationFor(MainRoute, SessionState.Active(LINKED, AgeBand.ADULT)))
+        assertNull(rootNavigationFor(MainRoute, SessionState.Active("u1", LINKED, AgeBand.ADULT)))
     }
 
     @Test

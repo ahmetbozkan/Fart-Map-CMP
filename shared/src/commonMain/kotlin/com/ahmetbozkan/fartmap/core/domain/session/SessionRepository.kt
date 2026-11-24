@@ -16,8 +16,11 @@ sealed interface SessionState {
     /** An under-13 birth year was declared on this install; the app stays closed. */
     data object AgeBlocked : SessionState
 
-    /** Only ADULT or TEEN: an Active session always has a declared age band. */
-    data class Active(val kind: Kind, val ageBand: AgeBand) : SessionState
+    /**
+     * Only ADULT or TEEN: an Active session always has a declared age band. [uid] travels with the state so consumers
+     * never pair a new user with the previous user's Active state.
+     */
+    data class Active(val uid: String, val kind: Kind, val ageBand: AgeBand) : SessionState
 
     enum class Kind { ANONYMOUS, LINKED }
 }

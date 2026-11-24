@@ -20,6 +20,8 @@ kotlin {
         compilerOptions {
             jvmTarget = JvmTarget.JVM_17
         }
+        // Pure DTO/mapper tests (no Firebase init): `./gradlew :firebaseData:testAndroidHostTest`.
+        withHostTest {}
     }
 
     sourceSets {
@@ -40,6 +42,9 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+        }
+        getByName("androidHostTest").dependencies {
+            implementation(libs.kotlin.testJunit)
         }
     }
 }
