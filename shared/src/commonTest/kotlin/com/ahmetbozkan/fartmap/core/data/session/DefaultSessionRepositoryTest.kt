@@ -78,7 +78,8 @@ class DefaultSessionRepositoryTest {
         repo.continueAnonymously()
         assertEquals(AppResult.Success(AgeGateOutcome.BLOCKED), repo.declareBirthYear(THIS_YEAR - 10))
         assertEquals(SessionState.AgeBlocked, repo.session.value)
-        assertEquals(1, auth.signOuts)
+        assertEquals(1, auth.deletes) // the Auth user is deleted, not just signed out
+        assertEquals(0, auth.signOuts)
         assertEquals(
             emptyList<Triple<String, AgeBand, Boolean>>(),
             accounts.created
@@ -200,6 +201,27 @@ class DefaultSessionRepositoryTest {
         auth.users.emit(null)
         assertEquals(AppResult.Failure(AppError.Unknown), repo.signInWithGoogle())
         assertEquals(SessionState.SignedOut, repo.session.value)
+    }
+
+    @Test
+    fun anUnderThirteenGoogleUserIsDeletedSoNoChildIdentityStays() = runTest {
+        val repo = repo()
+        auth.users.emit(null)
+        repo.signInWithGoogle()
+        assertEquals(AppResult.Success(AgeGateOutcome.BLOCKED), repo.declareBirthYear(THIS_YEAR - 11))
+        assertEquals(1, auth.deletes)
+        assertEquals(SessionState.AgeBlocked, repo.session.value)
+        assertEquals(emptyList<Triple<String, AgeBand, Boolean>>(), accounts.created)
+    }
+
+    @Test
+    fun aFailedDeleteFallsBackToSignOutAndStaysBlocked() = runTest {
+        auth.deleteError = AppError.AuthExpired // e.g. requires-recent-login
+        val repo = repo()
+        repo.signInWithGoogle()
+        repo.declareBirthYear(THIS_YEAR - 11)
+        assertEquals(1, auth.signOuts)
+        assertEquals(SessionState.AgeBlocked, repo.session.value)
     }
 
     @Test

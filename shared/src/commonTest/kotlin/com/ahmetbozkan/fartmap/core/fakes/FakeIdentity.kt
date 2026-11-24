@@ -43,6 +43,16 @@ class FakeAuthGateway : AuthGateway {
         return AppResult.Success(Unit)
     }
 
+    var deletes = 0
+    var deleteError: AppError? = null
+
+    override suspend fun deleteCurrentUser(): AppResult<Unit> {
+        deletes++
+        deleteError?.let { return AppResult.Failure(it) }
+        users.emit(null)
+        return AppResult.Success(Unit)
+    }
+
     override suspend fun signOut(): AppResult<Unit> {
         signOuts++
         users.emit(null)

@@ -45,6 +45,11 @@ class FirebaseAuthGateway(private val logger: Logger) : AuthGateway {
 
     override suspend fun signOut(): AppResult<Unit> = authCall("sign_out") { Firebase.auth.signOut() }
 
+    override suspend fun deleteCurrentUser(): AppResult<Unit> = authCall("delete_user") {
+        // No current user means nothing to delete; the caller only needs the identity gone.
+        Firebase.auth.currentUser?.delete()
+    }
+
     private suspend fun authCall(operation: String, block: suspend () -> Unit): AppResult<Unit> = try {
         block()
         AppResult.Success(Unit)

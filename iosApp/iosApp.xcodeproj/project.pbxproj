@@ -223,7 +223,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# GoogleSignIn needs the reversed client id as a URL scheme. It lives in the injected (untracked) config, so it is\n# copied into the built Info.plist here. The value is never printed.\nset -e\nPB=/usr/libexec/PlistBuddy\nCONFIG=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/GoogleService-Info.plist\"\nINFO=\"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\nSCHEME=$(\"$PB\" -c \"Print :REVERSED_CLIENT_ID\" \"$CONFIG\" 2>/dev/null || true)\nif [ -z \"$SCHEME\" ]; then\n  echo \"warning: GoogleService-Info-$APP_ENV.plist has no REVERSED_CLIENT_ID. Google sign-in stays off until the Google provider is enabled and the config re-downloaded.\"\n  exit 0\nfi\nif \"$PB\" -c \"Print :CFBundleURLTypes\" \"$INFO\" 2>/dev/null | grep -qF \"$SCHEME\"; then\n  exit 0\nfi\n\"$PB\" -c \"Print :CFBundleURLTypes\" \"$INFO\" >/dev/null 2>&1 || \"$PB\" -c \"Add :CFBundleURLTypes array\" \"$INFO\"\n\"$PB\" -c \"Add :CFBundleURLTypes:0 dict\" \"$INFO\"\n\"$PB\" -c \"Add :CFBundleURLTypes:0:CFBundleURLSchemes array\" \"$INFO\"\n\"$PB\" -c \"Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string $SCHEME\" \"$INFO\"\necho \"Registered the Google sign-in URL scheme for APP_ENV=$APP_ENV\"\n";
+			shellScript = "# GoogleSignIn needs the reversed client id as a URL scheme. It lives in the injected (untracked) config, so it is\n# copied into the built Info.plist here. The value is never printed.\nset -e\nPB=/usr/libexec/PlistBuddy\nCONFIG=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/GoogleService-Info.plist\"\nINFO=\"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\nSCHEME=$(\"$PB\" -c \"Print :REVERSED_CLIENT_ID\" \"$CONFIG\" 2>/dev/null || true)\nif [ -z \"$SCHEME\" ]; then\n  echo \"warning: GoogleService-Info-$APP_ENV.plist has no REVERSED_CLIENT_ID. Google sign-in stays off until the Google provider is enabled and the config re-downloaded.\"\n  exit 0\nfi\nif \"$PB\" -c \"Print :CFBundleURLTypes\" \"$INFO\" 2>/dev/null | grep -qF \"$SCHEME\"; then\n  exit 0\nfi\n\"$PB\" -c \"Print :CFBundleURLTypes\" \"$INFO\" >/dev/null 2>&1 || plutil -insert CFBundleURLTypes -xml \"<array/>\" \"$INFO\"\n# Append, so URL types added later (deep links) are kept.\nplutil -insert CFBundleURLTypes -xml \"<dict><key>CFBundleURLSchemes</key><array><string>$SCHEME</string></array></dict>\" -append \"$INFO\"\necho \"Registered the Google sign-in URL scheme for APP_ENV=$APP_ENV\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -250,7 +250,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
 			requirement = {
-				kind = upToNextMajorVersion;
+				kind = versionRange;
+				maximumVersion = 11.0.0;
 				minimumVersion = 9.0.0;
 			};
 		};

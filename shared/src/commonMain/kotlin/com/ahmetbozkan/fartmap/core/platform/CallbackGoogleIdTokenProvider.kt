@@ -37,11 +37,11 @@ class CallbackGoogleIdTokenProvider(
     override suspend fun requestToken(): GoogleTokenResult = suspendCancellableCoroutine { continuation ->
         val done = AtomicBoolean(false)
 
-        // Only the first callback builds (and, for a failure, logs) its result; later ones do nothing.
+        // Only the first callback builds (and, for a failure, logs) its result; later ones, and any callback after the
+        // caller was cancelled, do nothing.
         fun finish(result: () -> GoogleTokenResult) {
-            if (!done.compareAndSet(expectedValue = false, newValue = true)) return
-            val value = result()
-            if (continuation.isActive) continuation.resume(value)
+            if (!continuation.isActive || !done.compareAndSet(expectedValue = false, newValue = true)) return
+            continuation.resume(result())
         }
         start(
             object : GoogleTokenCallback {

@@ -5,6 +5,10 @@ import com.ahmetbozkan.fartmap.core.observability.LogRecord
 import com.ahmetbozkan.fartmap.core.observability.LogSink
 import com.ahmetbozkan.fartmap.core.observability.Logger
 import com.ahmetbozkan.fartmap.core.observability.format
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -12,6 +16,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class CallbackGoogleIdTokenProviderTest {
     private val records = mutableListOf<LogRecord>()
     private val logger = Logger(sinks = listOf(LogSink { records += it }), nowMillis = { 0 })
@@ -62,6 +67,18 @@ class CallbackGoogleIdTokenProviderTest {
     @Test
     fun aBlankTokenIsAFailure() = runTest {
         assertEquals(GoogleTokenResult.Failed(AppError.Unknown), provider { it.onToken(" ", null) }.requestToken())
+    }
+
+    @Test
+    fun aLateCallbackAfterTheCallerIsCancelledIsDropped() = runTest {
+        var pending: GoogleTokenCallback? = null
+        val job = launch(UnconfinedTestDispatcher(testScheduler)) { provider { pending = it }.requestToken() }
+        job.cancelAndJoin()
+        val late = checkNotNull(pending)
+        late.onFailure(GoogleTokenCallback.REASON_NETWORK) // the sheet finishes after the screen is gone
+        late.onToken("late-token", null)
+        assertTrue(job.isCancelled)
+        assertTrue(records.isEmpty())
     }
 
     @Test

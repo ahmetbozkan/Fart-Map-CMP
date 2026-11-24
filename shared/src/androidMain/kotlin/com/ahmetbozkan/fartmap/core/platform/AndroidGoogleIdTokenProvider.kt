@@ -63,7 +63,8 @@ internal class AndroidGoogleIdTokenProvider(
         } catch (none: NoCredentialException) {
             failed(AppError.Unknown, reason = "no_credential", throwable = none)
         } catch (failure: GetCredentialException) {
-            failed(failure.toAppError(), reason = "credential_error", throwable = failure)
+            // Credential Manager has no network-specific type, so offline lands here as Unknown (retry message).
+            failed(AppError.Unknown, reason = "credential_error", throwable = failure)
         } catch (parsing: GoogleIdTokenParsingException) {
             failed(AppError.Unknown, reason = "token_parsing", throwable = parsing)
         }
@@ -78,9 +79,6 @@ internal class AndroidGoogleIdTokenProvider(
             ?.let { context.getString(it) }
             ?.takeIf { it.isNotBlank() }
     }
-
-    private fun GetCredentialException.toAppError(): AppError =
-        if (type.contains("NETWORK", ignoreCase = true)) AppError.NetworkUnavailable else AppError.Unknown
 
     private fun notConfigured(reason: String): GoogleTokenResult.Failed {
         logger.error(

@@ -104,11 +104,12 @@ class DefaultSessionRepository(
         return when (declaredAge(birthYear, currentYear())) {
             DeclaredAge.INVALID -> AppResult.Failure(AppError.ValidationFailed("birth_year"))
             DeclaredAge.UNDER_13 -> {
-                // Close the gate in memory before anything else, then persist it, then sign out. A failed disk write
-                // or sign-out is logged by its implementation and still leaves this process blocked.
+                // Close the gate in memory before anything else, then persist it, then delete the Auth user (a Google
+                // sign-in already created one holding the provider identity), signing out if the delete fails. Every
+                // failure is logged by its implementation and still leaves this process blocked.
                 blockedThisProcess.value = true
                 preferences.blockAgeGate()
-                auth.signOut()
+                if (auth.deleteCurrentUser() is AppResult.Failure) auth.signOut()
                 AppResult.Success(AgeGateOutcome.BLOCKED)
             }
             DeclaredAge.TEEN -> admit(user, AgeBand.TEEN)
