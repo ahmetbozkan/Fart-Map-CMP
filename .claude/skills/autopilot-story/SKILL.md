@@ -13,12 +13,23 @@ Arguments: `next` (default) or a story id. `--cross-epics`: you may open the nex
 
 Everything in `CLAUDE.md` and `planning/WorkingAgreement.md` still holds, except that the owner's approvals are replaced by the checks below. Hooks still block secrets, pushes to `main`, force-pushes and any merge other than the hook-checked form in §7.
 
+**Commands that pass headless permissions.** Allowed commands come from `.claude/settings.json` plus `.claude/autopilot.settings.json`. A denied command fails without asking anyone and wastes turns, so:
+- run every command from the repository root, which is already the working directory: no `cd <path> &&` prefixes, no `VAR=value cmd` prefixes (`scripts/verify.sh` finds Java itself);
+- backend commands: `npm --prefix backend/functions run <script>`;
+- keep each Bash call to one command where you can; pipes into `tail`, `grep` or `head` are fine;
+- multi-line text (PR bodies, review comments, issues) goes in a file under `.autopilot/` (create it with Write), then `--body-file`; never inline it with `--body "..."`;
+- push with `git push -u origin <branch>`;
+- if a command you need is denied, don't keep trying variants: use an allowed equivalent, or count it as an attempt on the retry ladder (§8) and name the command in the escalation so the owner can allow it.
+
+**Interruptions.** The driver may stop you at any time (usage limit, crash, the owner). It later resumes the same session, or starts a fresh one that resumes through §0. Commit and push after each meaningful step (a passing slice, a fix, the story update), so at most a few minutes of work is only on disk. When you are resumed, check `git status`, the branch and the story before doing anything else.
+
 ## 0. Resume before starting anything new
 
 1. `git status`. If the tree is dirty from a crashed run, look at what's there: if it belongs to the story on the current branch, keep it and continue that story; never discard work you didn't inspect.
 2. Read `planning/STATE.md` and `planning/ROADMAP.md`. Then `gh pr list --author @me --state open` and `gh issue list --label needs-owner --state open`.
 3. Pick what to work on, in this order:
    - **A story in `Review` with an open PR** → switch to its branch and go to §6 (review) if the PR has no `<!-- autopilot-review -->` comment yet, otherwise §7 (CI).
+   - **A story whose branch exists but has no PR** (any status, including `Done` set early by §5 before a crash) → switch to it, commit any leftover work from the interrupted run after checking it, and continue from where its tasks and Evidence stop; if the work is complete, go to §5 step 2.
    - **A story `In progress` whose branch exists** → switch to it and continue from where its tasks and Evidence stop.
    - **A `Blocked` story with a `needs-owner` issue** → read the issue with `gh issue view <n> --comments`. Every comment you write starts with `<!-- autopilot -->`; **any comment without that marker is the owner's answer** (the agent and the owner share one GitHub account, so the author can't tell you). If the owner answered, apply the answer, record it in the story's `## Decisions`, reply on the issue (marker first) and close it, set the story back to `In progress` and continue. If not, skip that story and take the next one that doesn't depend on it; if every remaining story in the epic depends on it, write status `escalated` (same issue) and stop.
    - **Otherwise** the argument decides: the given id, or for `next` the first unchecked story in the active epic of `ROADMAP.md`.
@@ -55,13 +66,13 @@ Do **not** use plan mode: nobody can approve it.
 ## 5. Record and open the PR
 
 1. Tick the story tasks, fill `## Evidence`, set the story to `Done`, tick it in `ROADMAP.md`, and update `planning/STATE.md` (Now / Next) as if the PR were merged. The guard only lets the merge through on green CI, so "merged" and "Done" are the same event and no follow-up commit is needed. If the PR ends up not merging, you set these back before escalating.
-2. Commit, push, `gh pr create --draft` with the body from `.github/pull_request_template.md`: summary, story link, DoD checklist, "Decisions made by the agent" (copied from the story), "iOS verified by CI" on Windows, and "Not verified".
+2. Commit, push, then write the PR body to `.autopilot/pr-body.md` and run `gh pr create --draft --base main --head <branch> --title "<story id>: <title>" --body-file .autopilot/pr-body.md`. The body follows `.github/pull_request_template.md`: summary, story link, DoD checklist, "Decisions made by the agent" (copied from the story), "iOS verified by CI" on Windows, and "Not verified".
 3. Add the PR link to the story's Evidence and push.
 
 ## 6. Second look on the PR
 
 1. Run the **`code-reviewer`** agent on `origin/main...HEAD`. Also run **`security-reviewer`** if the diff touches rules, auth, location, monetization, logging, analytics or `backend/functions`.
-2. Write the findings to `.claude/loop/review-<pr>.md` (gitignored), starting with the line `<!-- autopilot-review -->`, and post it with `gh pr comment <pr> --body-file .claude/loop/review-<pr>.md`.
+2. Write the findings to `.autopilot/review-<pr>.md` (gitignored), starting with the line `<!-- autopilot-review -->`, and post it with `gh pr comment <pr> --body-file .autopilot/review-<pr>.md`.
 3. Fix every finding that is a real bug, a rule violation, a parity gap or a missing test. For a finding you reject, say why in a reply comment (marker `<!-- autopilot -->`). Re-run `/verify`, commit, push.
 4. Re-review only what changed, at most 2 more rounds. A finding still open after that goes through §8 as a technical problem.
 
@@ -90,12 +101,12 @@ Do **not** use plan mode: nobody can approve it.
 **How to escalate:**
 1. Commit and push whatever work exists to the story branch (it may be red; that's fine on a branch).
 2. Set the story to `Blocked (<one-line reason>; owner)` and update `STATE.md` (and undo `Done` / the ROADMAP tick if you set them). Commit and push.
-3. Make sure the label exists: `gh label create needs-owner --color D93F0B --description "Autopilot is waiting for the owner" --force`. Open an issue with `gh issue create --label needs-owner --assignee @me --title "<story id>: <short question>" --body-file .claude/loop/issue.md`. The body starts with `<!-- autopilot -->` and contains: the story and branch/PR, what's blocked, every attempt from the ladder, the options with their trade-offs, **your recommended default**, and exactly what reply unblocks it ("reply with A or B" is ideal).
+3. Make sure the label exists: `gh label create needs-owner --color D93F0B --description "Autopilot is waiting for the owner" --force`. Open an issue with `gh issue create --label needs-owner --assignee @me --title "<story id>: <short question>" --body-file .autopilot/issue.md`. The body starts with `<!-- autopilot -->` and contains: the story and branch/PR, what's blocked, every attempt from the ladder, the options with their trade-offs, **your recommended default**, and exactly what reply unblocks it ("reply with A or B" is ideal).
 4. Write status `escalated` with the issue number, and stop.
 
 ## 9. Status file (last step, always)
 
-Write `.claude/loop/status.json` (the folder is gitignored; create the file with the Write tool):
+Write `.autopilot/status.json` (the folder is gitignored; create the file with the Write tool):
 
 ```json
 { "result": "merged", "story": "STORY-01-02-02", "pr": 12, "issue": null, "summary": "one line for the owner" }
