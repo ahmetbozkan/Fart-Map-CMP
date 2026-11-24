@@ -56,24 +56,33 @@ Subagents are not a "team of roles" handing work to each other. Each one starts 
 
 ## Autopilot
 
-`scripts/autopilot.sh` runs stories back to back without you. Each story gets a fresh headless session (`claude -p "/autopilot-story next" --permission-mode acceptEdits`), so nothing waits on a prompt: edits are allowed, Bash runs only what `settings.json` allows, and anything else is denied. The rules are in `planning/WorkingAgreement.md` §2 (gates) and §6 (retry ladder, escalation); the procedure is `.claude/skills/autopilot-story/SKILL.md`.
+`scripts/autopilot.sh` runs stories back to back without you. Each story gets a headless session (`claude -p "/autopilot-story next" --permission-mode acceptEdits --settings .claude/autopilot.settings.json`), so nothing waits on a prompt: edits are allowed, Bash runs what `settings.json` plus `autopilot.settings.json` allow, and anything else is denied (the guard hook still applies). The rules are in `planning/WorkingAgreement.md` §2 (gates) and §6 (retry ladder, escalation); the procedure is `.claude/skills/autopilot-story/SKILL.md`.
 
 **One-time setup:**
 1. Install `gh` and run `gh auth login`.
 2. Keep squash merging enabled (GitHub → Settings → General).
-3. Optional phone ping: GitHub doesn't notify you about issues you opened yourself, and the agent opens them as you. Set `AUTOPILOT_NOTIFY_CMD` (for example an ntfy.sh `curl`). The script also shows a desktop notification.
+3. Phone notifications: copy `scripts/autopilot.local.env.example` to `scripts/autopilot.local.env` and set `AUTOPILOT_NTFY_TOPIC` (install the free ntfy app and subscribe to the same, hard-to-guess topic). GitHub won't notify you about issues the agent opens, because it opens them as you. The script also shows a desktop notification.
+
+**Following a run.** The terminal shows one line per step: commands, file edits, subagents, short agent messages, errors and `DENIED` permissions, then a per-session summary listing every denial. The same lines go to `.autopilot/live.log`, so you can follow from another window (`Get-Content .autopilot\live.log -Wait` in PowerShell, `tail -f` in bash). The raw event stream is kept in `.autopilot/logs/`. To read the whole conversation later, `claude --resume <session id>` (printed at the start of each session) opens it interactively.
+
+**Interruptions resume.** The session id is saved in `.autopilot/session.json` as soon as a session starts and removed only when the agent finishes properly. If a session stops for any reason (usage limit, Ctrl+C, crash, turn cap, a reboot), the next `scripts/autopilot.sh` continues **the same session** with `claude --resume`, with its full context. If that session can't be resumed, it starts a fresh one, which picks the story up from the branch, STATE and the open PR. Uncommitted work on a story branch is fine; on `main` the script refuses. On a usage limit the script sends a notification, waits for the reset (read from Claude's message, or retries every 30 min) and resumes on its own; `--no-wait` exits instead. Use `--fresh` to throw the saved session away.
+
+**From your phone.** You get a push at each milestone: branch started, PR opened, merged, usage limit, and every escalation. When the agent needs you, it opens a `needs-owner` issue and the script **keeps waiting** (up to `--max-wait-hours`, default 8) while checking it every 3 minutes. Answer on the issue in the GitHub app; any comment without the `<!-- autopilot -->` marker counts as your answer, and closing the issue also counts. The script then starts the next session, which reads your answer and carries on. Headless sessions can't use Remote Control; to talk to the agent directly, run `claude --resume <session id>` on the PC.
 
 **How merging is kept safe.** The repository is private on GitHub Free, which offers neither branch protection nor auto-merge, so the check runs in the guard hook instead. The agent may only run `gh pr merge <n> --squash --match-head-commit <sha>`. Before letting it through, `.claude/hooks/merge-check.mjs` asks GitHub for the PR and refuses unless it is open, not a draft, based on `main`, mergeable, its head is exactly `<sha>`, all four CI jobs passed on that sha and no other check failed or is still running. `--match-head-commit` makes gh refuse the merge if anything was pushed after the check. The required job names live in `merge-check.mjs`: rename a job in `ci.yml` and you must update that list, or every merge is refused. This protects against agent mistakes, not against a manual merge from the GitHub UI. With GitHub Pro you could add real branch protection on top.
 
-**Run** from a clean tree, ideally in a dedicated clone so you can keep working elsewhere:
+**Run** it, ideally in a dedicated clone so you can keep working elsewhere:
 
 ```bash
 scripts/autopilot.sh                     # up to 5 stories, stop at the epic boundary
 scripts/autopilot.sh --max 2 --hold-sensitive
 scripts/autopilot.sh --cross-epics       # also split and start the next epic
+scripts/autopilot.sh --help              # all options
 ```
 
-It stops on `escalated` (answer the `needs-owner` issue, then re-run), `epic-boundary`, `roadmap-done`, the story cap, or two crashed sessions in a row (logs in `.claude/loop/`, gitignored). Re-running after a crash or interruption is safe: the skill resumes from STATE, open PRs and branches. Keep the PC awake while it runs. Merges to `main` deploy the backend to `fart-map-dev`; prod stays behind the `prod` environment approval.
+It stops on `epic-boundary`, `roadmap-done`, the story cap, an escalation you didn't answer in time, a sign-in problem, or two failed sessions in a row. Everything it keeps is in `.autopilot/` (gitignored). Keep the PC awake and plugged in while it runs.
+
+**Denied commands.** The session summary lists every permission denial. If the agent needed a safe command, add it to `.claude/autopilot.settings.json`, not to `settings.json`, so interactive sessions keep the stricter list. That file also denies deploys, `gcloud`, `curl`, `git reset --hard` and `git clean` for the agent. Merges to `main` deploy the backend to `fart-map-dev`; prod stays behind the `prod` environment approval.
 
 ## MCP servers (optional, per machine)
 
