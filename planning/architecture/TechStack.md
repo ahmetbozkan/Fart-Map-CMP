@@ -131,7 +131,7 @@ Verification environment: macOS 26 (Darwin 25.6), Xcode 26.4.1, iOS simulator "i
 - iOS deployment target is the template's 18.2. The linker warns that the Kotlin/Native `libicu` data object was built for simulator 18.5; harmless, revisit when the minimum iOS version is decided.
 - Android needs the Crashlytics Gradle plugin (`com.google.firebase.crashlytics` 3.0.8, applied in `androidApp`) as soon as the Crashlytics SDK is on the classpath; without it the app aborts at start with "The Crashlytics build ID is missing".
 - GitLive 2.7.0: `Firebase.app.options` throws `NullPointerException` on iOS for projects without Realtime Database (its Apple implementation force-unwraps `databaseURL`). Project identity is read through platform actuals in `firebaseData` (`FIRApp.defaultApp()?.options?.projectID` via the FirebaseCore cinterop that GitLive ships; GitLive on Android). Re-check when GitLive is upgraded.
-- CI: the iOS job runs on GitHub's `macos-26` image with Xcode 26.4.1 selected (`macos-15` defaults to Xcode 16.4, whose Swift tools 6.1 cannot resolve `firebase-ios-sdk` 13, which declares 6.2.1); Android and backend jobs run on `ubuntu-latest` with Zulu 21.
+- CI: the two iOS jobs (shared tests; app build) run on GitHub's `macos-26` image with Xcode 26.4.1 selected (`macos-15` defaults to Xcode 16.4, whose Swift tools 6.1 cannot resolve `firebase-ios-sdk` 13, which declares 6.2.1); Android and backend jobs run on `ubuntu-latest` with Zulu 21.
 - Lint on the baseline: 0 errors, 3 warnings (template launcher icons and `drawable-v24`), to be cleared when STORY-01-01-02 replaces the icons.
 - Gradle reports "Deprecated Gradle features were used … incompatible with Gradle 10" from third-party plugins; no action until Gradle 10.
 
