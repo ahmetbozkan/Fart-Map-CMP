@@ -5,6 +5,7 @@
 | Need | File |
 |---|---|
 | What to do now / next | `STATE.md`, `ROADMAP.md`, `stories/` |
+| Owner's console/account checklist with instructions | `OwnerTodo.md` |
 | How work flows, Definition of Done, escalation | `WorkingAgreement.md` |
 | Settled and proposed decisions | `decisions/README.md` |
 | **Product** | |
