@@ -6,6 +6,7 @@ import com.ahmetbozkan.fartmap.core.domain.session.AgeGateOutcome
 import com.ahmetbozkan.fartmap.core.domain.session.AuthGateway
 import com.ahmetbozkan.fartmap.core.domain.session.AuthUser
 import com.ahmetbozkan.fartmap.core.domain.session.DeclaredAge
+import com.ahmetbozkan.fartmap.core.domain.session.LinkOutcome
 import com.ahmetbozkan.fartmap.core.domain.session.SessionRepository
 import com.ahmetbozkan.fartmap.core.domain.session.SessionState
 import com.ahmetbozkan.fartmap.core.domain.session.SignInOutcome
@@ -23,9 +24,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 
@@ -50,6 +53,13 @@ class DefaultSessionRepository(
         data class Known(val user: AuthUser?) : UserState
     }
 
+    /** Which user the session is about; a link keeps the uid, so it keeps the key. */
+    private sealed interface UserKey {
+        data object Unknown : UserKey
+        data object SignedOut : UserKey
+        data class Uid(val uid: String) : UserKey
+    }
+
     private val userState: StateFlow<UserState> = auth.user
         .map<AuthUser?, UserState> { UserState.Known(it) }
         .stateIn(scope, SharingStarted.Eagerly, UserState.Unknown)
@@ -61,34 +71,37 @@ class DefaultSessionRepository(
         combine(
             preferences.ageGateBlocked,
             blockedThisProcess,
-            userState.flatMapLatest(::sessionFor),
+            userState.map(::keyOf).distinctUntilChanged().flatMapLatest(::sessionFor),
         ) { blockedOnDisk, blockedInMemory, state ->
             if (blockedOnDisk || blockedInMemory) SessionState.AgeBlocked else state
         }.stateIn(scope, SharingStarted.Eagerly, SessionState.Loading)
 
-    private fun sessionFor(state: UserState): Flow<SessionState> = when (state) {
-        UserState.Unknown -> flowOf(SessionState.Loading)
-        is UserState.Known -> {
-            val user = state.user
-            if (user == null) {
-                flowOf(SessionState.SignedOut)
-            } else {
-                val kind = if (user.isAnonymous) SessionState.Kind.ANONYMOUS else SessionState.Kind.LINKED
-                // Loading until the account doc resolves, so the auth screen never lingers on a slow snapshot.
-                accounts.observeAgeBand(user.uid)
-                    .map { band ->
-                        if (band == null) {
-                            SessionState.NeedsAgeBand(
-                                kind
-                            )
-                        } else {
-                            SessionState.Active(user.uid, kind, band)
-                        }
-                    }
-                    .onStart { emit(SessionState.Loading) }
-            }
-        }
+    private fun keyOf(state: UserState): UserKey = when (state) {
+        UserState.Unknown -> UserKey.Unknown
+        is UserState.Known -> state.user?.let { UserKey.Uid(it.uid) } ?: UserKey.SignedOut
     }
+
+    /**
+     * Re-derived per uid, not per user emission: linking flips only the kind, so the session goes from
+     * `Active(ANONYMOUS)` to `Active(LINKED)` without a Loading blip and the root keeps its back stack (Architecture.md
+     * §7).
+     */
+    private fun sessionFor(key: UserKey): Flow<SessionState> = when (key) {
+        UserKey.Unknown -> flowOf(SessionState.Loading)
+        UserKey.SignedOut -> flowOf(SessionState.SignedOut)
+        is UserKey.Uid ->
+            // Loading until the account doc resolves, so the auth screen never lingers on a slow snapshot.
+            combine(accounts.observeAgeBand(key.uid), kindOf(key.uid)) { band, kind ->
+                if (band == null) SessionState.NeedsAgeBand(kind) else SessionState.Active(key.uid, kind, band)
+            }.onStart { emit(SessionState.Loading) }
+    }
+
+    private fun kindOf(uid: String): Flow<SessionState.Kind> = userState
+        .mapNotNull { state -> (state as? UserState.Known)?.user?.takeIf { it.uid == uid } }
+        .map { user -> if (user.isAnonymous) SessionState.Kind.ANONYMOUS else SessionState.Kind.LINKED }
+        .distinctUntilChanged()
+
+    private fun currentUser(): AuthUser? = (userState.value as? UserState.Known)?.user
 
     override suspend fun continueAnonymously(): AppResult<Unit> = auth.signInAnonymously()
 
@@ -99,8 +112,25 @@ class DefaultSessionRepository(
         is GoogleTokenResult.Failed -> AppResult.Failure(token.error)
     }
 
+    override suspend fun linkGoogle(): AppResult<LinkOutcome> {
+        val user = currentUser()
+        return when {
+            user == null -> AppResult.Failure(AppError.AuthExpired)
+            !user.isAnonymous -> AppResult.Success(LinkOutcome.LINKED)
+            else -> linkGuestToGoogle()
+        }
+    }
+
+    private suspend fun linkGuestToGoogle(): AppResult<LinkOutcome> = when (val token = googleTokens.requestToken()) {
+        is GoogleTokenResult.Token ->
+            // The server-managed account fields follow through AccountProviderSync once the session is LINKED.
+            auth.linkGoogle(token.idToken, token.accessToken).map { LinkOutcome.LINKED }
+        GoogleTokenResult.Cancelled -> AppResult.Success(LinkOutcome.CANCELLED)
+        is GoogleTokenResult.Failed -> AppResult.Failure(token.error)
+    }
+
     override suspend fun declareBirthYear(birthYear: Int): AppResult<AgeGateOutcome> {
-        val user = (userState.value as? UserState.Known)?.user ?: return AppResult.Failure(AppError.AuthExpired)
+        val user = currentUser() ?: return AppResult.Failure(AppError.AuthExpired)
         return when (declaredAge(birthYear, currentYear())) {
             DeclaredAge.INVALID -> AppResult.Failure(AppError.ValidationFailed("birth_year"))
             DeclaredAge.UNDER_13 -> {

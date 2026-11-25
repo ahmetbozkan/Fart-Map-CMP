@@ -17,6 +17,13 @@ interface AuthGateway {
     /** Signs in to Firebase with Google tokens from the native sheet. Online-only. */
     suspend fun signInWithGoogle(idToken: String, accessToken: String?): AppResult<Unit>
 
+    /**
+     * Links Google tokens to the signed-in (anonymous) user, keeping its uid (ADR-0018 §3), and then emits the updated
+     * user on [user]. [com.ahmetbozkan.fartmap.core.observability.AppError.Conflict] when the Google account already
+     * belongs to another user. Online-only.
+     */
+    suspend fun linkGoogle(idToken: String, accessToken: String?): AppResult<Unit>
+
     suspend fun signOut(): AppResult<Unit>
 
     /**
@@ -33,6 +40,16 @@ interface AccountRepository {
 
     /** Writes the account doc once (fire-and-forget through AppWriteScope). [ageBand] is ADULT or TEEN. */
     fun createAccount(uid: String, ageBand: AgeBand, isAnonymous: Boolean): AppResult<Unit>
+
+    /**
+     * Whether the server-managed provider fields (`is_anonymous`, `linked_providers`) are out of date, from
+     * server-confirmed snapshots only: true while the doc still says anonymous or lists no provider. Emits nothing while
+     * the doc is missing, only cached, or has pending local writes.
+     */
+    fun observeProvidersStale(uid: String): Flow<Boolean>
+
+    /** Asks the server to re-derive the signed-in user's provider fields from Firebase Auth. Online-only; logs failures. */
+    suspend fun syncLinkedProviders(): AppResult<Unit>
 }
 
 /** Result of reading a self-declared birth year. */

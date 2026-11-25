@@ -1,6 +1,7 @@
 package com.ahmetbozkan.fartmap.feature.auth
 
 import com.ahmetbozkan.fartmap.core.domain.session.AgeGateOutcome
+import com.ahmetbozkan.fartmap.core.domain.session.LinkOutcome
 import com.ahmetbozkan.fartmap.core.domain.session.SessionRepository
 import com.ahmetbozkan.fartmap.core.domain.session.SessionState
 import com.ahmetbozkan.fartmap.core.domain.session.SignInOutcome
@@ -54,6 +55,8 @@ private class FakeSessionRepository : SessionRepository {
         if (googleOutcome == SignInOutcome.SIGNED_IN) state.value = SessionState.NeedsAgeBand(SessionState.Kind.LINKED)
         return AppResult.Success(googleOutcome)
     }
+
+    override suspend fun linkGoogle(): AppResult<LinkOutcome> = AppResult.Success(LinkOutcome.LINKED)
 
     override suspend fun declareBirthYear(birthYear: Int): AppResult<AgeGateOutcome> =
         AppResult.Success(AgeGateOutcome.ADMITTED)

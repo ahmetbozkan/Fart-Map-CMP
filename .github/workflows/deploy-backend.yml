@@ -53,7 +53,7 @@ jobs:
           TARGET: ${{ (github.event_name == 'release' || github.event.inputs.environment == 'prod') && 'prod' || 'dev' }}
           # Prod gets only the functions named here: a new function reaches prod when it is added on purpose.
           # Dev gets every exported function (skeletons such as onFartCreated stay dev-only until they do real work).
-          PROD_FUNCTIONS: functions:health
+          PROD_FUNCTIONS: functions:health,functions:syncAccountProviders
         run: |
           if [ "$TARGET" = "prod" ]; then FUNCTIONS="$PROD_FUNCTIONS"; else FUNCTIONS="functions"; fi
           firebase deploy --only "firestore:rules,firestore:indexes,storage,$FUNCTIONS" -P "$TARGET" --non-interactive --force

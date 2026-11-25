@@ -1,6 +1,7 @@
 package com.ahmetbozkan.fartmap.feature.onboarding
 
 import com.ahmetbozkan.fartmap.core.domain.session.AgeGateOutcome
+import com.ahmetbozkan.fartmap.core.domain.session.LinkOutcome
 import com.ahmetbozkan.fartmap.core.domain.session.SessionRepository
 import com.ahmetbozkan.fartmap.core.domain.session.SessionState
 import com.ahmetbozkan.fartmap.core.domain.session.SignInOutcome
@@ -32,6 +33,7 @@ private class RecordingSessions(var result: AppResult<AgeGateOutcome> = AppResul
         MutableStateFlow(SessionState.NeedsAgeBand(SessionState.Kind.ANONYMOUS))
     override suspend fun continueAnonymously(): AppResult<Unit> = AppResult.Success(Unit)
     override suspend fun signInWithGoogle(): AppResult<SignInOutcome> = AppResult.Success(SignInOutcome.SIGNED_IN)
+    override suspend fun linkGoogle(): AppResult<LinkOutcome> = AppResult.Success(LinkOutcome.LINKED)
     override suspend fun declareBirthYear(birthYear: Int): AppResult<AgeGateOutcome> {
         declared += birthYear
         return result

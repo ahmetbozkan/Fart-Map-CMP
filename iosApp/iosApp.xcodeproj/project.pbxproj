@@ -15,6 +15,7 @@
 		FB0000000000000000000206 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = FB0000000000000000000106 /* FirebaseMessaging */; };
 		FB0000000000000000000207 /* FirebaseAppCheck in Frameworks */ = {isa = PBXBuildFile; productRef = FB0000000000000000000107 /* FirebaseAppCheck */; };
 		FB0000000000000000000208 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = FB0000000000000000000108 /* GoogleSignIn */; };
+		FB0000000000000000000209 /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = FB0000000000000000000109 /* FirebaseFunctions */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -60,6 +61,7 @@
 				FB0000000000000000000206 /* FirebaseMessaging in Frameworks */,
 				FB0000000000000000000207 /* FirebaseAppCheck in Frameworks */,
 				FB0000000000000000000208 /* GoogleSignIn in Frameworks */,
+				FB0000000000000000000209 /* FirebaseFunctions in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -114,6 +116,7 @@
 				FB0000000000000000000106 /* FirebaseMessaging */,
 				FB0000000000000000000107 /* FirebaseAppCheck */,
 				FB0000000000000000000108 /* GoogleSignIn */,
+				FB0000000000000000000109 /* FirebaseFunctions */,
 			);
 			productName = iosApp;
 			productReference = 20D886B9944516BB0E2D06F3 /* Fart Map.app */;
@@ -296,6 +299,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FB0000000000000000000002 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignIn;
+		};
+		FB0000000000000000000109 /* FirebaseFunctions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FB0000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFunctions;
 		};
 /* End XCSwiftPackageProductDependency section */
 
