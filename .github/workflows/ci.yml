@@ -1,5 +1,8 @@
 name: CI
 
+# The run on main after a merge is kept on purpose: caches written on main are the only ones every pull
+# request can read (GitHub scopes a PR's caches to that PR), and it catches two PRs that pass alone but
+# break together. It never blocks a PR.
 on:
   pull_request:
   push:
@@ -7,7 +10,8 @@ on:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Cancel superseded PR runs; let main runs finish so they can save the caches.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -75,40 +79,140 @@ jobs:
             umbrella/build/reports/**
           if-no-files-found: ignore
 
-  ios:
-    name: iOS framework, shared tests, app build
-    # Firebase iOS SDK 13 declares Swift tools 6.2, so the default Xcode 16.4 of macos-15 cannot resolve it.
-    # macos-26 ships Xcode 26.x; pin the locally verified 26.4.1 (TechStack.md §3.1) with a fallback to the newest 26.
-    runs-on: macos-26
+  # Path gate for the two iOS jobs. They always run and report (the merge hook requires both by name), but
+  # skip their work when only iOS-irrelevant paths changed (skip list and fail-safe rules: the script).
+  changes:
+    name: Detect iOS-relevant changes
+    runs-on: ubuntu-latest
+    outputs:
+      ios: ${{ steps.diff.outputs.ios }}
     steps:
       - uses: actions/checkout@v7
-      - name: Select Xcode 26
-        run: |
-          XCODE=/Applications/Xcode_26.4.1.app
-          [ -d "$XCODE" ] || XCODE=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)
-          sudo xcode-select -s "$XCODE"
-          xcodebuild -version
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: bash scripts/ci-ios-affected.sh
+
+  # The iOS check is split in two parallel jobs: Kotlin/Native tests, and the Xcode app build (whose Gradle
+  # build phase, embedAndSignAppleFrameworkForXcode, links the Shared framework itself).
+  # Both run on macos-26: Firebase iOS SDK 13 declares Swift tools 6.2, which the Xcode 16.4 of macos-15 can't
+  # resolve. Xcode 26.4.1 is pinned (TechStack.md §3.1) with a fallback to the newest 26.
+  ios-tests:
+    name: iOS shared tests
+    needs: changes
+    runs-on: macos-26
+    env:
+      RUN: ${{ needs.changes.outputs.ios }}
+    steps:
+      - name: Skipped, no iOS-relevant changes
+        if: env.RUN != 'true'
+        run: echo "::notice::Only iOS-irrelevant paths changed; the iOS tests were skipped (scripts/ci-ios-affected.sh)."
+      - uses: actions/checkout@v7
+        if: env.RUN == 'true'
       - uses: actions/setup-java@v6
+        if: env.RUN == 'true'
         with:
           distribution: zulu
           java-version: "21"
       - uses: gradle/actions/setup-gradle@v5
+        if: env.RUN == 'true'
+      # Kotlin/Native compiler and its LLVM/sysroot dependencies: ~1 GB that setup-gradle doesn't cache.
+      - name: Restore Kotlin/Native toolchain
+        id: konan
+        if: env.RUN == 'true'
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
       - name: Inject Firebase configs
+        if: env.RUN == 'true'
         env:
           GOOGLE_SERVICES_JSON_DEV: ${{ secrets.GOOGLE_SERVICES_JSON_DEV }}
           GOOGLE_SERVICES_JSON_PROD: ${{ secrets.GOOGLE_SERVICES_JSON_PROD }}
           GOOGLE_SERVICE_INFO_PLIST_DEV: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_DEV }}
           GOOGLE_SERVICE_INFO_PLIST_PROD: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_PROD }}
         run: scripts/inject-config.sh --require-all
-      - name: Shared tests on the iOS simulator and framework link
-        run: ./gradlew :shared:iosSimulatorArm64Test :umbrella:linkDebugFrameworkIosSimulatorArm64 --stacktrace
+      - name: Shared tests on the iOS simulator
+        if: env.RUN == 'true'
+        run: ./gradlew :shared:iosSimulatorArm64Test --stacktrace
+      - name: Save Kotlin/Native toolchain (main only)
+        if: env.RUN == 'true' && github.event_name == 'push' && steps.konan.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.konan
+          key: ${{ steps.konan.outputs.cache-primary-key }}
+
+  ios-app:
+    name: iOS app build
+    needs: changes
+    runs-on: macos-26
+    env:
+      RUN: ${{ needs.changes.outputs.ios }}
+      DERIVED_DATA: ${{ github.workspace }}/.derived-data
+    steps:
+      - name: Skipped, no iOS-relevant changes
+        if: env.RUN != 'true'
+        run: echo "::notice::Only iOS-irrelevant paths changed; the iOS app build was skipped (scripts/ci-ios-affected.sh)."
+      - uses: actions/checkout@v7
+        if: env.RUN == 'true'
+      - name: Select Xcode 26
+        if: env.RUN == 'true'
+        run: |
+          XCODE=/Applications/Xcode_26.4.1.app
+          [ -d "$XCODE" ] || XCODE=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+      - uses: actions/setup-java@v6
+        if: env.RUN == 'true'
+        with:
+          distribution: zulu
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v5
+        if: env.RUN == 'true'
+      - name: Restore Kotlin/Native toolchain
+        if: env.RUN == 'true'
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
+      # DerivedData holds the Swift package checkouts (SourcePackages) and the compiled Firebase/GoogleSignIn
+      # modules. Keyed on Package.resolved, so a dependency change starts clean.
+      - name: Restore Xcode DerivedData
+        id: derived
+        if: env.RUN == 'true'
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.DERIVED_DATA }}
+          key: deriveddata-${{ runner.os }}-xcode26-${{ hashFiles('iosApp/iosApp.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+      - name: Inject Firebase configs
+        if: env.RUN == 'true'
+        env:
+          GOOGLE_SERVICES_JSON_DEV: ${{ secrets.GOOGLE_SERVICES_JSON_DEV }}
+          GOOGLE_SERVICES_JSON_PROD: ${{ secrets.GOOGLE_SERVICES_JSON_PROD }}
+          GOOGLE_SERVICE_INFO_PLIST_DEV: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_DEV }}
+          GOOGLE_SERVICE_INFO_PLIST_PROD: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_PROD }}
+        run: scripts/inject-config.sh --require-all
       - name: Resolve Swift packages
-        run: xcodebuild -resolvePackageDependencies -project iosApp/iosApp.xcodeproj -scheme "FartMap Dev"
+        if: env.RUN == 'true'
+        run: xcodebuild -resolvePackageDependencies -project iosApp/iosApp.xcodeproj -scheme "FartMap Dev" -derivedDataPath "$DERIVED_DATA"
+      # ARCHS=arm64: the runner is Apple silicon and Kotlin only has iosSimulatorArm64, so building x86_64
+      # (the default for a generic simulator destination) would compile every Swift package twice for nothing.
       - name: Build the iOS app (Debug-dev, simulator, unsigned)
+        if: env.RUN == 'true'
         run: |
           set -o pipefail
           xcodebuild -project iosApp/iosApp.xcodeproj -scheme "FartMap Dev" -configuration Debug-dev \
-            -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build | tail -200
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath "$DERIVED_DATA" \
+            ARCHS=arm64 ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO build | tail -200
+      - name: Save Xcode DerivedData (main only)
+        if: env.RUN == 'true' && github.event_name == 'push' && steps.derived.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ env.DERIVED_DATA }}
+          key: ${{ steps.derived.outputs.cache-primary-key }}
 
   backend:
     name: Backend build, lint, emulator tests

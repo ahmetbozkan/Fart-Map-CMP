@@ -78,12 +78,12 @@ Do **not** use plan mode: nobody can approve it.
 
 ## 7. CI, then merge
 
-1. Wait for CI: `gh pr checks <pr> --watch --interval 60`, with the Bash timeout at its maximum (600000 ms); repeat the command until every check has finished. The iOS job can take 20+ minutes.
-2. **A check failed** → `gh run view <run-id> --log-failed`, find the cause, fix it locally, verify, commit, push, wait again. Each fix is one attempt on the retry ladder (§8). On Windows the iOS job is your only iOS compiler: read its log carefully before changing Swift or `iosMain` code.
+1. Wait for CI: `gh pr checks <pr> --watch --interval 60`, with the Bash timeout at its maximum (600000 ms); repeat the command until every check has finished. The iOS jobs can take 10–15 minutes (they finish in seconds when the PR has no iOS-relevant change).
+2. **A check failed** → `gh run view <run-id> --log-failed`, find the cause, fix it locally, verify, commit, push, wait again. Each fix is one attempt on the retry ladder (§8). On Windows the iOS jobs are your only iOS compiler: read its log carefully before changing Swift or `iosMain` code.
 3. **`main` moved and the PR conflicts** → `git fetch origin && git merge origin/main`, resolve, verify, push (never rebase a pushed branch, never force-push).
 4. **All checks green:**
    - With `--hold-sensitive`, if `gh pr diff <pr> --name-only` touches `backend/firestore.rules`, `backend/storage.rules`, `backend/functions/`, anything with `entitlement`, `unlock`, `purchase` or `location` in its path: run `gh pr ready <pr>`, then escalate with "ready for your review, not merged" (§8) instead of merging.
-   - Otherwise: `gh pr ready <pr>`, then read the head with `gh pr view <pr> --json headRefOid --jq .headRefOid` and merge with `gh pr merge <pr> --squash --match-head-commit <sha> --delete-branch`. The guard hook asks GitHub itself and refuses the merge unless the PR is open, not a draft, mergeable, its head is that sha and all four required checks passed on it; gh refuses too if the head moved. Never pass `--admin` or `--auto`, never merge any other way.
+   - Otherwise: `gh pr ready <pr>`, then read the head with `gh pr view <pr> --json headRefOid --jq .headRefOid` and merge with `gh pr merge <pr> --squash --match-head-commit <sha> --delete-branch`. The guard hook asks GitHub itself and refuses the merge unless the PR is open, not a draft, mergeable, its head is that sha and all required checks passed on it; gh refuses too if the head moved. Never pass `--admin` or `--auto`, never merge any other way.
 5. If the guard refuses, its message says why. Checks still running or mergeability not computed yet: wait (`sleep 60`) and retry. Anything else (a red check, conflicts, a moved head): fix it through §8, wait for CI on the new head, and retry with the new sha. Confirm with `gh pr view <pr> --json state,mergeCommit` that the state is `MERGED`.
 6. After the merge: `git switch main && git pull --ff-only`, then write status `merged` (§9).
 

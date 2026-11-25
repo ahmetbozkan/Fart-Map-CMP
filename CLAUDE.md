@@ -31,7 +31,7 @@ xcodebuild -project iosApp/iosApp.xcodeproj -scheme "FartMap Dev" -destination '
 (cd backend/functions && npm ci && npm run build && npm run lint && npm test)  # Java 21 on PATH for emulators
 scripts/check-no-secrets.sh
 ```
-- **iOS on Windows:** can't be built locally; the macOS CI job on the draft PR is the iOS check.
+- **iOS on Windows:** can't be built locally; the macOS CI jobs on the draft PR are the iOS check.
 - **Firebase configs:** injected, never committed (`scripts/inject-config.sh`, see README).
 
 ## Work loop (details: `planning/WorkingAgreement.md`)

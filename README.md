@@ -14,7 +14,7 @@ Kotlin Multiplatform + Compose Multiplatform app for Android and iOS. The specif
 ## Toolchain
 
 - JDK 21 for the Gradle daemon (`gradle/gradle-daemon-jvm.properties` provisions it; installing it avoids the download: macOS `brew install openjdk@21`, Windows `winget install Azul.Zulu.21.JDK`). The launcher needs JDK 17 or newer.
-- Windows: run the bash scripts in Git Bash (`bash scripts/verify.sh`); in PowerShell use `gradlew.bat`. iOS cannot be built on Windows; the macOS CI job verifies it on every PR.
+- Windows: run the bash scripts in Git Bash (`bash scripts/verify.sh`); in PowerShell use `gradlew.bat`. iOS cannot be built on Windows; the macOS CI jobs verify it on every PR that touches iOS-relevant code (`scripts/ci-ios-affected.sh`).
 - Gradle wrapper, Kotlin, Compose Multiplatform and AGP versions: `gradle/libs.versions.toml`; the proven baseline is recorded in `planning/architecture/TechStack.md` §3.1.
 - Xcode 26 with the iOS simulator runtime. Firebase iOS SDK comes through Swift Package Manager (`Package.resolved` is tracked).
 - Node.js 22 and `firebase-tools` 15 for the backend; the Firestore emulator needs Java 21 on `PATH` (`backend/README.md`).
