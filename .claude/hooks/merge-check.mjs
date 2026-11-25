@@ -8,11 +8,14 @@
 // every required check passed on that head, and no other check failed or is still running.
 
 // The CI job names in .github/workflows/ci.yml. Renaming a job there means updating this list, or every
-// merge is blocked (fail closed).
+// merge is blocked (fail closed). The two iOS jobs always report SUCCESS-or-FAILURE: when the path gate
+// finds no iOS-relevant change they succeed without building. A skipped job (e.g. the gate job failed)
+// is not SUCCESS, so it blocks.
 export const REQUIRED_CHECKS = [
   'Secret scan',
   'Android build, shared tests, lint',
-  'iOS framework, shared tests, app build',
+  'iOS shared tests',
+  'iOS app build',
   'Backend build, lint, emulator tests',
 ];
 

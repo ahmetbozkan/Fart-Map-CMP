@@ -52,7 +52,7 @@ Subagents are not a "team of roles" handing work to each other. Each one starts 
   - ask for `spec-scout` instead of "read the planning docs".
 - **Parallel work:** independent stories (e.g. a backend story and a UI story) can run in separate sessions or git worktrees, as long as they don't touch the same files.
 - **Models:** the main session uses your default; `spec-scout` runs on Haiku (cheap reading); the reviewers and `backend-engineer` run on Sonnet.
-- **iOS on Windows:** not buildable locally. The draft PR's macOS CI job is the check, and the session hook reminds the agent of that.
+- **iOS on Windows:** not buildable locally. The draft PR's macOS CI jobs (`iOS shared tests`, `iOS app build`) are the check, and the session hook reminds the agent of that.
 
 ## Autopilot
 
@@ -69,7 +69,7 @@ Subagents are not a "team of roles" handing work to each other. Each one starts 
 
 **From your phone.** You get a push at each milestone: branch started, PR opened, merged, usage limit, and every escalation. When the agent needs you, it opens a `needs-owner` issue and the script **keeps waiting** (up to `--max-wait-hours`, default 8) while checking it every 3 minutes. Answer on the issue in the GitHub app; any comment without the `<!-- autopilot -->` marker counts as your answer, and closing the issue also counts. The script then starts the next session, which reads your answer and carries on. Headless sessions can't use Remote Control; to talk to the agent directly, run `claude --resume <session id>` on the PC.
 
-**How merging is kept safe.** The repository is private on GitHub Free, which offers neither branch protection nor auto-merge, so the check runs in the guard hook instead. The agent may only run `gh pr merge <n> --squash --match-head-commit <sha>`. Before letting it through, `.claude/hooks/merge-check.mjs` asks GitHub for the PR and refuses unless it is open, not a draft, based on `main`, mergeable, its head is exactly `<sha>`, all four CI jobs passed on that sha and no other check failed or is still running. `--match-head-commit` makes gh refuse the merge if anything was pushed after the check. The required job names live in `merge-check.mjs`: rename a job in `ci.yml` and you must update that list, or every merge is refused. This protects against agent mistakes, not against a manual merge from the GitHub UI. With GitHub Pro you could add real branch protection on top.
+**How merging is kept safe.** The repository is private on GitHub Free, which offers neither branch protection nor auto-merge, so the check runs in the guard hook instead. The agent may only run `gh pr merge <n> --squash --match-head-commit <sha>`. Before letting it through, `.claude/hooks/merge-check.mjs` asks GitHub for the PR and refuses unless it is open, not a draft, based on `main`, mergeable, its head is exactly `<sha>`, every required CI job (`REQUIRED_CHECKS` in `merge-check.mjs`) passed on that sha and no other check failed or is still running. `--match-head-commit` makes gh refuse the merge if anything was pushed after the check. The required job names live in `merge-check.mjs`: rename a job in `ci.yml` and you must update that list, or every merge is refused. This protects against agent mistakes, not against a manual merge from the GitHub UI. With GitHub Pro you could add real branch protection on top.
 
 **Run** it, ideally in a dedicated clone so you can keep working elsewhere:
 

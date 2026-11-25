@@ -52,7 +52,7 @@ if has '^(shared|firebaseData|umbrella|iosApp)/|^gradle/|\.gradle\.kts$'; then
     run "ios-app" xcodebuild -project iosApp/iosApp.xcodeproj -scheme "FartMap Dev" -configuration Debug-dev \
       -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO -quiet build
   else
-    results+=("SKIP  ios (not macOS: verified by the CI ios job on the PR)")
+    results+=("SKIP  ios (not macOS: verified by the CI iOS jobs on the PR)")
   fi
 fi
 
