@@ -1,5 +1,6 @@
 package com.ahmetbozkan.fartmap.core.fakes
 
+import com.ahmetbozkan.fartmap.core.domain.map.MapFilter
 import com.ahmetbozkan.fartmap.core.domain.preferences.PreferencesRepository
 import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
 import com.ahmetbozkan.fartmap.core.observability.AppError
@@ -19,6 +20,17 @@ class FakePreferencesRepository : PreferencesRepository {
 
     override suspend fun setLastVisibilityMode(mode: VisibilityMode): AppResult<Unit> {
         lastVisibility = mode
+        return AppResult.Success(Unit)
+    }
+
+    var savedMapFilter: MapFilter = MapFilter.DEFAULT
+    var mapFilterWrites = 0
+
+    override suspend fun mapFilter(): MapFilter = savedMapFilter
+
+    override suspend fun setMapFilter(filter: MapFilter): AppResult<Unit> {
+        savedMapFilter = filter
+        mapFilterWrites++
         return AppResult.Success(Unit)
     }
 
