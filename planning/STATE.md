@@ -15,7 +15,7 @@
 
 ## Next
 1. Owner: run the EPIC-01-02 test plan (`planning/testing/EPIC-01-02.md`, Android + iOS) and file failures as `bug` issues. Needs the dev catalog seed first (`OwnerTodo.md` A).
-2. EPIC-01-03 (map). Owner: the Maps key (`OwnerTodo.md` D) is needed before the map renders.
+2. EPIC-01-03 (map). The dev Maps key is in place (owner, 2026-11-25; `OwnerTodo.md` D).
 3. On the Mac: commit the `Package.resolved` Xcode updates (GoogleSignIn + FirebaseFunctions pins).
 
 ## Pending owner decisions
