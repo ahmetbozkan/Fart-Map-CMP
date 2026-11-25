@@ -94,14 +94,19 @@ class MapViewModel(
             loaded = emptyList()
             setState { copy(farts = emptyList(), status = MapDataStatus.Loading, uid = subscription.uid) }
         }
-        val uid = subscription.uid ?: return emptyFlow()
-        val area = subscription.area ?: return emptyFlow()
-        val query = when (subscription.filter) {
-            MapFilter.FOLLOWERS -> return flowOf(MapFartsUpdate.Loaded(emptyList(), isFromCache = false))
-            MapFilter.MINE -> MapQuery(MapSource.Mine(uid), area)
-            MapFilter.EVERYONE -> MapQuery(MapSource.Public, area)
+        val uid = subscription.uid
+        val area = subscription.area
+        return when {
+            uid == null || area == null -> emptyFlow()
+            subscription.filter == MapFilter.FOLLOWERS -> flowOf(
+                MapFartsUpdate.Loaded(emptyList(), isFromCache = false)
+            )
+            else -> {
+                val source = if (subscription.filter == MapFilter.MINE) MapSource.Mine(uid) else MapSource.Public
+                repository.observeMapFarts(MapQuery(source, area))
+                    .onStart { setState { copy(status = MapDataStatus.Loading) } }
+            }
         }
-        return repository.observeMapFarts(query).onStart { setState { copy(status = MapDataStatus.Loading) } }
     }
 
     private fun reduce(update: MapFartsUpdate) {

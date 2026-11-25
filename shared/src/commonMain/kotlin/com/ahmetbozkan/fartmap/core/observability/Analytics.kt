@@ -24,7 +24,10 @@ sealed interface AnalyticsEvent {
     data class MapViewed(val markerCount: Int, val filter: MapFilter) : AnalyticsEvent {
         override val name = "map_viewed"
         override val params: Map<String, Any>
-            get() = mapOf("marker_count_bucket" to markerCountBucket(markerCount), "filter" to filter.wireName.lowercase())
+            get() = mapOf(
+                "marker_count_bucket" to markerCountBucket(markerCount),
+                "filter" to filter.wireName.lowercase()
+            )
     }
 
     /** A marker was tapped (the tap that opens the detail sheet from EPIC-01-05 on). */

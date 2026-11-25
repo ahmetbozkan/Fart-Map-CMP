@@ -48,7 +48,8 @@ class MapViewModelTest {
     private val tokyo = MapViewport(south = 35.60, west = 139.60, north = 35.75, east = 139.85)
 
     private val repository = FakeMapFartRepository()
-    private val sessions = InMemorySessionRepository(SessionState.Active("me", SessionState.Kind.ANONYMOUS, AgeBand.ADULT))
+    private val sessions =
+        InMemorySessionRepository(SessionState.Active("me", SessionState.Kind.ANONYMOUS, AgeBand.ADULT))
     private val preferences = FakePreferencesRepository()
     private val tracked = mutableListOf<AnalyticsEvent>()
     private val analytics = AnalyticsTracker { tracked += it }
@@ -62,7 +63,15 @@ class MapViewModelTest {
     @AfterTest fun tearDown() = Dispatchers.resetMain()
 
     private fun fart(id: String, author: String, lat: Double, lng: Double) =
-        MapFart(id, author, lat, lng, flavorLevel = 3, timestampEpochMs = now - 60_000, visibility = VisibilityMode.PUBLIC)
+        MapFart(
+            id,
+            author,
+            lat,
+            lng,
+            flavorLevel = 3,
+            timestampEpochMs = now - 60_000,
+            visibility = VisibilityMode.PUBLIC
+        )
 
     private fun viewModel() = MapViewModel(repository, sessions, preferences, analytics, clock)
 
@@ -212,7 +221,11 @@ class MapViewModelTest {
         vm.idle()
 
         assertEquals(MapFilter.MINE, vm.state.value.filter)
-        assertEquals(listOf(MapQuery(MapSource.Mine("me"), istanbulCells)), repository.queries, "never an Everyone flash")
+        assertEquals(
+            listOf(MapQuery(MapSource.Mine("me"), istanbulCells)),
+            repository.queries,
+            "never an Everyone flash"
+        )
         assertEquals(0, preferences.mapFilterWrites, "restoring is not a new choice")
     }
 

@@ -44,11 +44,15 @@ object GeohashCover {
         private val latSize = FULL_LAT / latCells
         private val lngSize = FULL_LNG / lngCells
 
-        fun latRange(south: Double, north: Double): LongRange = index(south, Geohash.MAX_LAT, latSize, latCells)..
-            index(north, Geohash.MAX_LAT, latSize, latCells)
+        fun latRange(south: Double, north: Double): LongRange {
+            val first = index(south, Geohash.MAX_LAT, latSize, latCells)
+            return first..index(north, Geohash.MAX_LAT, latSize, latCells)
+        }
 
-        fun lngRange(west: Double, east: Double): LongRange = index(west, Geohash.MAX_LNG, lngSize, lngCells)..
-            index(east, Geohash.MAX_LNG, lngSize, lngCells)
+        fun lngRange(west: Double, east: Double): LongRange {
+            val first = index(west, Geohash.MAX_LNG, lngSize, lngCells)
+            return first..index(east, Geohash.MAX_LNG, lngSize, lngCells)
+        }
 
         fun cell(row: Long, column: Long): String = Geohash.encode(
             lat = -Geohash.MAX_LAT + (row + HALF) * latSize,

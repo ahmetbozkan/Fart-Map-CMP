@@ -19,7 +19,10 @@ class GeohashCoverTest {
     }
 
     private fun cornersAndCenter(v: MapViewport): List<Pair<Double, Double>> = listOf(
-        v.south to v.west, v.south to v.east, v.north to v.west, v.north to v.east,
+        v.south to v.west,
+        v.south to v.east,
+        v.north to v.west,
+        v.north to v.east,
         (v.south + v.north) / 2 to (v.west + v.east) / 2,
     )
 

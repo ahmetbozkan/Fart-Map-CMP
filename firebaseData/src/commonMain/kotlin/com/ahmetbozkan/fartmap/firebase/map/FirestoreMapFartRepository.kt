@@ -95,16 +95,15 @@ class FirestoreMapFartRepository(
     }
 
     private fun baseQuery(source: MapSource): Query {
-        val farts = firestore.get().collection("farts")
-        return when (source) {
-            MapSource.Public -> farts
-                .where { "visibility_mode" equalTo VisibilityMode.PUBLIC.wireName }
-                .where { "is_hidden" equalTo false }
-                .where { "is_removed" equalTo false }
-            is MapSource.Mine -> farts
-                .where { "author_user_id" equalTo source.uid }
-                .where { "is_removed" equalTo false }
+        val farts: Query = firestore.get().collection("farts")
+        val scoped = when (source) {
+            MapSource.Public ->
+                farts
+                    .where { "visibility_mode" equalTo VisibilityMode.PUBLIC.wireName }
+                    .where { "is_hidden" equalTo false }
+            is MapSource.Mine -> farts.where { "author_user_id" equalTo source.uid }
         }
+        return scoped.where { "is_removed" equalTo false }
     }
 
     private fun listen(query: Query): Flow<CellResult> =
