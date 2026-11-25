@@ -49,13 +49,17 @@ describe("syncAccountProviders", () => {
     expect((await db.doc("users/nobody/private/account").get()).exists).toBe(false);
   });
 
-  it("is idempotent", async () => {
+  it("is idempotent and skips the write when the doc already matches", async () => {
     await db.doc("users/guest-1/private/account").set(guestAccount());
-    await syncAccountProviders(db, "guest-1", ["google.com"]);
-    await syncAccountProviders(db, "guest-1", ["google.com"]);
-    const data = (await db.doc("users/guest-1/private/account").get()).data();
-    expect(data?.linked_providers).toEqual(["google"]);
-    expect(data?.is_anonymous).toBe(false);
+    expect(await syncAccountProviders(db, "guest-1", ["google.com"])).toBe("updated");
+    const first = (await db.doc("users/guest-1/private/account").get()).updateTime?.toMillis();
+
+    expect(await syncAccountProviders(db, "guest-1", ["google.com"])).toBe("unchanged");
+
+    const again = await db.doc("users/guest-1/private/account").get();
+    expect(again.updateTime?.toMillis()).toBe(first); // no second write
+    expect(again.data()?.linked_providers).toEqual(["google"]);
+    expect(again.data()?.is_anonymous).toBe(false);
   });
 
   it("writes only the caller's doc through the callable handler", async () => {

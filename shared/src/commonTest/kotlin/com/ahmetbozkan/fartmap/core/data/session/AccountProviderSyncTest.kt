@@ -12,9 +12,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+
+// Longer than every backoff delay together (5 s + 10 s); backgroundScope work only runs as virtual time advances.
+private const val ALL_RETRIES_MS = 60_000L
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AccountProviderSyncTest {
@@ -65,13 +69,43 @@ class AccountProviderSyncTest {
     }
 
     @Test
-    fun aFailedSyncIsNotRetriedInTheSameProcess() = runTest {
+    fun aFailedSyncIsRetriedWithBackoffThenGivesUpForThisProcess() = runTest {
         accounts.syncResult = AppResult.Failure(AppError.NetworkUnavailable)
         accounts.stale.value = mapOf("u1" to true)
         started()
         sessions.set(active("u1", LINKED))
+        assertEquals(1, accounts.syncs)
+
+        advanceTimeBy(AccountProviderSync.FIRST_RETRY_DELAY_MS + 1)
+        assertEquals(2, accounts.syncs)
+        advanceTimeBy(ALL_RETRIES_MS)
+        assertEquals(AccountProviderSync.MAX_ATTEMPTS, accounts.syncs)
+
         sessions.set(SessionState.SignedOut)
         sessions.set(active("u1", LINKED))
+        advanceTimeBy(ALL_RETRIES_MS)
+        assertEquals(AccountProviderSync.MAX_ATTEMPTS, accounts.syncs) // next launch tries again
+    }
+
+    @Test
+    fun aRetrySucceedsAndStops() = runTest {
+        accounts.syncResult = AppResult.Failure(AppError.Unknown)
+        accounts.stale.value = mapOf("u1" to true)
+        started()
+        sessions.set(active("u1", LINKED))
+        accounts.syncResult = AppResult.Success(Unit)
+        advanceTimeBy(ALL_RETRIES_MS)
+        assertEquals(2, accounts.syncs)
+    }
+
+    @Test
+    fun leavingTheSessionCancelsPendingRetries() = runTest {
+        accounts.syncResult = AppResult.Failure(AppError.Unknown)
+        accounts.stale.value = mapOf("u1" to true)
+        started()
+        sessions.set(active("u1", LINKED))
+        sessions.set(SessionState.SignedOut)
+        advanceTimeBy(ALL_RETRIES_MS)
         assertEquals(1, accounts.syncs)
     }
 

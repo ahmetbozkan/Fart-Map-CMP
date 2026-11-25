@@ -20,7 +20,8 @@ export const onFartCreated = onDocumentCreated({ document: "farts/{fartId}", reg
 });
 
 /** Re-derives the caller's server-managed account fields after account linking (callables/syncAccountProviders.ts). */
-export const syncAccountProviders = onCall({ region: REGION }, (request) =>
+// maxInstances caps spend until App Check enforcement lands (STORY-01-02-05, Security.md §6).
+export const syncAccountProviders = onCall({ region: REGION, maxInstances: 10 }, (request) =>
   handleSyncAccountProviders(
     {
       lookupProviders: async (uid) => (await getAuth().getUser(uid)).providerData.map((p) => p.providerId),

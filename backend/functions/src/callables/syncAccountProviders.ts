@@ -1,4 +1,4 @@
-import { FieldValue, type Firestore } from "firebase-admin/firestore";
+import { FieldValue, type DocumentData, type Firestore } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/v2/https";
 import { logError, logInfo } from "../lib/log";
 
@@ -9,7 +9,7 @@ import { logError, logInfo } from "../lib/log";
  * Auth record of the caller. The callable takes no input and is idempotent.
  */
 
-export type SyncStatus = "updated" | "missing";
+export type SyncStatus = "updated" | "unchanged" | "missing";
 
 export interface AccountProviderFields {
   is_anonymous: boolean;
@@ -34,19 +34,32 @@ export function accountProvidersFrom(providerIds: readonly string[]): AccountPro
   return { is_anonymous: linked.length === 0, linked_providers: linked };
 }
 
-/** Writes the derived fields to an existing account doc. Never creates it: the age gate does that (ADR-0025). */
+/**
+ * Writes the derived fields to an existing account doc. Never creates it: the age gate does that (ADR-0025). A doc
+ * that already matches is left alone, so repeated calls cost a read, not a write.
+ */
 export async function syncAccountProviders(
   db: Firestore,
   uid: string,
   providerIds: readonly string[],
 ): Promise<SyncStatus> {
   const ref = db.doc(`users/${uid}/private/account`);
+  const fields = accountProvidersFrom(providerIds);
   return db.runTransaction(async (tx) => {
     const snap = await tx.get(ref);
     if (!snap.exists) return "missing";
-    tx.update(ref, { ...accountProvidersFrom(providerIds), updated_at: FieldValue.serverTimestamp() });
+    if (matches(snap.data(), fields)) return "unchanged";
+    tx.update(ref, { ...fields, updated_at: FieldValue.serverTimestamp() });
     return "updated";
   });
+}
+
+function matches(data: DocumentData | undefined, fields: AccountProviderFields): boolean {
+  const stored = data?.linked_providers;
+  return data?.is_anonymous === fields.is_anonymous
+    && Array.isArray(stored)
+    && stored.length === fields.linked_providers.length
+    && stored.every((name, i) => name === fields.linked_providers[i]);
 }
 
 export interface SyncDeps {

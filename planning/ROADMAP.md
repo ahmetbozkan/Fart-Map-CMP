@@ -50,7 +50,7 @@
   - [x] STORY-01-02-01: Anonymous session + 13+ age gate + private account doc (`stories/STORY-01-02-01.md`)
   - [x] STORY-01-02-02: Public profile (generated display name, free starter avatar) + dev seed of free starter catalog items (`stories/STORY-01-02-02.md`)
   - [x] STORY-01-02-03: Google sign-in on Android and iOS (`stories/STORY-01-02-03.md`)
-  - [x] STORY-01-02-04: Link anonymous → Google (same uid, ADR-0018; Google only) from the Profile tab, plus the `syncAccountProviders` callable (`stories/STORY-01-02-04.md`)
+  - [ ] STORY-01-02-04: Link anonymous → Google (same uid, ADR-0018; Google only) from the Profile tab, plus the `syncAccountProviders` callable (`stories/STORY-01-02-04.md`)
   - [ ] STORY-01-02-05: App Check (Play Integrity / App Attest) + enforcement. **Deferred** until the paid Apple account exists (App Attest). Stays Phase 1 and release-blocking (ADR-0015); not needed to start EPIC-01-03
 - **EPIC-01-03:** Map and markers on both platforms: filters, fuzzed projection, marker parity.
 - **EPIC-01-04:** Log Fart: quick log + detailed log, drafts, offline (Firestore queue), delete, visibility default per ADR-0023. Also the one-time account-link nudge after the first successful log (ADR-0018 §3; reuses `SessionRepository.linkGoogle`, throttle key `account_link_nudge_shown_at`).

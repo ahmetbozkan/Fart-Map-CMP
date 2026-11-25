@@ -202,6 +202,7 @@ If client and backend disagree, backend state wins for canonical data and access
 - Every collection/document type must have explicit read/write conditions.
 - Default-deny posture for unknown/unmatched paths.
 - User-scoped documents use authenticated uid ownership checks.
+- Callable functions use `request.auth.uid` only (never a uid from the payload) and carry a `maxInstances` cap. App Check enforcement (`enforceAppCheck`) is mandatory per ADR-0015 and lands for every callable with STORY-01-02-05, which is deferred and release-blocking (`STATE.md`).
 
 ### Visibility isolation
 
