@@ -19,6 +19,7 @@ import com.ahmetbozkan.fartmap.core.platform.AppEnvironment
 import com.ahmetbozkan.fartmap.core.platform.DefaultsRemoteConfig
 import com.ahmetbozkan.fartmap.core.platform.RemoteConfig
 import com.ahmetbozkan.fartmap.feature.auth.presentation.AuthViewModel
+import com.ahmetbozkan.fartmap.feature.map.presentation.MapViewModel
 import com.ahmetbozkan.fartmap.feature.onboarding.presentation.AgeGateViewModel
 import com.ahmetbozkan.fartmap.feature.profile.presentation.ProfileViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -90,6 +91,7 @@ private val featureModule = module {
     viewModelOf(::AuthViewModel)
     viewModelOf(::AgeGateViewModel)
     viewModelOf(::ProfileViewModel)
+    viewModelOf(::MapViewModel)
 }
 
 @OptIn(ExperimentalTime::class)
