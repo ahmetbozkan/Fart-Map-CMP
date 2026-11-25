@@ -86,16 +86,22 @@ private class FartMapView(private val initialCamera: MapCamera) : MKMapView(fram
         val (width, height) = bounds.useContents { size.width to size.height }
         if (width <= 0 || height <= 0) return
         cameraApplied = true
-        val span = initialCamera.span(widthPoints = width, heightPoints = height)
-        setRegion(
-            MKCoordinateRegionMake(
-                CLLocationCoordinate2DMake(initialCamera.lat, initialCamera.lng),
-                MKCoordinateSpanMake(span.latDelta, span.lngDelta),
+        // Width-driven region: a near-zero latitude span lets the view's aspect decide the height, so the longitude
+        // span (and so the zoom) is exactly the camera's. The center stays inside MapKit's Mercator range, and
+        // regionThatFits makes the region valid before setRegion sees it (an invalid one raises an NSException).
+        val region = MKCoordinateRegionMake(
+            CLLocationCoordinate2DMake(
+                initialCamera.lat.coerceIn(-MAX_MERCATOR_LAT, MAX_MERCATOR_LAT),
+                initialCamera.lng,
             ),
-            animated = false,
+            MKCoordinateSpanMake(MIN_LAT_DELTA, initialCamera.lngSpan(widthPoints = width)),
         )
+        setRegion(regionThatFits(region), animated = false)
     }
 }
+
+private const val MAX_MERCATOR_LAT = 85.0
+private const val MIN_LAT_DELTA = 1e-6
 
 /** Diffs the annotations against [markers] by id: removes gone ones, adds new ones, replaces changed ones. */
 private fun MKMapView.sync(current: MutableMap<String, FartAnnotation>, markers: List<MapMarker>) {
@@ -154,7 +160,7 @@ private class MapDelegate(
                 MapCamera.fromRegion(center.latitude, center.longitude, span.longitudeDelta, width)
         }
         if (viewport == null || camera == null) {
-            logger.warn(feature = "map", operation = "camera_idle", event = "region_not_finite")
+            logger.warn(feature = "map", operation = "camera_idle", event = "region_invalid")
         } else {
             onCameraIdle(viewport, camera)
         }
