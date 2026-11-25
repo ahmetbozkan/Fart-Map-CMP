@@ -33,6 +33,7 @@ kotlin {
             implementation(libs.gitlive.firebase.auth)
             implementation(libs.gitlive.firebase.firestore)
             implementation(libs.gitlive.firebase.storage)
+            implementation(libs.gitlive.firebase.functions)
             implementation(libs.gitlive.firebase.analytics)
             implementation(libs.gitlive.firebase.crashlytics)
             implementation(libs.gitlive.firebase.messaging)
@@ -42,6 +43,8 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.serialization.json) // decodes DTOs from JSON in tests
+
         }
         getByName("androidHostTest").dependencies {
             implementation(libs.kotlin.testJunit)

@@ -64,8 +64,8 @@ It does not set `bio` or `signature_style_id`. The create is tried once per uid 
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `age_band` | String enum | Yes | AGE_13_17 / AGE_18_PLUS (under-13 is blocked at sign-up; `ContentSafety.md` §5). Set once by the owner, immutable |
-| `linked_providers` | Array<String> | Yes | e.g. `google`, `apple`; empty for anonymous. Server-managed |
-| `is_anonymous` | Boolean | Yes | ADR-0018; flips to false on account linking. Server-managed |
+| `linked_providers` | Array<String> | Yes | e.g. `google`, `apple`; empty for anonymous. Server-managed: `[]` on the client create, then derived from the Firebase Auth record by the `syncAccountProviders` callable (STORY-01-02-04) |
+| `is_anonymous` | Boolean | Yes | ADR-0018; flips to false on account linking. Server-managed: set on the client create from the sign-in provider (rules check it), then re-derived by `syncAccountProviders`, which the client calls when a linked session's doc is stale |
 | `is_suspended` | Boolean | Yes | Moderation enforcement. Server-managed |
 | `created_at` | Timestamp | Yes | Server timestamp |
 | `updated_at` | Timestamp | Yes | Server timestamp |

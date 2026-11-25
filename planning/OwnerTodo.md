@@ -17,7 +17,7 @@
 
 ## A. Now: unblocks the current work
 
-- [ ] **CI minutes (issue #17).** GitHub Free gives a private repo 2,000 Actions minutes a month, and the macOS iOS job counts 10x, so about 26 CI runs use it all. Decide: make the repo public (unlimited free minutes), or trim CI and run iOS on your own Mac as a self-hosted runner. Until then, merge a PR whose `scripts/verify.sh --full` is green locally yourself.
+- [x] **CI minutes (issue #17).** Done 2026-11-25: the repo is public. GitHub Free gives a private repo 2,000 Actions minutes a month, and the macOS iOS job counts 10x, so about 26 CI runs use it all. Decide: make the repo public (unlimited free minutes), or trim CI and run iOS on your own Mac as a self-hosted runner. Until then, merge a PR whose `scripts/verify.sh --full` is green locally yourself.
 - [ ] **Dev catalog seed.** Profile creation on dev is rejected until the catalog exists (`write_rejected` in logs).
   1. `gcloud auth application-default login` (lets the script act as you, locally);
   2. `npm --prefix backend/functions run seed:catalog -- --project fart-map-dev`;

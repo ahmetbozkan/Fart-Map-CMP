@@ -2,6 +2,7 @@ package com.ahmetbozkan.fartmap.core.di
 
 import com.ahmetbozkan.fartmap.core.data.preferences.DataStorePreferencesRepository
 import com.ahmetbozkan.fartmap.core.data.profile.ProfileBootstrap
+import com.ahmetbozkan.fartmap.core.data.session.AccountProviderSync
 import com.ahmetbozkan.fartmap.core.data.session.DefaultSessionRepository
 import com.ahmetbozkan.fartmap.core.data.write.DefaultAppWriteScope
 import com.ahmetbozkan.fartmap.core.domain.preferences.PreferencesRepository
@@ -19,6 +20,7 @@ import com.ahmetbozkan.fartmap.core.platform.DefaultsRemoteConfig
 import com.ahmetbozkan.fartmap.core.platform.RemoteConfig
 import com.ahmetbozkan.fartmap.feature.auth.presentation.AuthViewModel
 import com.ahmetbozkan.fartmap.feature.onboarding.presentation.AgeGateViewModel
+import com.ahmetbozkan.fartmap.feature.profile.presentation.ProfileViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -72,6 +74,11 @@ private val dataModule = module {
             it.start(CoroutineScope(SupervisorJob() + Dispatchers.Default))
         }
     }
+    single(createdAtStart = true) {
+        AccountProviderSync(session = get(), accounts = get()).also {
+            it.start(CoroutineScope(SupervisorJob() + Dispatchers.Default))
+        }
+    }
     single<PreferencesRepository> { DataStorePreferencesRepository(store = get(), logger = get()) }
     single { DefaultAppWriteScope(logger = get(), errorMapper = get()) } binds
         arrayOf(AppWriteScope::class, PendingWriteMonitor::class)
@@ -82,6 +89,7 @@ private val featureModule = module {
     viewModelOf(::RootViewModel)
     viewModelOf(::AuthViewModel)
     viewModelOf(::AgeGateViewModel)
+    viewModelOf(::ProfileViewModel)
 }
 
 @OptIn(ExperimentalTime::class)

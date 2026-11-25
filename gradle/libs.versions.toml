@@ -76,6 +76,7 @@ datastore-preferences = { module = "androidx.datastore:datastore-preferences", v
 gitlive-firebase-auth = { module = "dev.gitlive:firebase-auth", version.ref = "gitlive" }
 gitlive-firebase-firestore = { module = "dev.gitlive:firebase-firestore", version.ref = "gitlive" }
 gitlive-firebase-storage = { module = "dev.gitlive:firebase-storage", version.ref = "gitlive" }
+gitlive-firebase-functions = { module = "dev.gitlive:firebase-functions", version.ref = "gitlive" }
 gitlive-firebase-analytics = { module = "dev.gitlive:firebase-analytics", version.ref = "gitlive" }
 gitlive-firebase-crashlytics = { module = "dev.gitlive:firebase-crashlytics", version.ref = "gitlive" }
 gitlive-firebase-messaging = { module = "dev.gitlive:firebase-messaging", version.ref = "gitlive" }

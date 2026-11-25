@@ -17,7 +17,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.ahmetbozkan.fartmap.feature.map.presentation.MapScreen
-import com.ahmetbozkan.fartmap.feature.profile.presentation.ProfileScreen
+import com.ahmetbozkan.fartmap.feature.profile.presentation.ProfileRoute
 import com.ahmetbozkan.fartmap.feature.rank.presentation.RankScreen
 import com.ahmetbozkan.fartmap.feature.social.presentation.SocialScreen
 import com.ahmetbozkan.fartmap.resources.Res
@@ -83,7 +83,7 @@ fun MainShell(modifier: Modifier = Modifier) {
             composable<TabRoute.Map> { MapScreen() }
             composable<TabRoute.Social> { SocialScreen() }
             composable<TabRoute.Rank> { RankScreen() }
-            composable<TabRoute.Profile> { ProfileScreen() }
+            composable<TabRoute.Profile> { ProfileRoute() }
         }
     }
 }

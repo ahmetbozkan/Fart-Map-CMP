@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 
@@ -40,6 +41,19 @@ class FakeAuthGateway : AuthGateway {
         googleIdToken = idToken
         signInError?.let { return AppResult.Failure(it) }
         users.emit(AuthUser(uid = googleUid, isAnonymous = false))
+        return AppResult.Success(Unit)
+    }
+
+    /** The tokens of the last link (null until one happens); [linkError] fails it. */
+    var linkedIdToken: String? = null
+    var linkError: AppError? = null
+
+    override suspend fun linkGoogle(idToken: String, accessToken: String?): AppResult<Unit> {
+        linkedIdToken = idToken
+        val user = users.replayCache.lastOrNull()
+        val error = linkError ?: if (user == null) AppError.AuthExpired else null
+        if (error != null || user == null) return AppResult.Failure(error ?: AppError.AuthExpired)
+        users.emit(user.copy(isAnonymous = false)) // same uid, now linked
         return AppResult.Success(Unit)
     }
 
@@ -90,5 +104,17 @@ class FakeAccountRepository : AccountRepository {
         created += Triple(uid, ageBand, isAnonymous)
         bands.value = bands.value + (uid to ageBand) // like the Firestore listener's pending local write
         return AppResult.Success(Unit)
+    }
+
+    /** Server-confirmed staleness per uid; absent = nothing confirmed yet (no emission). */
+    val stale = MutableStateFlow<Map<String, Boolean>>(emptyMap())
+    var syncs = 0
+    var syncResult: AppResult<Unit> = AppResult.Success(Unit)
+
+    override fun observeProvidersStale(uid: String): Flow<Boolean> = stale.mapNotNull { it[uid] }
+
+    override suspend fun syncLinkedProviders(): AppResult<Unit> {
+        syncs++
+        return syncResult
     }
 }

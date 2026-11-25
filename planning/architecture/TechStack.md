@@ -67,7 +67,7 @@ This project does **not** inherit the PoC's version lines. It is bootstrapped on
 
 ### Backend and network
 
-- GitLive Firebase: auth, firestore, storage, analytics, crashlytics, messaging modules as needed by the phase.
+- GitLive Firebase: auth, firestore, storage, analytics, crashlytics, messaging, functions modules as needed by the phase.
 - Firebase iOS SDK via Swift Package Manager in the iOS app target; the Kotlin framework must link against the same Firebase products (see §6.2).
 - Ktor client for non-Firebase HTTP use cases only (none in Phase 1).
 
@@ -114,7 +114,7 @@ This project does **not** inherit the PoC's version lines. It is bootstrapped on
 | Room / KSP | Removed 2026-11-22 (ADR-0022); never resolved | — |
 | Firebase Remote Config | Added with EPIC-01-06 (ADR-0024): GitLive `firebase-config` on the same GitLive line + `Firebase/RemoteConfig` SPM product linked in `iosApp` | not yet resolved |
 | Koin | 4.2.2 (core, compose, compose-viewmodel) | 2026-10-21 |
-| GitLive Firebase / Firebase BOM / Firebase iOS SDK | 2.7.0 (auth, firestore, storage, analytics, crashlytics, messaging) / 35.0.2 / 13.0.1 via SPM `upToNextMajor` (products Analytics, Auth, Firestore, Storage, Crashlytics, Messaging, AppCheck linked in `iosApp`; `-ObjC`); `Package.resolved` tracked | 2026-10-21 |
+| GitLive Firebase / Firebase BOM / Firebase iOS SDK | 2.7.0 (auth, firestore, storage, analytics, crashlytics, messaging, functions) / 35.0.2 / 13.0.1 via SPM `upToNextMajor` (products Analytics, Auth, Firestore, Storage, Crashlytics, Messaging, AppCheck, Functions linked in `iosApp`; `-ObjC`); `Package.resolved` tracked. `functions` added in STORY-01-02-04 for the `syncAccountProviders` callable | 2026-10-21 (functions: 2026-11-25, Android build; iOS via CI) |
 | Navigation / Lifecycle (CMP) | 2.9.2 / 2.11.0 | 2026-10-21 |
 | kotlinx-coroutines / DataStore Preferences | 1.11.0 / 1.3.0 | 2026-10-21 |
 | RevenueCat purchases-kmp | 3.14.0 — catalog entry only; first resolved by EPIC-01-06 | not yet resolved |

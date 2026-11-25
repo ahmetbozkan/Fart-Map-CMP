@@ -31,6 +31,9 @@ enum class AgeGateOutcome { ADMITTED, BLOCKED }
 /** How an interactive provider sign-in ended. Cancelling the sheet is not an error. */
 enum class SignInOutcome { SIGNED_IN, CANCELLED }
 
+/** How linking a provider to a guest session ended. Cancelling the sheet is not an error. */
+enum class LinkOutcome { LINKED, CANCELLED }
+
 /** The session source of truth (Firebase Auth + the owner-only account doc, ADR-0018/0025). */
 interface SessionRepository {
     val session: StateFlow<SessionState>
@@ -43,6 +46,13 @@ interface SessionRepository {
      * gate; an existing account goes straight to Active. Online-only, never queued.
      */
     suspend fun signInWithGoogle(): AppResult<SignInOutcome>
+
+    /**
+     * Links Google to the current guest session (ADR-0018 §3): same uid, so content, entitlements and settings stay,
+     * and the session moves from `Active(ANONYMOUS)` to `Active(LINKED)` without leaving Active. `Conflict` when that
+     * Google account already has its own Fart Map account; the guest session stays. Online-only, never queued.
+     */
+    suspend fun linkGoogle(): AppResult<LinkOutcome>
 
     /**
      * Passes the age gate with a self-declared [birthYear]. 13+ writes the age band (never the year) to the account

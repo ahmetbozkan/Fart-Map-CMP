@@ -3,6 +3,7 @@ package com.ahmetbozkan.fartmap.core.data.session
 import com.ahmetbozkan.fartmap.core.domain.session.AgeGateOutcome
 import com.ahmetbozkan.fartmap.core.domain.session.AuthUser
 import com.ahmetbozkan.fartmap.core.domain.session.DeclaredAge
+import com.ahmetbozkan.fartmap.core.domain.session.LinkOutcome
 import com.ahmetbozkan.fartmap.core.domain.session.SessionState
 import com.ahmetbozkan.fartmap.core.domain.session.SessionState.Kind.ANONYMOUS
 import com.ahmetbozkan.fartmap.core.domain.session.SessionState.Kind.LINKED
@@ -18,6 +19,7 @@ import com.ahmetbozkan.fartmap.core.observability.AppResult
 import com.ahmetbozkan.fartmap.core.platform.GoogleTokenResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -230,6 +232,73 @@ class DefaultSessionRepositoryTest {
         val repo = repo()
         repo.signInWithGoogle()
         assertEquals(SessionState.AgeBlocked, repo.session.value)
+    }
+
+    /** An Active guest "anon-1" (teen band) with its session emissions recorded from here on. */
+    private suspend fun TestScope.activeGuest(): Pair<DefaultSessionRepository, List<SessionState>> {
+        val repo = repo()
+        repo.continueAnonymously()
+        repo.declareBirthYear(THIS_YEAR - 15)
+        val seen = mutableListOf<SessionState>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { repo.session.collect { seen += it } }
+        return repo to seen
+    }
+
+    @Test
+    fun linkingAGuestKeepsTheUidAndBandAndNeverLeavesActive() = runTest {
+        val (repo, seen) = activeGuest()
+        val listenersBefore = accounts.activeListeners
+
+        assertEquals(AppResult.Success(LinkOutcome.LINKED), repo.linkGoogle())
+
+        assertEquals("id-token", auth.linkedIdToken)
+        assertEquals(
+            listOf(
+                SessionState.Active("anon-1", ANONYMOUS, AgeBand.TEEN),
+                SessionState.Active("anon-1", LINKED, AgeBand.TEEN),
+            ),
+            seen,
+        )
+        assertEquals(listenersBefore, accounts.activeListeners) // the account listener wasn't restarted
+        assertEquals(1, accounts.created.size) // no second account doc, no age gate
+    }
+
+    @Test
+    fun cancellingTheLinkSheetChangesNothing() = runTest {
+        google.next = GoogleTokenResult.Cancelled
+        val (repo, seen) = activeGuest()
+        assertEquals(AppResult.Success(LinkOutcome.CANCELLED), repo.linkGoogle())
+        assertNull(auth.linkedIdToken)
+        assertEquals(listOf<SessionState>(SessionState.Active("anon-1", ANONYMOUS, AgeBand.TEEN)), seen)
+    }
+
+    @Test
+    fun aProviderFailureOnLinkIsTypedAndSkipsFirebase() = runTest {
+        google.next = GoogleTokenResult.Failed(AppError.NetworkUnavailable)
+        val (repo, _) = activeGuest()
+        assertEquals(AppResult.Failure(AppError.NetworkUnavailable), repo.linkGoogle())
+        assertNull(auth.linkedIdToken)
+    }
+
+    @Test
+    fun aGoogleAccountThatAlreadyHasItsOwnUserIsAConflictAndTheGuestStays() = runTest {
+        auth.linkError = AppError.Conflict
+        val (repo, _) = activeGuest()
+        assertEquals(AppResult.Failure(AppError.Conflict), repo.linkGoogle())
+        assertEquals(SessionState.Active("anon-1", ANONYMOUS, AgeBand.TEEN), repo.session.value)
+    }
+
+    @Test
+    fun linkingAnAlreadyLinkedUserIsANoOpAndAMissingUserIsTyped() = runTest {
+        accounts.createAccount("u1", AgeBand.ADULT, isAnonymous = false)
+        val repo = repo()
+        auth.users.emit(null)
+        assertEquals(AppResult.Failure(AppError.AuthExpired), repo.linkGoogle())
+
+        auth.users.emit(AuthUser("u1", isAnonymous = false))
+        assertEquals(AppResult.Success(LinkOutcome.LINKED), repo.linkGoogle())
+        assertEquals(0, google.requests) // the sheet never opened
+        assertNull(auth.linkedIdToken)
     }
 
     @Test

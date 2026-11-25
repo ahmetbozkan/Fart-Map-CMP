@@ -30,6 +30,12 @@
     <string name="placeholder_profile_title">Your legend starts here</string>
     <string name="placeholder_profile_body">One brave log and this page becomes all about you.</string>
 
+    <string name="profile_link_title">Keep your legacy safe</string>
+    <string name="profile_link_body">You're here as a guest. Link Google and your farts survive a new phone.</string>
+    <string name="profile_link_button">Link Google</string>
+    <string name="profile_link_success">Linked. Your legacy is safe now.</string>
+    <string name="profile_link_conflict">That Google account already has its own Fart Map. You're still here as a guest.</string>
+
     <string name="state_loading">Loading</string>
     <string name="state_retry">Try again</string>
     <string name="error_network">You're offline. The wind can't carry this one.</string>
