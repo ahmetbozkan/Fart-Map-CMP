@@ -111,6 +111,13 @@ Readable by the owner only; never readable by other users (it reveals whether a 
 
 Readable and writable by the author only (ADR-0019). A Cloud Function recomputes `public_lat`/`public_lng`/`coarse_location_key` from this document and overwrites the public fields on mismatch.
 
+**How the public fields are computed (ADR-0019 §3, STORY-01-03-01):**
+- `coarse_location_key` = the geohash-6 cell of the precise point.
+- `public_lat`/`public_lng` = the cell center plus `(u − 0.5) × 0.8 × cell size` on each axis. `u` = FNV-1a 32-bit of the UTF-8 bytes of `"<fartId>:lat"` (or `":lng"`) divided by 2³², so the point stays in the middle 80% of the cell and is stable per fart.
+- If that point equals the precise one, the offset is mirrored (or, at offset 0, moved by +0.25 × cell size).
+- Two implementations with identical results: `shared` `core/domain/location/LocationFuzzer` (client, at write time) and `backend/functions/src/lib/location.ts` (re-validation, admin scripts). Both test suites assert `backend/functions/test/fixtures/location-fuzz-vectors.json`. Changing the algorithm changes every stored public point, so it needs a superseding ADR.
+- Dev test farts: `npm run seed:farts -- --project fart-map-dev` (dev and emulator only; `OwnerTodo.md` D).
+
 ---
 
 ## 3.3 `farts/{fartId}/reactions/{userId}`

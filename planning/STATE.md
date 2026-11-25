@@ -12,13 +12,15 @@
 - STORY-01-02-02 Done (PR #13): public profile `users/{uid}` (generated name + free starter avatar, created on Active), starter catalog in `backend/catalog/starter-catalog.json` + `npm run seed:catalog`.
 - STORY-01-02-03 Done (PR #15): Google sign-in on Android (Credential Manager) and iOS (GoogleSignIn SDK). Apple moved to Phase 2, and -05 App Check is deferred (owner, issue #14).
 - STORY-01-02-04 Done (PR #16): a guest links Google from the Profile tab; the `syncAccountProviders` callable re-derives `is_anonymous` / `linked_providers`. **EPIC-01-02 complete** except the deferred -05 (App Check). The repo is public now, so CI minutes are free (owner, issue #17).
+- EPIC-01-03 (map) started and split into -01..-04 (ROADMAP). STORY-01-03-01 Done (PR #22): geohash-6 fuzzed projection in Kotlin (`core/domain/location`) and TS (`backend/functions/src/lib/location.ts`), proven equal by shared vectors; dev fart seed `npm run seed:farts`.
 
 ## Next
 1. Owner: run the EPIC-01-02 test plan (`planning/testing/EPIC-01-02.md`, Android + iOS) and file failures as `bug` issues. Needs the dev catalog seed first (`OwnerTodo.md` A).
-2. EPIC-01-03 (map). The dev Maps key is in place (owner, 2026-11-25; `OwnerTodo.md` D).
+2. STORY-01-03-02 (map host on both platforms), then -03 (map data and filters). Owner: seed dev test farts before the EPIC-01-03 test plan (`OwnerTodo.md` D).
 3. On the Mac: commit the `Package.resolved` Xcode updates (GoogleSignIn + FirebaseFunctions pins).
 
 ## Pending owner decisions
+- **Location permission timing (blocks STORY-01-03-04).** `Growth.md` §2 says "ask at first map use, never at launch", and `Scope.md` says the map is "centered on user location". Recommended default: the map opens at a default camera without asking, and the first "center on me" tap asks for foreground location. Reply in the -04 escalation, or here.
 - Further minor-safe defaults for the 13–17 band (PUBLIC is already blocked for them) and the other Phase 1 launch items in `planning/product/Scope.md` §7a.
 - Launch catalog prices (RevenueCat Offerings) and the owned domain for App Links / Universal Links (ADR-0023/0024).
 - Minimum iOS version (the template uses 18.2).

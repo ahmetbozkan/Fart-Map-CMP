@@ -1,0 +1,165 @@
+{
+  "description": "Generated once from src/lib/location.ts (STORY-01-03-01). Asserted by test/location.test.ts and the Kotlin LocationFuzzVectorsParityTest; never regenerate it to make a test pass.",
+  "vectors": [
+    {
+      "fart_id": "f_istanbul",
+      "lat": 41.0082,
+      "lng": 28.9784,
+      "public_lat": 41.00757186534645,
+      "public_lng": 28.972082279705546,
+      "coarse_location_key": "sxk973"
+    },
+    {
+      "fart_id": "f_paris",
+      "lat": 48.8583,
+      "lng": 2.2945,
+      "public_lat": 48.86025192575721,
+      "public_lng": 2.2926778284090688,
+      "coarse_location_key": "u09tun"
+    },
+    {
+      "fart_id": "f_newyork",
+      "lat": 40.7484,
+      "lng": -73.9857,
+      "public_lat": 40.75246801896674,
+      "public_lng": -73.98335931930387,
+      "coarse_location_key": "dr5ru6"
+    },
+    {
+      "fart_id": "f_sydney",
+      "lat": -33.8568,
+      "lng": 151.2153,
+      "public_lat": -33.85505829366036,
+      "public_lng": 151.20609749400933,
+      "coarse_location_key": "r3gx2u"
+    },
+    {
+      "fart_id": "f_saopaulo",
+      "lat": -23.5505,
+      "lng": -46.6333,
+      "public_lat": -23.553844824929797,
+      "public_lng": -46.63483494352954,
+      "coarse_location_key": "6gyf4b"
+    },
+    {
+      "fart_id": "f_tokyo",
+      "lat": 35.6595,
+      "lng": 139.7005,
+      "public_lat": 35.659737742802804,
+      "public_lng": 139.69841113132065,
+      "coarse_location_key": "xn76fg"
+    },
+    {
+      "fart_id": "f_reykjavik",
+      "lat": 64.1466,
+      "lng": -21.9426,
+      "public_lat": 64.14663071279699,
+      "public_lng": -21.944741049671165,
+      "coarse_location_key": "ge2kut"
+    },
+    {
+      "fart_id": "f_wikipedia",
+      "lat": 57.64911,
+      "lng": 10.40744,
+      "public_lat": 57.64802315918655,
+      "public_lng": 10.410084989331153,
+      "coarse_location_key": "u4pruy"
+    },
+    {
+      "fart_id": "f_origin",
+      "lat": 0,
+      "lng": 0,
+      "public_lat": 0.004540484911444764,
+      "public_lng": 0.009118223130144543,
+      "coarse_location_key": "s00000"
+    },
+    {
+      "fart_id": "f_north_east_corner",
+      "lat": 90,
+      "lng": 180,
+      "public_lat": 89.99928761199567,
+      "public_lng": 179.9902994418244,
+      "coarse_location_key": "zzzzzz"
+    },
+    {
+      "fart_id": "f_south_west_corner",
+      "lat": -90,
+      "lng": -180,
+      "public_lat": -89.9963359590131,
+      "public_lng": -179.99215842657395,
+      "coarse_location_key": "000000"
+    },
+    {
+      "fart_id": "f_antimeridian_west",
+      "lat": 0,
+      "lng": -180,
+      "public_lat": 0.002405476566991638,
+      "public_lng": -179.99577442573536,
+      "coarse_location_key": "800000"
+    },
+    {
+      "fart_id": "f_antimeridian_east",
+      "lat": -16.5,
+      "lng": 179.99,
+      "public_lat": -16.50028791470004,
+      "public_lng": 179.99257412586257,
+      "coarse_location_key": "rvpfpu"
+    },
+    {
+      "fart_id": "f_south_pole_area",
+      "lat": -89.9,
+      "lng": 45.1,
+      "public_lat": -89.90056070534217,
+      "public_lng": 45.10044423314571,
+      "coarse_location_key": "j000d6"
+    },
+    {
+      "fart_id": "ğ💨",
+      "lat": 41.0082,
+      "lng": 28.9784,
+      "public_lat": 41.01064749110628,
+      "public_lng": 28.98050153300801,
+      "coarse_location_key": "sxk973"
+    },
+    {
+      "fart_id": "Ünïcödé-fart-ид",
+      "lat": 52.52,
+      "lng": 13.405,
+      "public_lat": 52.517592656874285,
+      "public_lng": 13.409727481095615,
+      "coarse_location_key": "u33dc0"
+    },
+    {
+      "fart_id": "a",
+      "lat": 1.5,
+      "lng": -1.5,
+      "public_lat": 1.5017632791740425,
+      "public_lng": -1.500835957989466,
+      "coarse_location_key": "ebqbtc"
+    },
+    {
+      "fart_id": "seed_fart_001",
+      "lat": 41.0123,
+      "lng": 28.9701,
+      "public_lat": 41.01369466563767,
+      "public_lng": 28.96387253399439,
+      "coarse_location_key": "sxk974"
+    },
+    {
+      "fart_id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "lat": -34.6037,
+      "lng": -58.3816,
+      "public_lat": -34.60593001118946,
+      "public_lng": -58.39090674860927,
+      "coarse_location_key": "69y7pk"
+    },
+    {
+      "fart_id": "6f1c2b9e-0d3a-4b7c-9a51-2e8f0c7d4a10",
+      "lat": 37.7749,
+      "lng": -122.4194,
+      "public_lat": 37.77436967116307,
+      "public_lng": -122.41277646793401,
+      "coarse_location_key": "9q8yyk"
+    }
+  ]
+}
