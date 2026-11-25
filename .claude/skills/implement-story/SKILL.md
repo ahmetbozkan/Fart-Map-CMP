@@ -24,7 +24,8 @@ Argument: a story id, or `next` (take the first unchecked story in the active ep
    - Tick the story tasks.
    - Fill **Evidence** (commands run, notable output, deviations).
    - Set the status to `Review`.
-   - Update `planning/STATE.md` (Now / Next).
+   - Update `planning/STATE.md` (Now / Next). Manual checks stay in the story's `## Validation`; the owner tests once per epic.
+   - If this is the epic's last (non-deferred) story, tick the epic in `ROADMAP.md` and write its manual test plan `planning/testing/EPIC-PP-EE.md` (format: `planning/testing/README.md`).
    - If a contract changed, update its owner doc in the same commit.
 9. **Ship.**
    - `git add` the specific paths, never `-A` over untracked config.

@@ -14,10 +14,9 @@
 - STORY-01-02-04 Done (PR #16): a guest links Google from the Profile tab; the `syncAccountProviders` callable re-derives `is_anonymous` / `linked_providers`. **EPIC-01-02 complete** except the deferred -05 (App Check). The repo is public now, so CI minutes are free (owner, issue #17).
 
 ## Next
-1. EPIC-01-03 (map). Owner: the Maps key (`OwnerTodo.md` D) is needed before the map renders.
-2. Owner: seed the dev catalog once (Owner actions), then check `users/{uid}` on a fresh dev install.
-3. On the Mac: run `FartMap Dev` once (shell, Google sign-in, Profile → Link Google), and commit the `Package.resolved` it updates (GoogleSignIn + FirebaseFunctions pins).
-4. Owner: after the dev deploy, check that linking flips `is_anonymous` to false in `users/{uid}/private/account`.
+1. Owner: run the EPIC-01-02 test plan (`planning/testing/EPIC-01-02.md`, Android + iOS) and file failures as `bug` issues. Needs the dev catalog seed first (`OwnerTodo.md` A).
+2. EPIC-01-03 (map). Owner: the Maps key (`OwnerTodo.md` D) is needed before the map renders.
+3. On the Mac: commit the `Package.resolved` Xcode updates (GoogleSignIn + FirebaseFunctions pins).
 
 ## Pending owner decisions
 - Further minor-safe defaults for the 13–17 band (PUBLIC is already blocked for them) and the other Phase 1 launch items in `planning/product/Scope.md` §7a.

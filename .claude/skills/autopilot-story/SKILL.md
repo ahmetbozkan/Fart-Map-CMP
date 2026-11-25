@@ -26,14 +26,22 @@ Everything in `CLAUDE.md` and `planning/WorkingAgreement.md` still holds, except
 ## 0. Resume before starting anything new
 
 1. `git status`. If the tree is dirty from a crashed run, look at what's there: if it belongs to the story on the current branch, keep it and continue that story; never discard work you didn't inspect.
-2. Read `planning/STATE.md` and `planning/ROADMAP.md`. Then `gh pr list --author @me --state open` and `gh issue list --label needs-owner --state open`.
+2. Read `planning/STATE.md` and `planning/ROADMAP.md`. Then `gh pr list --author @me --state open`, `gh issue list --label needs-owner --state open` and `gh issue list --label bug --state open`.
 3. Pick what to work on, in this order:
    - **A story in `Review` with an open PR** → switch to its branch and go to §6 (review) if the PR has no `<!-- autopilot-review -->` comment yet, otherwise §7 (CI).
    - **A story whose branch exists but has no PR** (any status, including `Done` set early by §5 before a crash) → switch to it, commit any leftover work from the interrupted run after checking it, and continue from where its tasks and Evidence stop; if the work is complete, go to §5 step 2.
    - **A story `In progress` whose branch exists** → switch to it and continue from where its tasks and Evidence stop.
    - **A `Blocked` story with a `needs-owner` issue** → read the issue with `gh issue view <n> --comments`. Every comment you write starts with `<!-- autopilot -->`; **any comment without that marker is the owner's answer** (the agent and the owner share one GitHub account, so the author can't tell you). If the owner answered, apply the answer, record it in the story's `## Decisions`, reply on the issue (marker first) and close it, set the story back to `In progress` and continue. If not, skip that story and take the next one that doesn't depend on it; if every remaining story in the epic depends on it, write status `escalated` (same issue) and stop.
+   - **An open `bug` issue** (usually filed by the owner from an epic test plan) → fix the oldest one before any new story. This is the same loop without a story file:
+     - the issue is the spec;
+     - branch `NN-fix-<short-name>`;
+     - write a failing test that reproduces it where the bug is testable, then fix it, then §4 verify;
+     - PR titled `Fix #<n>: <title>`, with `Fixes #<n>` in the body;
+     - then §6 review and §7 CI and merge;
+     - write status `merged` with `"story": "bug #<n>"`.
+     If the fix would need an owner decision (§1 list), or the report is unclear, comment on the issue with what you need (marker first) and move on to the next item. A `bug` issue whose latest comment carries the marker is waiting for the owner: skip it until a comment without the marker follows.
    - **Otherwise** the argument decides: the given id, or for `next` the first unchecked story in the active epic of `ROADMAP.md`.
-4. **Epic boundary.** If the active epic has no unchecked stories left: mark the epic done in `ROADMAP.md` (that edit rides along in the last story's PR, so it should already be done), and without `--cross-epics` write status `epic-boundary` and stop. With `--cross-epics`, split the next epic into stories (§1 rules apply to each, and the split is recorded in the first story's `## Decisions`), then continue with its first story. If no epics are left in the phase, write `roadmap-done`.
+4. **Epic boundary.** If the active epic has no unchecked stories left (deferred ones excepted): the epic is ticked in `ROADMAP.md` and its manual test plan `planning/testing/EPIC-PP-EE.md` exists. Both ride along in the last story's PR (§5), so they should already be on `main`. If the plan is missing, write it now as its own docs PR (§5–§7) before doing anything else. Then, without `--cross-epics`, write status `epic-boundary` with the plan's path in `summary`, and stop. With `--cross-epics`, split the next epic into stories (§1 rules apply to each, and the split is recorded in the first story's `## Decisions`), then continue with its first story. If no epics are left in the phase, write `roadmap-done`.
 5. Make sure you start from fresh `main`: `git switch main && git pull --ff-only` before creating a branch.
 
 ## 1. Author or check the story
@@ -66,6 +74,12 @@ Do **not** use plan mode: nobody can approve it.
 ## 5. Record and open the PR
 
 1. Tick the story tasks, fill `## Evidence`, set the story to `Done`, tick it in `ROADMAP.md`, and update `planning/STATE.md` (Now / Next) as if the PR were merged. The guard only lets the merge through on green CI, so "merged" and "Done" are the same event and no follow-up commit is needed. If the PR ends up not merging, you set these back before escalating.
+   - Manual checks go in the story's `## Validation`, not in STATE "Next". The owner tests once per epic, not per story.
+   - **Last story of the epic** (every other story is done or deferred):
+     - also tick the epic in `ROADMAP.md`;
+     - write the epic's manual test plan, `planning/testing/EPIC-PP-EE.md`, following `planning/testing/README.md` and gathering every story's Validation and "not verified" items;
+     - make STATE "Next" item 1: run that plan;
+     - put the plan's path in the status `summary`.
 2. Commit, push, then write the PR body to `.autopilot/pr-body.md` and run `gh pr create --draft --base main --head <branch> --title "<story id>: <title>" --body-file .autopilot/pr-body.md`. The body follows `.github/pull_request_template.md`: summary, story link, DoD checklist, "Decisions made by the agent" (copied from the story), "iOS verified by CI" on Windows, and "Not verified".
 3. Add the PR link to the story's Evidence and push.
 

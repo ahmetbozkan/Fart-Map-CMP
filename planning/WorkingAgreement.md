@@ -20,6 +20,9 @@
 4. Implement within the rules (`.claude/rules/` loads them by path).
 5. Run `scripts/verify.sh` (or `/verify`) until it is green.
 6. Tick the story checklist, add evidence (commands run plus PR link), and update `STATE.md`.
+   - **Manual testing happens once per epic.** The epic's last story also writes `planning/testing/EPIC-PP-EE.md` (format in `planning/testing/README.md`).
+   - The owner runs it on both platforms and files failures as `bug` issues.
+   - Open `bug` issues are fixed before the next story starts.
 7. Commit (message ends with the Co-Authored-By line), push the branch, and open a **draft** PR. Never push to `main`, never force-push. In this interactive loop the agent never merges; the owner does.
 
 ### Autopilot (the `/autopilot-story` skill, driven by `scripts/autopilot.sh`)

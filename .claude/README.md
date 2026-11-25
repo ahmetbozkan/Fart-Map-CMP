@@ -80,7 +80,7 @@ scripts/autopilot.sh --cross-epics       # also split and start the next epic
 scripts/autopilot.sh --help              # all options
 ```
 
-It stops on `epic-boundary`, `roadmap-done`, the story cap, an escalation you didn't answer in time, a sign-in problem, or two failed sessions in a row. Everything it keeps is in `.autopilot/` (gitignored). Keep the PC awake and plugged in while it runs.
+It stops on `epic-boundary` (the notification points to the epic's manual test plan in `planning/testing/`), `roadmap-done`, the story cap, an escalation you didn't answer in time, a sign-in problem, or two failed sessions in a row. Everything it keeps is in `.autopilot/` (gitignored). Keep the PC awake and plugged in while it runs.
 
 **Denied commands.** The session summary lists every permission denial. If the agent needed a safe command, add it to `.claude/autopilot.settings.json`, not to `settings.json`, so interactive sessions keep the stricter list. That file also denies deploys, `gcloud`, `curl`, `git reset --hard` and `git clean` for the agent. Merges to `main` deploy the backend to `fart-map-dev`; prod stays behind the `prod` environment approval.
 
