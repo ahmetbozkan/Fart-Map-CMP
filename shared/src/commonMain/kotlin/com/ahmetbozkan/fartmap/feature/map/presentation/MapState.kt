@@ -6,7 +6,8 @@ import com.ahmetbozkan.fartmap.core.platform.MapMarker
 
 /**
  * The Map tab (MAP-01). Markers stay empty until the data story (STORY-01-03-03); [viewport] is what that story
- * queries, and [selectedMarkerId] is what the detail sheet (EPIC-01-05) opens.
+ * queries, and [selectedMarkerId] is what the detail sheet (EPIC-01-05) opens. [camera] follows the user's gestures,
+ * so a recreated map (after a tab switch) opens where it was left.
  */
 data class MapState(
     val camera: MapCamera = DEFAULT_CAMERA,
@@ -21,7 +22,7 @@ data class MapState(
 }
 
 sealed interface MapAction {
-    data class ViewportChanged(val viewport: MapViewport) : MapAction
+    data class CameraIdle(val viewport: MapViewport, val camera: MapCamera) : MapAction
 
     data class MarkerTapped(val markerId: String) : MapAction
 }

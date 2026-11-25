@@ -35,7 +35,7 @@ fun MapScreen(
         markers = state.markers,
         initialCamera = state.camera,
         onMarkerTap = { onAction(MapAction.MarkerTapped(it)) },
-        onViewportChange = { onAction(MapAction.ViewportChanged(it)) },
+        onCameraIdle = { viewport, camera -> onAction(MapAction.CameraIdle(viewport, camera)) },
         modifier = modifier.fillMaxSize(),
     )
 }

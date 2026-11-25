@@ -15,7 +15,7 @@ object StaticMapHost : MapHost {
         markers: List<MapMarker>,
         initialCamera: MapCamera,
         onMarkerTap: (markerId: String) -> Unit,
-        onViewportChange: (MapViewport) -> Unit,
+        onCameraIdle: (viewport: MapViewport, camera: MapCamera) -> Unit,
         modifier: Modifier,
     ) {
         Box(modifier.background(MaterialTheme.colorScheme.surfaceVariant))

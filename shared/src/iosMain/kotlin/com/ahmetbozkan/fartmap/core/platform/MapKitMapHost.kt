@@ -9,8 +9,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.viewinterop.UIKitInteropInteractionMode
 import androidx.compose.ui.viewinterop.UIKitInteropProperties
 import androidx.compose.ui.viewinterop.UIKitView
@@ -20,6 +18,7 @@ import com.ahmetbozkan.fartmap.core.observability.Logger
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCSignatureOverride
 import kotlinx.cinterop.useContents
+import platform.CoreGraphics.CGRectMake
 import platform.CoreLocation.CLLocationCoordinate2DMake
 import platform.MapKit.MKAnnotationProtocol
 import platform.MapKit.MKAnnotationView
@@ -43,36 +42,27 @@ internal class MapKitMapHost(private val logger: Logger) : MapHost {
         markers: List<MapMarker>,
         initialCamera: MapCamera,
         onMarkerTap: (markerId: String) -> Unit,
-        onViewportChange: (MapViewport) -> Unit,
+        onCameraIdle: (viewport: MapViewport, camera: MapCamera) -> Unit,
         modifier: Modifier,
     ) {
         val currentOnMarkerTap by rememberUpdatedState(onMarkerTap)
-        val currentOnViewportChange by rememberUpdatedState(onViewportChange)
+        val currentOnCameraIdle by rememberUpdatedState(onCameraIdle)
         // MKMapView holds its delegate weakly, so the composition keeps it alive.
         val delegate = remember {
             MapDelegate(
                 onTap = { currentOnMarkerTap(it) },
-                onViewport = { currentOnViewportChange(it) },
+                onCameraIdle = { viewport, camera -> currentOnCameraIdle(viewport, camera) },
                 logger = logger,
             )
         }
-        val mapView = remember { MKMapView().apply { this.delegate = delegate } }
+        val mapView = remember { FartMapView(initialCamera).apply { this.delegate = delegate } }
         val annotations = remember { mutableMapOf<String, FartAnnotation>() }
-        val cameraApplied = remember { booleanArrayOf(false) }
-        val density = LocalDensity.current.density
 
         LaunchedEffect(markers) { mapView.sync(annotations, markers) }
 
         UIKitView(
             factory = { mapView },
-            // The camera needs the real width (MapKit has no zoom level); setting it makes MapKit report the first
-            // viewport through regionDidChangeAnimated.
-            modifier = modifier.onSizeChanged { size ->
-                if (!cameraApplied[0] && size.width > 0) {
-                    cameraApplied[0] = true
-                    mapView.applyCamera(initialCamera, widthPoints = size.width / density.toDouble())
-                }
-            },
+            modifier = modifier,
             properties = UIKitInteropProperties(
                 interactionMode = UIKitInteropInteractionMode.NonCooperative,
                 isNativeAccessibilityEnabled = true,
@@ -81,15 +71,30 @@ internal class MapKitMapHost(private val logger: Logger) : MapHost {
     }
 }
 
-private fun MKMapView.applyCamera(camera: MapCamera, widthPoints: Double) {
-    val span = camera.span(widthPoints)
-    setRegion(
-        MKCoordinateRegionMake(
-            CLLocationCoordinate2DMake(camera.lat, camera.lng),
-            MKCoordinateSpanMake(span.latDelta, span.lngDelta),
-        ),
-        animated = false,
-    )
+/**
+ * Applies the initial camera on the first layout with a real size: MapKit has no zoom level, so the span depends on
+ * the view's bounds, which Compose only sets after its own layout pass. Until then [cameraApplied] is false and the
+ * delegate ignores MapKit's default (whole-world) region.
+ */
+private class FartMapView(private val initialCamera: MapCamera) : MKMapView(frame = CGRectMake(0.0, 0.0, 0.0, 0.0)) {
+    var cameraApplied = false
+        private set
+
+    override fun layoutSubviews() {
+        super.layoutSubviews()
+        if (cameraApplied) return
+        val (width, height) = bounds.useContents { size.width to size.height }
+        if (width <= 0 || height <= 0) return
+        cameraApplied = true
+        val span = initialCamera.span(widthPoints = width, heightPoints = height)
+        setRegion(
+            MKCoordinateRegionMake(
+                CLLocationCoordinate2DMake(initialCamera.lat, initialCamera.lng),
+                MKCoordinateSpanMake(span.latDelta, span.lngDelta),
+            ),
+            animated = false,
+        )
+    }
 }
 
 /** Diffs the annotations against [markers] by id: removes gone ones, adds new ones, replaces changed ones. */
@@ -98,7 +103,7 @@ private fun MKMapView.sync(current: MutableMap<String, FartAnnotation>, markers:
     (current.keys - wanted.keys).forEach { id -> current.remove(id)?.let { removeAnnotation(it) } }
     for (marker in markers) {
         val existing = current[marker.id]
-        if (existing != null && existing.matches(marker)) continue
+        if (existing?.marker == marker) continue
         existing?.let { removeAnnotation(it) }
         val annotation = FartAnnotation(marker)
         current[marker.id] = annotation
@@ -110,13 +115,11 @@ private class FartAnnotation(val marker: MapMarker) : MKPointAnnotation() {
     init {
         setCoordinate(CLLocationCoordinate2DMake(marker.lat, marker.lng))
     }
-
-    fun matches(other: MapMarker): Boolean = marker == other
 }
 
 private class MapDelegate(
     private val onTap: (String) -> Unit,
-    private val onViewport: (MapViewport) -> Unit,
+    private val onCameraIdle: (MapViewport, MapCamera) -> Unit,
     private val logger: Logger,
 ) : NSObject(), MKMapViewDelegateProtocol {
 
@@ -144,17 +147,19 @@ private class MapDelegate(
 
     @ObjCSignatureOverride
     override fun mapView(mapView: MKMapView, regionDidChangeAnimated: Boolean) {
-        val viewport = mapView.region.useContents {
-            MapViewport.fromCenterSpan(center.latitude, center.longitude, span.latitudeDelta, span.longitudeDelta)
+        if ((mapView as? FartMapView)?.cameraApplied != true) return
+        val width = mapView.bounds.useContents { size.width }
+        val (viewport, camera) = mapView.region.useContents {
+            MapViewport.fromCenterSpan(center.latitude, center.longitude, span.latitudeDelta, span.longitudeDelta) to
+                MapCamera.fromRegion(center.latitude, center.longitude, span.longitudeDelta, width)
         }
-        if (viewport == null) {
-            logger.warn(feature = "map", operation = "viewport", event = "region_not_finite")
+        if (viewport == null || camera == null) {
+            logger.warn(feature = "map", operation = "camera_idle", event = "region_not_finite")
         } else {
-            onViewport(viewport)
+            onCameraIdle(viewport, camera)
         }
-    }
-
-    private companion object {
-        const val REUSE_ID = "fart"
     }
 }
+
+// Top level: Kotlin/Native allows no companion fields in a subclass of an Objective-C class.
+private const val REUSE_ID = "fart"

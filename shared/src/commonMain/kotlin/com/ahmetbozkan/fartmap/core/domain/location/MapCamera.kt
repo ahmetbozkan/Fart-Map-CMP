@@ -2,6 +2,7 @@ package com.ahmetbozkan.fartmap.core.domain.location
 
 import kotlin.math.PI
 import kotlin.math.cos
+import kotlin.math.log2
 import kotlin.math.pow
 
 /** Where the map looks: a center and a Web Mercator zoom level (Google's scale; MapKit converts via [span]). */
@@ -16,14 +17,16 @@ data class MapCamera(
     }
 
     /**
-     * The span a view [widthPoints] wide shows at this zoom: `lngDelta = 360 / 2^zoom × width / 256` (one 256-point
-     * world tile at zoom 0), `latDelta = lngDelta × cos(lat)`. MapKit fits the region to the view's aspect.
+     * The span a [widthPoints] × [heightPoints] view shows at this zoom: `lngDelta = 360 / 2^zoom × width / 256` (one
+     * 256-point world tile at zoom 0) and `latDelta = lngDelta × cos(lat) × height / width`, both capped at the globe.
+     * MapKit has no zoom level, so this is how the iOS host applies a camera.
      */
-    fun span(widthPoints: Double): MapSpan {
+    fun span(widthPoints: Double, heightPoints: Double): MapSpan {
         require(widthPoints.isFinite() && widthPoints > 0) { "view width must be positive" }
-        val lngDelta = (FULL_TURN / 2.0.pow(zoom.toDouble()) * widthPoints / TILE_POINTS).coerceAtMost(FULL_TURN)
-        val latDelta = (lngDelta * cos(lat * PI / HALF_TURN)).coerceIn(0.0, HALF_TURN)
-        return MapSpan(latDelta = latDelta, lngDelta = lngDelta)
+        require(heightPoints.isFinite() && heightPoints > 0) { "view height must be positive" }
+        val lngDelta = FULL_TURN / 2.0.pow(zoom.toDouble()) * widthPoints / TILE_POINTS
+        val latDelta = lngDelta * cos(lat * PI / HALF_TURN) * heightPoints / widthPoints
+        return MapSpan(latDelta = latDelta.coerceIn(0.0, HALF_TURN), lngDelta = lngDelta.coerceAtMost(FULL_TURN))
     }
 
     companion object {
@@ -32,6 +35,22 @@ data class MapCamera(
         private const val TILE_POINTS = 256.0
         private const val FULL_TURN = 360.0
         private const val HALF_TURN = 180.0
+
+        /**
+         * The inverse of [span] for a region the SDK reports (MapKit): the zoom at which [lngDelta] fills
+         * [widthPoints]. Untrusted input: the center and zoom are clamped, and a non-finite or empty value gives null.
+         */
+        fun fromRegion(centerLat: Double, centerLng: Double, lngDelta: Double, widthPoints: Double): MapCamera? {
+            val valid = listOf(centerLat, centerLng, lngDelta, widthPoints).all { it.isFinite() } &&
+                lngDelta > 0 && widthPoints > 0
+            if (!valid) return null
+            val zoom = log2(FULL_TURN * widthPoints / TILE_POINTS / lngDelta).toFloat()
+            return MapCamera(
+                lat = centerLat.coerceIn(-Geohash.MAX_LAT, Geohash.MAX_LAT),
+                lng = centerLng.coerceIn(-Geohash.MAX_LNG, Geohash.MAX_LNG),
+                zoom = zoom.coerceIn(MIN_ZOOM, MAX_ZOOM),
+            )
+        }
     }
 }
 

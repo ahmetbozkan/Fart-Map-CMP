@@ -29,11 +29,11 @@ internal class GoogleMapsMapHost : MapHost {
         markers: List<MapMarker>,
         initialCamera: MapCamera,
         onMarkerTap: (markerId: String) -> Unit,
-        onViewportChange: (MapViewport) -> Unit,
+        onCameraIdle: (viewport: MapViewport, camera: MapCamera) -> Unit,
         modifier: Modifier,
     ) {
         val currentOnMarkerTap by rememberUpdatedState(onMarkerTap)
-        val currentOnViewportChange by rememberUpdatedState(onViewportChange)
+        val currentOnCameraIdle by rememberUpdatedState(onCameraIdle)
         val cameraPositionState = rememberCameraPositionState {
             position = CameraPosition.fromLatLngZoom(LatLng(initialCamera.lat, initialCamera.lng), initialCamera.zoom)
         }
@@ -45,12 +45,18 @@ internal class GoogleMapsMapHost : MapHost {
                 .filter { it }
                 .collect {
                     val bounds = cameraPositionState.projection?.visibleRegion?.latLngBounds ?: return@collect
-                    currentOnViewportChange(
+                    val position = cameraPositionState.position
+                    currentOnCameraIdle(
                         MapViewport(
                             south = bounds.southwest.latitude,
                             west = bounds.southwest.longitude,
                             north = bounds.northeast.latitude,
                             east = bounds.northeast.longitude,
+                        ),
+                        MapCamera(
+                            lat = position.target.latitude,
+                            lng = position.target.longitude,
+                            zoom = position.zoom.coerceIn(MapCamera.MIN_ZOOM, MapCamera.MAX_ZOOM),
                         ),
                     )
                 }

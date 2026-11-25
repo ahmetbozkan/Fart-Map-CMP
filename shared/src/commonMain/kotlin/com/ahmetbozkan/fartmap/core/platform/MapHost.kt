@@ -12,14 +12,15 @@ import com.ahmetbozkan.fartmap.core.domain.location.MapViewport
 interface MapHost {
     /**
      * [initialCamera] is applied once, when the map first has a size; later changes are the user's gestures.
-     * [onViewportChange] fires whenever the camera comes to rest, including after the first layout.
+     * [onCameraIdle] fires whenever the camera comes to rest (including after the first layout) with the visible
+     * area and the camera, so the caller can restore the same view when the map is recreated (a tab switch).
      */
     @Composable
     fun Content(
         markers: List<MapMarker>,
         initialCamera: MapCamera,
         onMarkerTap: (markerId: String) -> Unit,
-        onViewportChange: (MapViewport) -> Unit,
+        onCameraIdle: (viewport: MapViewport, camera: MapCamera) -> Unit,
         modifier: Modifier,
     )
 }
