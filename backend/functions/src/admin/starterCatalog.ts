@@ -72,11 +72,11 @@ export function catalogDocs<T>(items: CatalogItem[], updatedAt: T): Record<strin
 export const DEV_PROJECT_ID = "fart-map-dev";
 
 /** Returns the normalized project to seed, or throws when it is missing or not allowed. */
-export function assertSeedTarget(project: string | undefined): string {
+export function assertSeedTarget(project: string | undefined, script = "seed:catalog"): string {
   const id = project?.trim().toLowerCase() ?? "";
-  if (id.length === 0) throw new Error("seed:catalog needs --project <id>");
+  if (id.length === 0) throw new Error(`${script} needs --project <id>`);
   if (id !== DEV_PROJECT_ID && !id.startsWith("demo-")) {
-    throw new Error(`seed:catalog only seeds ${DEV_PROJECT_ID} or demo-* emulator projects, not "${id}"`);
+    throw new Error(`${script} only seeds ${DEV_PROJECT_ID} or demo-* emulator projects, not "${id}"`);
   }
   return id;
 }

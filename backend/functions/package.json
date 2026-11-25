@@ -11,6 +11,7 @@
     "build": "tsc",
     "lint": "eslint src test",
     "seed:catalog": "npm run build && node lib/admin/seedCatalog.js",
+    "seed:farts": "npm run build && node lib/admin/seedFarts.js",
     "test:unit": "vitest run --exclude \"test/emulator/**\"",
     "test": "npm run test:unit && npm run test:emulator",
     "test:emulator": "firebase emulators:exec --only firestore --project demo-fartmap \"vitest run test/emulator --no-file-parallelism\""
