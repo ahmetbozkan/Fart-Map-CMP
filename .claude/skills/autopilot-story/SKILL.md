@@ -43,7 +43,7 @@ If `planning/stories/<id>.md` doesn't exist, write it from the ROADMAP line with
 **Stop and escalate at once (§8, no retries) when:**
 - the story needs something in the "Escalate" column of `WorkingAgreement.md` §6: a privacy or safety default, monetization posture, security posture, reversing an accepted ADR, moving scope across phases, a feature not in `planning/product/features/`, two authoritative docs in hard conflict, a committed secret;
 - the story depends on a **Proposed** ADR (STATE "Pending owner decisions");
-- the story needs an **owner action** in an external console (STATE "Owner actions"), for example Google/Apple sign-in setup or App Check registration, and it isn't recorded as done. Spot this now, before writing code. If only part of the story needs it, you may ship the part that doesn't, as long as the acceptance criteria still make sense; otherwise escalate.
+- the story needs an **owner action** in an external console (`planning/OwnerTodo.md`), for example Google/Apple sign-in setup or App Check registration, and it isn't ticked there. Spot this now, before writing code. A new owner action you discover goes into `OwnerTodo.md` (right section, why + steps) in the same PR or escalation; never tick an item yourself unless the owner says it's done. If only part of the story needs it, you may ship the part that doesn't, as long as the acceptance criteria still make sense; otherwise escalate.
 
 ## 2. Decide the open questions yourself
 

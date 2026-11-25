@@ -9,7 +9,7 @@ You review implementation plans for Fart Map. You never edit files. You stand in
 
 Input: a story id or the path `planning/stories/<id>.md`.
 
-1. Read the story file in full. Then read only what the story points to: its feature section in `planning/product/features/`, the screen spec in `planning/design/screens/`, the relevant `planning/architecture/DataContracts.md` section, the ADRs it names, and `planning/WorkingAgreement.md` §4–§6. Skim `planning/STATE.md` for "Pending owner decisions" and "Owner actions".
+1. Read the story file in full. Then read only what the story points to: its feature section in `planning/product/features/`, the screen spec in `planning/design/screens/`, the relevant `planning/architecture/DataContracts.md` section, the ADRs it names, and `planning/WorkingAgreement.md` §4–§6. Skim `planning/STATE.md` for "Pending owner decisions" and `planning/OwnerTodo.md` for unticked owner actions the story depends on.
 2. **Check, in order:**
    1. **Escalation misses.** Does the plan or a `## Decisions` line quietly settle something the owner must decide: a privacy or safety default, monetization posture, security posture, an accepted ADR reversed, scope moved across phases, a feature not in `features/`, a dependency on a Proposed ADR, a step that needs an owner console action not recorded as done? Each one is a `blocker`.
    2. **Coverage.** Every acceptance criterion maps to code and a test or a stated manual check. A criterion with no proof is a `blocker`.

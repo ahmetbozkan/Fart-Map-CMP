@@ -76,6 +76,7 @@ scripts/check-no-secrets.sh
 | Topic | File |
 |---|---|
 | State / roadmap / stories | `planning/STATE.md`, `planning/ROADMAP.md`, `planning/stories/` |
+| Owner's console/account to-do (with instructions) | `planning/OwnerTodo.md` |
 | Product brief, scope and phases, features | `planning/product/Product.md`, `Scope.md`, `features/` |
 | Monetization / growth | `planning/product/Monetization.md`, `Growth.md` |
 | Architecture / Firestore schema + rules / local data / security | `planning/architecture/Architecture.md`, `DataContracts.md`, `LocalData.md`, `Security.md` |
