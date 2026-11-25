@@ -50,13 +50,13 @@
   - [x] STORY-01-02-01: Anonymous session + 13+ age gate + private account doc (`stories/STORY-01-02-01.md`)
   - [x] STORY-01-02-02: Public profile (generated display name, free starter avatar) + dev seed of free starter catalog items (`stories/STORY-01-02-02.md`)
   - [x] STORY-01-02-03: Google sign-in on Android and iOS (`stories/STORY-01-02-03.md`)
-  - [ ] STORY-01-02-04: Link anonymous → Google (same uid, ADR-0018; Google only)
+  - [x] STORY-01-02-04: Link anonymous → Google (same uid, ADR-0018; Google only) from the Profile tab, plus the `syncAccountProviders` callable (`stories/STORY-01-02-04.md`)
   - [ ] STORY-01-02-05: App Check (Play Integrity / App Attest) + enforcement. **Deferred** until the paid Apple account exists (App Attest). Stays Phase 1 and release-blocking (ADR-0015); not needed to start EPIC-01-03
 - **EPIC-01-03:** Map and markers on both platforms: filters, fuzzed projection, marker parity.
-- **EPIC-01-04:** Log Fart: quick log + detailed log, drafts, offline (Firestore queue), delete, visibility default per ADR-0023.
+- **EPIC-01-04:** Log Fart: quick log + detailed log, drafts, offline (Firestore queue), delete, visibility default per ADR-0023. Also the one-time account-link nudge after the first successful log (ADR-0018 §3; reuses `SessionRepository.linkGoogle`, throttle key `account_link_nudge_shown_at`).
 - **EPIC-01-05:** Reactions, detail sheet and safety: report, block, auto-hide at 3.
 - **EPIC-01-06:** Cosmetics monetization: launch catalog, Wardrobe shop, starter pack offer, RevenueCat purchases + Offerings, AdMob rewarded (single-use) with server-side verification and Remote Config cap, entitlements mirror (ADR-0016/0017/0024).
-- **EPIC-01-07:** Social tab, Rank tab, Profile and Settings (Phase 1 variants; all four tabs stay, ADR-0024 accepted with no trims).
+- **EPIC-01-07:** Social tab, Rank tab, Profile and Settings (Phase 1 variants; all four tabs stay, ADR-0024 accepted with no trims). Keep the guest link card on Profile (STORY-01-02-04) and add it to Rank (`RankTabScreen.md`). Sign-out with the anonymous-loss warning (ADR-0018 §4) is also the way out for a guest whose Google account already has its own Fart Map account (link conflict).
 - **EPIC-01-08:** Reaction push notification and deep link; permission prompt after the first successful log (ADR-0023).
 - **EPIC-01-09:** Backend rules, functions, emulator tests and CI deploy (cross-cutting; grows with each epic).
 - **EPIC-01-10:** Growth kernel (ADR-0023): share card rendering on both platforms, App Links / Universal Links on an owned domain, web landing page, Play Install Referrer, official landmark markers (admin script), aggregated regional counts.

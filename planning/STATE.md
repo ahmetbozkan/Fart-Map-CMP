@@ -6,18 +6,17 @@
 ## Now
 - Phase 1, EPIC-01-01. STORY-01-01-01 Done. Planning consolidation, `.claude/` setup, static analysis and ADR-0022/0023/0024 acceptance merged (PRs #2–#5).
 - Backend deploys to `fart-map-dev` from CI on every merge to `main` (first green run 2026-11-22: rules, indexes, `health`, `onFartCreated`, `europe-west1`).
-- STORY-01-01-02 Done (PR #6 merged as `ceb2c71`): Koin, typed navigation shell, theme tokens, observability base, `StateViewModel`.
-- STORY-01-01-03 Done (PR #7 merged as `30aa4fa`): Firestore cache, write path, preferences, sign-out wipe, Remote Config contract.
-- STORY-01-01-04 Done (PR #8 merged as `fb275fd`; dev deploy green: rules, indexes + `function_runs` TTL, functions). **EPIC-01-01 complete.**
+- STORY-01-01-02/-03/-04 Done (PRs #6–#8): Koin, navigation shell, theme, observability, `StateViewModel`; Firestore cache, write path, preferences, Remote Config contract; rules skeleton + CI dev deploy. **EPIC-01-01 complete.**
 - EPIC-01-02: STORY-01-02-01 Done (PR #9 merged as `96ac220`): anonymous session + 13+ age gate.
 - Autopilot workflow merged (PR #10), with the hook-checked squash merge (PR #11, `4ddec11`).
 - STORY-01-02-02 Done (PR #13): public profile `users/{uid}` (generated name + free starter avatar, created on Active), starter catalog in `backend/catalog/starter-catalog.json` + `npm run seed:catalog`.
 - STORY-01-02-03 Done (PR #15): Google sign-in on Android (Credential Manager) and iOS (GoogleSignIn SDK). Apple moved to Phase 2, and -05 App Check is deferred (owner, issue #14).
+- STORY-01-02-04 Done (PR #16): a guest links Google from the Profile tab (same uid, no Loading blip); the `syncAccountProviders` callable re-derives `is_anonymous` / `linked_providers` (dev on merge, prod allow-listed). **EPIC-01-02 complete** except -05 (deferred).
 
 ## Next
 1. Owner: seed the dev catalog once (Owner actions), then check `users/{uid}` on a fresh dev install.
-2. On the Mac: run `FartMap Dev` once (shell + Google sign-in), and commit the `Package.resolved` it updates.
-3. STORY-01-02-04 (link anonymous → Google), then EPIC-01-03 (map; the Maps key isn't in place yet).
+2. On the Mac: run `FartMap Dev` once (shell, Google sign-in, Profile → Link Google), and commit the `Package.resolved` it updates (GoogleSignIn + FirebaseFunctions pins).
+3. EPIC-01-03 (map; the Maps key isn't in place yet).
 
 ## Pending owner decisions
 - Further minor-safe defaults for the 13–17 band (PUBLIC is already blocked for them) and the other Phase 1 launch items in `planning/product/Scope.md` §7a.
