@@ -842,7 +842,7 @@ All interactive elements must have a minimum touch target of **48dp × 48dp**, r
 
 - All icons must have `contentDescription` (descriptive) or `contentDescription = null` (decorative)
 - Bottom navigation tabs announce: "Map tab, selected" / "Feed tab, not selected"
-- Map markers announce: "Fart by [username], [flavor], [time ago]"
+- Map markers announce: "Fart by [username], [flavor], [time ago]". Interim (STORY-01-03-03): "A level-[flavor] fart, [time ago]" ("Your …" for your own), because the public fart doc carries no display name; the username joins when the detail sheet loads the author (EPIC-01-05)
 - Reaction toggles announce: "Laugh reaction, 42 people, double tap to react"
 - Sliders announce current value on focus and on change
 - Bottom sheets announce their content role on open

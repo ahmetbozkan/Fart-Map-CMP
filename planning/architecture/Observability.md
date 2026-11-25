@@ -163,12 +163,12 @@ The minimum event set that makes `Metrics.md` §4–§8 measurable in Phase 1. N
 |---|---|---|---|
 | `app_open` | cold/warm start | `session_kind` (anonymous/linked), `is_first_open` | Activation funnel |
 | `onboarding_completed` | first-launch flow finished | `duration_bucket` | Activation |
-| `map_viewed` | Map tab shown | `marker_count_bucket`, `filter` | L1/L3 health |
+| `map_viewed` | Map tab shown, after its first result | `marker_count_bucket` (`0`/`1_9`/`10_49`/`50_plus`, markers in view), `filter` (mine/followers/everyone) | L1/L3 health |
 | `log_started` | Log Fart opened | `entry` (fab/quick) | L1 |
 | `log_abandoned` | Log Fart dismissed without submit | `step_reached` | L1 leak rate |
 | `log_submitted` | submit tapped | `visibility`, `has_description`, `has_sound`, `avatar_is_free`, `offline` | Activation, L1 |
 | `marker_appeared` | own marker rendered after submit | `time_to_marker_bucket` | Time-to-first-log |
-| `marker_opened` | detail sheet opened | `is_own`, `source` (map/social_tab/push) | L2/L3 |
+| `marker_opened` | marker tapped / detail sheet opened (the same tap once the sheet exists, EPIC-01-05; tracked once) | `is_own`, `source` (map/social_tab/push) | L2/L3 |
 | `reaction_given` / `reaction_removed` | reaction tapped | `type`, `is_own_fart` | First social touch, L2 |
 | `reaction_received` | server-side, on fan-out | `type` | L2 reciprocity |
 | `fart_deleted` | delete confirmed | `age_bucket` | Trust |
