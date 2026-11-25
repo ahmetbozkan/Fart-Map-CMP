@@ -29,6 +29,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind
@@ -86,12 +87,13 @@ private val dataModule = module {
     factoryOf(::SignOut)
 }
 
+@OptIn(ExperimentalTime::class)
 private val featureModule = module {
     viewModelOf(::RootViewModel)
     viewModelOf(::AuthViewModel)
     viewModelOf(::AgeGateViewModel)
     viewModelOf(::ProfileViewModel)
-    viewModelOf(::MapViewModel)
+    viewModel { MapViewModel(get(), get(), get(), get(), clock = Clock.System) }
 }
 
 @OptIn(ExperimentalTime::class)
