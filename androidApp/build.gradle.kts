@@ -57,14 +57,15 @@ android {
             resValue("string", "app_name", "Fart Map Dev")
             buildConfigField("String", "APP_ENV", "\"dev\"")
             manifestPlaceholders["telemetryEnabled"] = "false"
-            buildConfigField("String", "MAPS_API_KEY", "\"${secret("MAPS_API_KEY_DEV")}\"")
+            // Read by the Maps SDK from the manifest (com.google.android.geo.API_KEY); empty → blank tiles, no crash.
+            manifestPlaceholders["mapsApiKey"] = secret("MAPS_API_KEY_DEV")
         }
         create("prod") {
             dimension = "env"
             resValue("string", "app_name", "Fart Map")
             buildConfigField("String", "APP_ENV", "\"prod\"")
             manifestPlaceholders["telemetryEnabled"] = "true"
-            buildConfigField("String", "MAPS_API_KEY", "\"${secret("MAPS_API_KEY_PROD")}\"")
+            manifestPlaceholders["mapsApiKey"] = secret("MAPS_API_KEY_PROD")
         }
     }
 

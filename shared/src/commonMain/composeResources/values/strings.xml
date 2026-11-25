@@ -21,8 +21,6 @@
     <string name="tab_rank">Rank</string>
     <string name="tab_profile">Profile</string>
 
-    <string name="placeholder_map_title">The map is warming up</string>
-    <string name="placeholder_map_body">Something is brewing out there. Markers land here soon.</string>
     <string name="placeholder_social_title">Your squad is still in the bathroom</string>
     <string name="placeholder_social_body">Friends, follows and reactions are on their way.</string>
     <string name="placeholder_rank_title">The leaderboard is taking a deep breath</string>

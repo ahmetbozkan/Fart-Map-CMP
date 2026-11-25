@@ -32,6 +32,8 @@ revenuecat = "3.14.0"
 play-services-ads = "25.5.0"
 ump = "4.0.0"
 play-services-location = "21.4.0"
+# Google Maps Compose (Android map host, STORY-01-03-02); brings play-services-maps transitively.
+maps-compose = "6.12.0"
 androidx-credentials = "1.6.0"
 # Static analysis and architecture tests (2026-11-21; latest stable lines). detekt 1.x analyzes with its own
 # Kotlin 2.0.21 compiler (pinned in the root build); compose-rules 0.4.x is the line built for detekt 1.23.
@@ -89,6 +91,7 @@ revenuecat-purchases-core = { module = "com.revenuecat.purchases:purchases-kmp-c
 play-services-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "play-services-ads" }
 ump = { module = "com.google.android.ump:user-messaging-platform", version.ref = "ump" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "play-services-location" }
+maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "maps-compose" }
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "androidx-credentials" }
 androidx-credentials-playServicesAuth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "androidx-credentials" }
 googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }

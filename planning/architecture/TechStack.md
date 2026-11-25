@@ -100,7 +100,8 @@ This project does **not** inherit the PoC's version lines. It is bootstrapped on
 
 ### Location and maps
 
-- Google Maps Compose (Android) and MapKit (iOS) via platform layer only.
+- Google Maps Compose (Android) and MapKit (iOS) via platform layer only: the `core/platform/MapHost` contract, `GoogleMapsMapHost` in `shared/src/androidMain`, `MapKitMapHost` in `shared/src/iosMain` (Kotlin over `platform.MapKit` in `UIKitView`; STORY-01-03-02).
+- Gotchas: the Android key reaches the Maps SDK only through the manifest (`com.google.android.geo.API_KEY`, a flavor placeholder from `secrets.properties`). The Kotlin framework is static, so `iosApp/Configuration/Config.xcconfig` links `-framework MapKit` for the app. Overriding `MKMapViewDelegate` methods in Kotlin needs `@ObjCSignatureOverride` where several selectors share one Kotlin signature.
 - Location: Play Services Location (Android), Core Location (iOS) behind the shared `LocationProvider` contract.
 - Any direct map or location SDK usage in shared domain/data code is forbidden.
 
@@ -119,6 +120,7 @@ This project does **not** inherit the PoC's version lines. It is bootstrapped on
 | kotlinx-coroutines / DataStore Preferences | 1.11.0 / 1.3.0 | 2026-10-21 |
 | RevenueCat purchases-kmp | 3.14.0 — catalog entry only; first resolved by EPIC-01-06 | not yet resolved |
 | Credential Manager / googleid / GoogleSignIn-iOS | 1.6.0 / 1.2.1 / SPM `upToNextMajor` from 10.0.0, resolved 10.1.0 with AppAuth 3.0.0, GTMAppAuth 6.0.0 and gtm-session-fetcher 5.3.1 (STORY-01-02-03). GoogleSignIn 9.x can't sit next to Firebase 13: it needs gtm-session-fetcher <4 and app-check 11. The pins are written to `Package.resolved` on the next Mac build; the CI `ios` job resolves the package until then | 2026-11-25 (Android build; iOS via CI) |
+| Google Maps Compose (Android) | 6.12.0 (play-services-maps transitively); iOS uses system MapKit, no package | 2026-11-26 (Android build; iOS via CI) |
 | Google Mobile Ads (Android / iOS) / UMP | 25.5.0 / iOS SPM package not yet added / 4.0.0 — catalog entries only; EPIC-01-06 | not yet resolved |
 | kotlinx-serialization / kotlinx-datetime / Coil | 1.12.0 / 0.8.0 / 3.6.3 (Coil catalog entry only) | 2026-10-21 (Coil not yet resolved) |
 | Node.js / firebase-tools | 22 (`backend/functions` engine; CI) / 15.25.1; firebase-functions 6.6.0, firebase-admin 13.10.0, TypeScript 5.9.3, vitest 3.2.7, `@firebase/rules-unit-testing` 4.0.1 | 2026-10-21 (local run on Node 20.11.0; the emulator needs Java 21) |
