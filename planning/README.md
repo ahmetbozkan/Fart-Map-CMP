@@ -6,6 +6,7 @@
 |---|---|
 | What to do now / next | `STATE.md`, `ROADMAP.md`, `stories/` |
 | Owner's console/account checklist with instructions | `OwnerTodo.md` |
+| Owner's manual test plan per finished epic | `testing/` |
 | How work flows, Definition of Done, escalation | `WorkingAgreement.md` |
 | Settled and proposed decisions | `decisions/README.md` |
 | **Product** | |

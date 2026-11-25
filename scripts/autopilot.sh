@@ -161,7 +161,7 @@ while [[ $merged -lt $max ]]; do
       if [[ $wait -eq 1 && -n "$issue" ]] && wait_for_owner "$issue"; then crashes=0; continue; fi
       exit 0 ;;
     epic-boundary)
-      notify "Epic finished after ${sid_story:-the last story}. Review it, then re-run (add --cross-epics to keep going)."
+      notify "Epic finished after ${sid_story:-the last story}. Test it with its plan in planning/testing/, file failures as 'bug' issues, then re-run (add --cross-epics to keep going). $summary"
       exit 0 ;;
     roadmap-done)
       notify "No stories left in the roadmap phase. $summary"
