@@ -1,5 +1,25 @@
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "farts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "visibility_mode", "order": "ASCENDING" },
+        { "fieldPath": "is_hidden", "order": "ASCENDING" },
+        { "fieldPath": "is_removed", "order": "ASCENDING" },
+        { "fieldPath": "coarse_location_key", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "farts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "author_user_id", "order": "ASCENDING" },
+        { "fieldPath": "is_removed", "order": "ASCENDING" },
+        { "fieldPath": "coarse_location_key", "order": "ASCENDING" }
+      ]
+    }
+  ],
   "fieldOverrides": [
     {
       "collectionGroup": "function_runs",
