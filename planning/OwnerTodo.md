@@ -64,7 +64,7 @@ The prod Firebase project exists but has only the basics. Repeat what dev has.
 
 ## D. Map epic (EPIC-01-03)
 
-- [ ] **Google Maps API key (Android only; iOS uses MapKit, no key):**
+- [x] **Google Maps API key (Android only; iOS uses MapKit, no key):** done for dev (owner, 2026-11-25). The prod key is item C.
   1. Google Cloud console for `dev` → enable "Maps SDK for Android";
   2. create an API key and restrict it to *Android apps*: package `com.ahmetbozkan.fartmap.dev` + your debug SHA-1(s), API = Maps SDK for Android. A restricted key is useless to anyone who pulls it out of the APK.
   3. put it in `androidApp/secrets.properties` as `MAPS_API_KEY_DEV=` (template next to it; never committed).
