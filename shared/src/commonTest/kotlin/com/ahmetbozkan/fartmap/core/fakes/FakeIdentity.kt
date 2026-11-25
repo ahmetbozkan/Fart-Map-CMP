@@ -6,6 +6,8 @@ import com.ahmetbozkan.fartmap.core.domain.session.AuthUser
 import com.ahmetbozkan.fartmap.core.domain.visibility.AgeBand
 import com.ahmetbozkan.fartmap.core.observability.AppError
 import com.ahmetbozkan.fartmap.core.observability.AppResult
+import com.ahmetbozkan.fartmap.core.platform.GoogleIdTokenProvider
+import com.ahmetbozkan.fartmap.core.platform.GoogleTokenResult
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -30,10 +32,42 @@ class FakeAuthGateway : AuthGateway {
         return AppResult.Success(Unit)
     }
 
+    /** The tokens of the last Google sign-in (null until one happens). */
+    var googleIdToken: String? = null
+    var googleUid = "google-1"
+
+    override suspend fun signInWithGoogle(idToken: String, accessToken: String?): AppResult<Unit> {
+        googleIdToken = idToken
+        signInError?.let { return AppResult.Failure(it) }
+        users.emit(AuthUser(uid = googleUid, isAnonymous = false))
+        return AppResult.Success(Unit)
+    }
+
+    var deletes = 0
+    var deleteError: AppError? = null
+
+    override suspend fun deleteCurrentUser(): AppResult<Unit> {
+        deletes++
+        deleteError?.let { return AppResult.Failure(it) }
+        users.emit(null)
+        return AppResult.Success(Unit)
+    }
+
     override suspend fun signOut(): AppResult<Unit> {
         signOuts++
         users.emit(null)
         return AppResult.Success(Unit)
+    }
+}
+
+/** Returns [next] for every request and counts the requests. */
+class FakeGoogleIdTokenProvider(var next: GoogleTokenResult = GoogleTokenResult.Token("id-token", "access-token")) :
+    GoogleIdTokenProvider {
+    var requests = 0
+
+    override suspend fun requestToken(): GoogleTokenResult {
+        requests++
+        return next
     }
 }
 

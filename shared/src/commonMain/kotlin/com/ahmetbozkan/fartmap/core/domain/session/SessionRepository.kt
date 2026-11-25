@@ -28,12 +28,21 @@ sealed interface SessionState {
 /** What the age gate decided for a declared birth year. */
 enum class AgeGateOutcome { ADMITTED, BLOCKED }
 
+/** How an interactive provider sign-in ended. Cancelling the sheet is not an error. */
+enum class SignInOutcome { SIGNED_IN, CANCELLED }
+
 /** The session source of truth (Firebase Auth + the owner-only account doc, ADR-0018/0025). */
 interface SessionRepository {
     val session: StateFlow<SessionState>
 
     /** "Continue without account": starts an anonymous session. Online-only for the first sign-in. */
     suspend fun continueAnonymously(): AppResult<Unit>
+
+    /**
+     * "Continue with Google" from the signed-out auth entry (Apple is Phase 2). A new Google uid then needs the age
+     * gate; an existing account goes straight to Active. Online-only, never queued.
+     */
+    suspend fun signInWithGoogle(): AppResult<SignInOutcome>
 
     /**
      * Passes the age gate with a self-declared [birthYear]. 13+ writes the age band (never the year) to the account

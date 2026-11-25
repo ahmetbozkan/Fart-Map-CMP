@@ -86,7 +86,7 @@ core/observability            Result/AppError, logger, analytics event contracts
 | Screen state | `StateViewModel<State, Action, Event>` (ADR-0004): one immutable `data class` State, a sealed `Action` interface, a sealed `Event` interface for one-time effects (navigation, toasts). Errors are fields in State or Events |
 | Navigation | Type-safe Compose Navigation with `@Serializable` routes (ADR-0005); session-driven start (ADR-0006, §7) |
 | DI | Koin: `sharedModule` plus platform modules composed at startup (ADR-0003). No singleton shortcuts |
-| Platform capability | A contract in `core/platform`. Use `expect`/`actual` for small pure-Kotlin seams; use an interface implemented in `androidMain`/`iosMain`, or in Swift and injected through Koin from `umbrella`, when an SDK is involved (ADR-0008) |
+| Platform capability | A contract in `core/platform`. Use `expect`/`actual` for small pure-Kotlin seams; use an interface implemented in `androidMain`/`iosMain`, or in Swift and injected through Koin from `umbrella`, when an SDK is involved (ADR-0008). Swift can't implement a `suspend` contract cleanly, so a Swift implementation implements a callback interface declared in `umbrella`, and a shared adapter turns it into the `core/platform` contract. The first one is `GoogleSignInBridge` → `CallbackGoogleIdTokenProvider` |
 | Local persistence | Firestore offline persistence behind repository interfaces (ADR-0022, `LocalData.md`); preferences and drafts in DataStore. Room only for a dataset that hits a trigger in `LocalData.md` §8, via a new ADR |
 | Runtime config | Firebase Remote Config behind a `RemoteConfig` contract in `core/platform`, every key with a safe in-app default (ADR-0024); values the server enforces (e.g. the rewarded-ad cap) are read by functions from the same source, never trusted from the client |
 | Remote | GitLive Firebase, called only from `firebaseData` (ADR-0002, ADR-0021) |
@@ -113,7 +113,7 @@ core/observability            Result/AppError, logger, analytics event contracts
 
 - **Session → start destination:**
   - `Loading` → splash gate;
-  - `SignedOut` → auth (Google / Apple / "Continue without account");
+  - `SignedOut` → auth (Google / "Continue without account"; Apple is Phase 2, owner 2026-11-25);
   - `Active(anonymous | linked)` → map-first root (ADR-0018).
 - **Root tabs:** Map (default) / Social / Rank / Profile (ADR-0020). Log Fart is a modal launched from the map FAB. Account linking happens inside the Active session and leaves the session, uid and back stack unchanged.
 - **Navigation calls:** ViewModels emit navigation Events and the UI calls the navigator. Never navigate from repositories or domain code.

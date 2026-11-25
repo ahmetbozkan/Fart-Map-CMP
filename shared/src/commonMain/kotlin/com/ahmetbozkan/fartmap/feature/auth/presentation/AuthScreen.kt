@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarHost
@@ -29,8 +31,6 @@ import com.ahmetbozkan.fartmap.core.design.PillShape
 import com.ahmetbozkan.fartmap.core.design.Spacing
 import com.ahmetbozkan.fartmap.core.design.components.messageResource
 import com.ahmetbozkan.fartmap.resources.Res
-import com.ahmetbozkan.fartmap.resources.auth_apple
-import com.ahmetbozkan.fartmap.resources.auth_coming_soon
 import com.ahmetbozkan.fartmap.resources.auth_google
 import com.ahmetbozkan.fartmap.resources.auth_guest
 import com.ahmetbozkan.fartmap.resources.auth_tagline
@@ -78,15 +78,19 @@ fun AuthScreen(
                 modifier = Modifier.padding(top = Spacing.sm),
             )
             Spacer(Modifier.heightIn(min = Spacing.huge))
-            ProviderButton(stringResource(Res.string.auth_google), enabled = state.providersEnabled)
-            ProviderButton(stringResource(Res.string.auth_apple), enabled = state.providersEnabled)
-            if (!state.providersEnabled) {
-                Text(
-                    text = stringResource(Res.string.auth_coming_soon),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = Spacing.xs),
-                )
+            OutlinedButton(
+                onClick = { onAction(AuthAction.ContinueWithGoogle) },
+                enabled = !state.isWorking,
+                shape = PillShape,
+                modifier = Modifier.fillMaxWidth().padding(top = Spacing.sm).heightIn(min = Spacing.minTouchTarget),
+            ) {
+                if (state.inProgress == AuthMethod.GOOGLE) {
+                    CircularProgressIndicator(
+                        strokeWidth = Spacing.xxs,
+                        modifier = Modifier.padding(end = Spacing.sm).size(Spacing.lg),
+                    )
+                }
+                Text(stringResource(Res.string.auth_google))
             }
             Button(
                 onClick = { onAction(AuthAction.ContinueWithoutAccount) },
@@ -99,21 +103,16 @@ fun AuthScreen(
     }
 }
 
-@Composable
-private fun ProviderButton(label: String, enabled: Boolean, modifier: Modifier = Modifier) {
-    // Real providers arrive in EPIC-01-02; until then the buttons render disabled and do nothing.
-    OutlinedButton(
-        onClick = {},
-        enabled = enabled,
-        shape = PillShape,
-        modifier = modifier.fillMaxWidth().padding(top = Spacing.sm).heightIn(min = Spacing.minTouchTarget),
-    ) { Text(label) }
-}
-
 @Preview
 @Composable
 private fun AuthScreenPreview() = FartMapTheme { AuthScreen(AuthState(), {}) }
 
 @Preview
 @Composable
-private fun AuthScreenWorkingPreview() = FartMapTheme(darkTheme = true) { AuthScreen(AuthState(isWorking = true), {}) }
+private fun AuthScreenGoogleInProgressPreview() =
+    FartMapTheme { AuthScreen(AuthState(inProgress = AuthMethod.GOOGLE), {}) }
+
+@Preview
+@Composable
+private fun AuthScreenGuestInProgressPreview() =
+    FartMapTheme(darkTheme = true) { AuthScreen(AuthState(inProgress = AuthMethod.GUEST), {}) }

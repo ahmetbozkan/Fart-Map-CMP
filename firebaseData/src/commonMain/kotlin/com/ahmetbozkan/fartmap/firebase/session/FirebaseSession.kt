@@ -13,6 +13,7 @@ import com.ahmetbozkan.fartmap.firebase.firestore.FirestoreProvider
 import com.ahmetbozkan.fartmap.firebase.firestore.FirestoreWriteErrorMapper
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.FirebaseNetworkException
+import dev.gitlive.firebase.auth.GoogleAuthProvider
 import dev.gitlive.firebase.auth.auth
 import dev.gitlive.firebase.firestore.BaseTimestamp
 import dev.gitlive.firebase.firestore.BaseTimestampSerializer
@@ -26,7 +27,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.coroutines.cancellation.CancellationException
 
-/** Firebase Auth (GitLive) behind [AuthGateway]. Providers: anonymous now; Google/Apple in STORY-01-02-03. */
+/** Firebase Auth (GitLive) behind [AuthGateway]. Providers: anonymous and Google (Apple is Phase 2). */
 class FirebaseAuthGateway(private val logger: Logger) : AuthGateway {
 
     override val user: Flow<AuthUser?> = Firebase.auth.authStateChanged.map { user ->
@@ -37,7 +38,17 @@ class FirebaseAuthGateway(private val logger: Logger) : AuthGateway {
         Firebase.auth.signInAnonymously()
     }
 
+    override suspend fun signInWithGoogle(idToken: String, accessToken: String?): AppResult<Unit> =
+        authCall("sign_in_google") {
+            Firebase.auth.signInWithCredential(GoogleAuthProvider.credential(idToken, accessToken))
+        }
+
     override suspend fun signOut(): AppResult<Unit> = authCall("sign_out") { Firebase.auth.signOut() }
+
+    override suspend fun deleteCurrentUser(): AppResult<Unit> = authCall("delete_user") {
+        // No current user means nothing to delete; the caller only needs the identity gone.
+        Firebase.auth.currentUser?.delete()
+    }
 
     private suspend fun authCall(operation: String, block: suspend () -> Unit): AppResult<Unit> = try {
         block()

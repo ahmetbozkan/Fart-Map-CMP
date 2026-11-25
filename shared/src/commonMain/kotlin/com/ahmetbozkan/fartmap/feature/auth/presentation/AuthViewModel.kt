@@ -6,23 +6,27 @@ import com.ahmetbozkan.fartmap.core.observability.AppResult
 import com.ahmetbozkan.fartmap.core.presentation.StateViewModel
 import kotlinx.coroutines.launch
 
-/** Navigation after success is session-driven (the root reacts to the Active session), so no navigate event. */
+/**
+ * Navigation after success is session-driven (the root reacts to NeedsAgeBand / Active), so no navigate event.
+ * Cancelling the Google sheet is silent; failures become a typed message and the user can retry.
+ */
 class AuthViewModel(
     private val sessions: SessionRepository,
 ) : StateViewModel<AuthState, AuthAction, AuthEvent>(AuthState()) {
 
     override fun onAction(action: AuthAction) {
         when (action) {
-            AuthAction.ContinueWithoutAccount -> continueWithoutAccount()
+            AuthAction.ContinueWithGoogle -> run(AuthMethod.GOOGLE) { sessions.signInWithGoogle() }
+            AuthAction.ContinueWithoutAccount -> run(AuthMethod.GUEST) { sessions.continueAnonymously() }
         }
     }
 
-    private fun continueWithoutAccount() {
+    private fun run(method: AuthMethod, request: suspend () -> AppResult<*>) {
         if (state.value.isWorking) return
-        setState { copy(isWorking = true) }
+        setState { copy(inProgress = method) }
         viewModelScope.launch {
-            val result = sessions.continueAnonymously()
-            setState { copy(isWorking = false) }
+            val result = request()
+            setState { copy(inProgress = null) }
             if (result is AppResult.Failure) sendEvent(AuthEvent.ShowMessage(result.error))
         }
     }

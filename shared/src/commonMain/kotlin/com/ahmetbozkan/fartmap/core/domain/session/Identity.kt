@@ -14,7 +14,16 @@ interface AuthGateway {
 
     suspend fun signInAnonymously(): AppResult<Unit>
 
+    /** Signs in to Firebase with Google tokens from the native sheet. Online-only. */
+    suspend fun signInWithGoogle(idToken: String, accessToken: String?): AppResult<Unit>
+
     suspend fun signOut(): AppResult<Unit>
+
+    /**
+     * Deletes the signed-in Firebase Auth user (and signs it out). Used when an under-13 birth year is declared, so no
+     * provider identity of a child (Google email, name) stays in the project.
+     */
+    suspend fun deleteCurrentUser(): AppResult<Unit>
 }
 
 /** The owner-only `users/{uid}/private/account` doc (ADR-0025, DataContracts.md §3.1.1). */

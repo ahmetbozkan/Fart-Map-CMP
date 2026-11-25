@@ -11,7 +11,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         FirebaseApp.configure()
         // APP_ENV comes from the active xcconfig through Info.plist (dev | prod). Starts telemetry switch + Koin.
         let env = Bundle.main.object(forInfoDictionaryKey: "APP_ENV") as? String ?? "prod"
-        AppStartupKt.startApp(environmentName: env)
+        AppStartupKt.startApp(environmentName: env, googleSignIn: GoogleSignInBridgeImpl())
         return true
     }
 }

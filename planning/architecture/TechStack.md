@@ -81,6 +81,13 @@ This project does **not** inherit the PoC's version lines. It is bootstrapped on
 - RevenueCat `purchases-kmp` (ADR-0016).
 - Google Mobile Ads SDK (Android) and Google Mobile Ads SDK for iOS via SPM, plus the User Messaging Platform SDK for consent (ADR-0017), behind `expect`/`actual` adapters.
 
+### Authentication
+
+- Firebase Auth through GitLive: Anonymous and Google in Phase 1. Apple moves to Phase 2 (owner, 2026-11-25).
+- Google on Android: Credential Manager (`androidx.credentials` + `credentials-play-services-auth`) with `googleid`'s `GetSignInWithGoogleOption`, in `shared/src/androidMain`.
+- Google on iOS: the GoogleSignIn SDK via SPM (`GoogleSignIn-iOS`, product `GoogleSignIn`), in Swift behind the `umbrella` callback bridge.
+- Both return Google tokens to the shared `GoogleIdTokenProvider`. The Firebase credential sign-in happens in `firebaseData`.
+
 ### Serialization and time
 
 - `kotlinx-serialization`.
@@ -111,6 +118,7 @@ This project does **not** inherit the PoC's version lines. It is bootstrapped on
 | Navigation / Lifecycle (CMP) | 2.9.2 / 2.11.0 | 2026-10-21 |
 | kotlinx-coroutines / DataStore Preferences | 1.11.0 / 1.3.0 | 2026-10-21 |
 | RevenueCat purchases-kmp | 3.14.0 — catalog entry only; first resolved by EPIC-01-06 | not yet resolved |
+| Credential Manager / googleid / GoogleSignIn-iOS | 1.6.0 / 1.2.1 / SPM `upToNextMajor` from 10.0.0, resolved 10.1.0 with AppAuth 3.0.0, GTMAppAuth 6.0.0 and gtm-session-fetcher 5.3.1 (STORY-01-02-03). GoogleSignIn 9.x can't sit next to Firebase 13: it needs gtm-session-fetcher <4 and app-check 11. The pins are written to `Package.resolved` on the next Mac build; the CI `ios` job resolves the package until then | 2026-11-25 (Android build; iOS via CI) |
 | Google Mobile Ads (Android / iOS) / UMP | 25.5.0 / iOS SPM package not yet added / 4.0.0 — catalog entries only; EPIC-01-06 | not yet resolved |
 | kotlinx-serialization / kotlinx-datetime / Coil | 1.12.0 / 0.8.0 / 3.6.3 (Coil catalog entry only) | 2026-10-21 (Coil not yet resolved) |
 | Node.js / firebase-tools | 22 (`backend/functions` engine; CI) / 15.25.1; firebase-functions 6.6.0, firebase-admin 13.10.0, TypeScript 5.9.3, vitest 3.2.7, `@firebase/rules-unit-testing` 4.0.1 | 2026-10-21 (local run on Node 20.11.0; the emulator needs Java 21) |

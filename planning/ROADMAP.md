@@ -29,7 +29,7 @@
 
 **Done when:**
 - both apps launch to the four-tab shell (Map / Social / Rank / Profile) with placeholders;
-- the auth entry shows Google / Apple / Continue without account (stubs allowed);
+- the auth entry shows Google / Continue without account (stubs allowed; Apple moved to Phase 2, owner 2026-11-25);
 - the theme comes from `DesignSpecification.md` tokens;
 - the observability base exists;
 - `firebase deploy --only firestore:rules,functions` works against `dev` from CI;
@@ -43,12 +43,15 @@
 
 ### Planned epics (instantiate one at a time)
 
-- **EPIC-01-02:** Session and identity: anonymous, Google, Apple, linking, 13+ age band.
+- **EPIC-01-02:** Session and identity: anonymous, Google, linking, 13+ age band.
+  - **Owner, 2026-11-25 (issue #14):**
+    - Sign in with Apple moves to Phase 2, because there is no paid Apple Developer account yet. App Store guideline 4.8 must be met before the iOS store release (`product/Growth.md` §2).
+    - After -04, EPIC-01-03 starts.
   - [x] STORY-01-02-01: Anonymous session + 13+ age gate + private account doc (`stories/STORY-01-02-01.md`)
   - [x] STORY-01-02-02: Public profile (generated display name, free starter avatar) + dev seed of free starter catalog items (`stories/STORY-01-02-02.md`)
-  - [ ] STORY-01-02-03: Google and Apple sign-in
-  - [ ] STORY-01-02-04: Link anonymous → Google/Apple (same uid, ADR-0018)
-  - [ ] STORY-01-02-05: App Check (Play Integrity / App Attest) + enforcement
+  - [x] STORY-01-02-03: Google sign-in on Android and iOS (`stories/STORY-01-02-03.md`)
+  - [ ] STORY-01-02-04: Link anonymous → Google (same uid, ADR-0018; Google only)
+  - [ ] STORY-01-02-05: App Check (Play Integrity / App Attest) + enforcement. **Deferred** until the paid Apple account exists (App Attest). Stays Phase 1 and release-blocking (ADR-0015); not needed to start EPIC-01-03
 - **EPIC-01-03:** Map and markers on both platforms: filters, fuzzed projection, marker parity.
 - **EPIC-01-04:** Log Fart: quick log + detailed log, drafts, offline (Firestore queue), delete, visibility default per ADR-0023.
 - **EPIC-01-05:** Reactions, detail sheet and safety: report, block, auto-hide at 3.

@@ -25,7 +25,7 @@
 ## Layout Structure
 - Top-level regions: hero illustration, title/tagline, sign-in actions, guest action.
 - Primary CTA: provider sign-in action.
-- Secondary actions: alternate provider, "Continue without account" (anonymous session with full capability, ADR-0018).
+- Secondary actions: "Continue without account" (anonymous session with full capability, ADR-0018). Phase 1 has Google only. The alternate provider (Apple) arrives in Phase 2 (owner, 2026-11-25).
 
 ## UI States
 - Loading: sign-in action shows in-progress state while auth request executes.

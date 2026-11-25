@@ -8,11 +8,14 @@ import com.ahmetbozkan.fartmap.core.domain.session.AuthUser
 import com.ahmetbozkan.fartmap.core.domain.session.DeclaredAge
 import com.ahmetbozkan.fartmap.core.domain.session.SessionRepository
 import com.ahmetbozkan.fartmap.core.domain.session.SessionState
+import com.ahmetbozkan.fartmap.core.domain.session.SignInOutcome
 import com.ahmetbozkan.fartmap.core.domain.session.declaredAge
 import com.ahmetbozkan.fartmap.core.domain.visibility.AgeBand
 import com.ahmetbozkan.fartmap.core.observability.AppError
 import com.ahmetbozkan.fartmap.core.observability.AppResult
 import com.ahmetbozkan.fartmap.core.observability.map
+import com.ahmetbozkan.fartmap.core.platform.GoogleIdTokenProvider
+import com.ahmetbozkan.fartmap.core.platform.GoogleTokenResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -37,6 +40,7 @@ class DefaultSessionRepository(
     private val auth: AuthGateway,
     private val accounts: AccountRepository,
     private val preferences: PreferencesRepository,
+    private val googleTokens: GoogleIdTokenProvider,
     scope: CoroutineScope,
     private val currentYear: () -> Int,
 ) : SessionRepository {
@@ -88,16 +92,24 @@ class DefaultSessionRepository(
 
     override suspend fun continueAnonymously(): AppResult<Unit> = auth.signInAnonymously()
 
+    override suspend fun signInWithGoogle(): AppResult<SignInOutcome> = when (val token = googleTokens.requestToken()) {
+        is GoogleTokenResult.Token ->
+            auth.signInWithGoogle(token.idToken, token.accessToken).map { SignInOutcome.SIGNED_IN }
+        GoogleTokenResult.Cancelled -> AppResult.Success(SignInOutcome.CANCELLED)
+        is GoogleTokenResult.Failed -> AppResult.Failure(token.error)
+    }
+
     override suspend fun declareBirthYear(birthYear: Int): AppResult<AgeGateOutcome> {
         val user = (userState.value as? UserState.Known)?.user ?: return AppResult.Failure(AppError.AuthExpired)
         return when (declaredAge(birthYear, currentYear())) {
             DeclaredAge.INVALID -> AppResult.Failure(AppError.ValidationFailed("birth_year"))
             DeclaredAge.UNDER_13 -> {
-                // Close the gate in memory before anything else, then persist it, then sign out. A failed disk write
-                // or sign-out is logged by its implementation and still leaves this process blocked.
+                // Close the gate in memory before anything else, then persist it, then delete the Auth user (a Google
+                // sign-in already created one holding the provider identity), signing out if the delete fails. Every
+                // failure is logged by its implementation and still leaves this process blocked.
                 blockedThisProcess.value = true
                 preferences.blockAgeGate()
-                auth.signOut()
+                if (auth.deleteCurrentUser() is AppResult.Failure) auth.signOut()
                 AppResult.Success(AgeGateOutcome.BLOCKED)
             }
             DeclaredAge.TEEN -> admit(user, AgeBand.TEEN)

@@ -4,6 +4,7 @@ import com.ahmetbozkan.fartmap.core.domain.session.AgeGateOutcome
 import com.ahmetbozkan.fartmap.core.domain.session.LocalDataReset
 import com.ahmetbozkan.fartmap.core.domain.session.SessionRepository
 import com.ahmetbozkan.fartmap.core.domain.session.SessionState
+import com.ahmetbozkan.fartmap.core.domain.session.SignInOutcome
 import com.ahmetbozkan.fartmap.core.domain.session.SignOut
 import com.ahmetbozkan.fartmap.core.domain.visibility.AgeBand
 import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
@@ -37,6 +38,7 @@ private class FailingSessions : SessionRepository {
         SessionState.Active("u1", SessionState.Kind.ANONYMOUS, AgeBand.ADULT)
     )
     override suspend fun continueAnonymously(): AppResult<Unit> = AppResult.Success(Unit)
+    override suspend fun signInWithGoogle(): AppResult<SignInOutcome> = AppResult.Success(SignInOutcome.SIGNED_IN)
     override suspend fun declareBirthYear(birthYear: Int): AppResult<AgeGateOutcome> =
         AppResult.Success(AgeGateOutcome.ADMITTED)
     override suspend fun signOut(): AppResult<Unit> = AppResult.Failure(AppError.NetworkUnavailable)
