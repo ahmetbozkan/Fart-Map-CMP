@@ -6,6 +6,7 @@ import { projectPublicLocation } from "../lib/location";
  * evidence for the client create path; the emulator test proves their shape passes `allow create` separately.
  */
 export const SEED_AUTHOR_ID = "seed_author_dev";
+/** Each fart is 2 writes in one batch; Firestore caps a batch at 500, so this must stay ≤ 250. */
 export const MAX_SEED_FARTS = 200;
 export const DEFAULT_SEED_COUNT = 30;
 /** Istanbul, the same area the backend test helpers use. */
@@ -28,7 +29,7 @@ export function seedFartId(index: number): string {
   return `seed_fart_${String(index + 1).padStart(3, "0")}`;
 }
 
-/** Spreads points on a golden-angle spiral up to [SPREAD_KM] from the centre; no randomness, so re-runs match. */
+/** Spreads points on a golden-angle spiral up to [SPREAD_KM] from the centre; no randomness, so locations repeat. */
 function spiralPoint(index: number, count: number, center: { lat: number; lng: number }): { lat: number; lng: number } {
   const radiusKm = SPREAD_KM * Math.sqrt((index + 0.5) / count);
   const angle = index * 2.399963229728653;

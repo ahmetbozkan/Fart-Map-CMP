@@ -81,6 +81,16 @@ export function assertSeedTarget(project: string | undefined, script = "seed:cat
   return id;
 }
 
+/**
+ * A `demo-*` id is only safe against the local emulator: a real GCP project that happens to be named `demo-…` must
+ * not receive seed writes. Throws unless `FIRESTORE_EMULATOR_HOST` is set for such an id.
+ */
+export function assertEmulatorForDemo(projectId: string, env: Record<string, string | undefined> = process.env): void {
+  if (projectId.startsWith("demo-") && !env.FIRESTORE_EMULATOR_HOST) {
+    throw new Error(`"${projectId}" is an emulator project id, but FIRESTORE_EMULATOR_HOST is not set`);
+  }
+}
+
 /** The starter catalog is free items only; a paid or rewarded item here would be a free grant to everyone. */
 export function assertStarterItemsFree(items: CatalogItem[]): CatalogItem[] {
   const paid = items.filter((item) => !item.is_free || item.rewarded_unlockable);

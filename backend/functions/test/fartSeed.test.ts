@@ -7,7 +7,7 @@ import {
   SEED_AUTHOR_ID,
   type FartSeedOptions,
 } from "../src/admin/fartSeed";
-import { assertSeedTarget } from "../src/admin/starterCatalog";
+import { assertEmulatorForDemo, assertSeedTarget } from "../src/admin/starterCatalog";
 import { boundsContain, encodeGeohash, geohashBounds, projectPublicLocation } from "../src/lib/location";
 
 // The farts create rule's required fields (backend/firestore.rules). The emulator test (fartSeed.rules.test.ts)
@@ -106,6 +106,12 @@ describe("seed:farts arguments", () => {
     expect(parseCount(undefined)).toBe(30);
     expect(parseCount("12")).toBe(12);
     expect(() => parseCount("ten")).toThrow();
+  });
+
+  it("refuses a demo-* project unless the emulator host is set", () => {
+    expect(() => assertEmulatorForDemo("demo-fartmap", {})).toThrow(/FIRESTORE_EMULATOR_HOST/);
+    expect(() => assertEmulatorForDemo("demo-fartmap", { FIRESTORE_EMULATOR_HOST: "127.0.0.1:8080" })).not.toThrow();
+    expect(() => assertEmulatorForDemo("fart-map-dev", {})).not.toThrow();
   });
 
   it("refuses prod and a missing project, naming the script", () => {

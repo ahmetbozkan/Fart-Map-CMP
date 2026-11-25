@@ -7,7 +7,7 @@
 import { initializeApp } from "firebase-admin/app";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import { logError, logInfo } from "../lib/log";
-import { assertSeedTarget, catalogDocs, loadStarterCatalog } from "./starterCatalog";
+import { assertEmulatorForDemo, assertSeedTarget, catalogDocs, loadStarterCatalog } from "./starterCatalog";
 
 function projectArg(argv: string[]): string | undefined {
   const index = argv.indexOf("--project");
@@ -16,6 +16,7 @@ function projectArg(argv: string[]): string | undefined {
 
 async function main(): Promise<void> {
   const projectId = assertSeedTarget(projectArg(process.argv.slice(2)));
+  assertEmulatorForDemo(projectId);
   const items = loadStarterCatalog();
   const db = getFirestore(initializeApp({ projectId }));
   const batch = db.batch();

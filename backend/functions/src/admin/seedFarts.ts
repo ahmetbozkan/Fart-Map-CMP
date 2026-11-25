@@ -2,13 +2,14 @@
 // the owner with Application Default Credentials, after the catalog seed:
 //   gcloud auth application-default login
 //   npm run seed:farts -- --project fart-map-dev [--center 41.0082,28.9784] [--count 30]
-// Idempotent: upserts seed_fart_001..N. Only fart-map-dev or demo-* emulator projects are accepted. Logs no
-// coordinates.
+// Upserts seed_fart_001..N: ids and locations are stable across runs; timestamps and created_at are refreshed.
+// A re-run with a smaller --count leaves the higher-numbered docs in place (dev data; delete them in the console
+// if needed). Only fart-map-dev, or demo-* with the emulator running, is accepted. Logs no coordinates.
 import { initializeApp } from "firebase-admin/app";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import { logError, logInfo } from "../lib/log";
 import { fartSeedDocs, parseCenter, parseCount } from "./fartSeed";
-import { assertSeedTarget, loadStarterCatalog } from "./starterCatalog";
+import { assertEmulatorForDemo, assertSeedTarget, loadStarterCatalog } from "./starterCatalog";
 
 function arg(argv: string[], name: string): string | undefined {
   const index = argv.indexOf(name);
@@ -18,6 +19,7 @@ function arg(argv: string[], name: string): string | undefined {
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
   const projectId = assertSeedTarget(arg(argv, "--project"), "seed:farts");
+  assertEmulatorForDemo(projectId);
   const catalog = loadStarterCatalog();
   const docs = fartSeedDocs(
     {
