@@ -70,6 +70,12 @@ The prod Firebase project exists but has only the basics. Repeat what dev has.
   3. put it in `androidApp/secrets.properties` as `MAPS_API_KEY_DEV=` (template next to it; never committed).
 
   Without it the map code still builds; tiles are blank.
+- [ ] **Dev test farts for the map (STORY-01-03-01).** Needed before the EPIC-01-03 test plan: there's no Log Fart flow yet (EPIC-01-04), so without these the map has no markers.
+  1. Seed the catalog first (section A), because the farts use the starter avatars and sounds;
+  2. `gcloud auth application-default login` (once), then `npm --prefix backend/functions run seed:farts -- --project fart-map-dev`;
+  3. optional: `--center <lat>,<lng>` (default Istanbul) and `--count <n>` (default 30, max 200). Re-running replaces the same `seed_fart_*` docs, so nothing piles up.
+
+  These are PUBLIC farts by a fake author, `seed_author_dev`, around the center. Only `fart-map-dev` and emulator projects are accepted, never prod.
 
 ## E. Paid Apple Developer account (99 USD/year): unlocks a group of iOS items
 
