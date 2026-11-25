@@ -1,6 +1,8 @@
 package com.ahmetbozkan.fartmap.core.di
 
 import com.ahmetbozkan.fartmap.core.data.preferences.DataStorePreferencesRepository
+import com.ahmetbozkan.fartmap.core.platform.MapHost
+import com.ahmetbozkan.fartmap.core.platform.MapKitMapHost
 import kotlinx.cinterop.ExperimentalForeignApi
 import org.koin.dsl.module
 import platform.Foundation.NSApplicationSupportDirectory
@@ -11,6 +13,7 @@ import platform.Foundation.NSUserDomainMask
 // Application Support: not user-visible and, unlike Documents, not exposed through file sharing.
 internal actual val platformModule = module {
     single { DataStorePreferencesRepository.createStore(appSupportPath(DataStorePreferencesRepository.FILE_NAME)) }
+    single<MapHost> { MapKitMapHost(logger = get()) }
 }
 
 @OptIn(ExperimentalForeignApi::class)

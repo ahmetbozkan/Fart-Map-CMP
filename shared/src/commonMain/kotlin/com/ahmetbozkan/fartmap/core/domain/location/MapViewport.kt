@@ -23,17 +23,20 @@ data class MapViewport(
          * instead of throwing inside a platform callback.
          */
         fun fromCenterSpan(centerLat: Double, centerLng: Double, latDelta: Double, lngDelta: Double): MapViewport? {
-            if (!centerLat.isFinite() || !centerLng.isFinite() || !latDelta.isFinite() || !lngDelta.isFinite()) {
-                return null
-            }
+            if (listOf(centerLat, centerLng, latDelta, lngDelta).any { !it.isFinite() }) return null
             val lat = centerLat.coerceIn(-MAX_LAT, MAX_LAT)
             val lng = wrapLng(centerLng)
             val halfLat = latDelta.coerceIn(0.0, 2 * MAX_LAT) / 2
             val south = (lat - halfLat).coerceAtLeast(-MAX_LAT)
             val north = (lat + halfLat).coerceAtMost(MAX_LAT)
-            val lngSpan = lngDelta.coerceAtLeast(0.0)
-            if (lngSpan >= FULL_TURN) return MapViewport(south, -MAX_LNG, north, MAX_LNG)
-            return MapViewport(south, wrapLng(lng - lngSpan / 2), north, wrapLng(lng + lngSpan / 2))
+            val halfLng = lngDelta.coerceAtLeast(0.0) / 2
+            val wholeWorld = halfLng * 2 >= FULL_TURN
+            return MapViewport(
+                south = south,
+                west = if (wholeWorld) -MAX_LNG else wrapLng(lng - halfLng),
+                north = north,
+                east = if (wholeWorld) MAX_LNG else wrapLng(lng + halfLng),
+            )
         }
 
         /** Brings a longitude into ±180, leaving values already inside untouched (so 180 stays 180). */

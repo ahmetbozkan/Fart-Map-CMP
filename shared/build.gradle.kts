@@ -43,6 +43,8 @@ kotlin {
             implementation(libs.androidx.credentials)
             implementation(libs.androidx.credentials.playServicesAuth)
             implementation(libs.googleid)
+            // Map host (STORY-01-03-02): Google Maps Compose.
+            implementation(libs.maps.compose)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)

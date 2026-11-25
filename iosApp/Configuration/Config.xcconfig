@@ -10,3 +10,7 @@ KOTLIN_FRAMEWORK_BUILD_TYPE[config=Debug-dev] = debug
 KOTLIN_FRAMEWORK_BUILD_TYPE[config=Debug-prod] = debug
 KOTLIN_FRAMEWORK_BUILD_TYPE[config=Release-dev] = release
 KOTLIN_FRAMEWORK_BUILD_TYPE[config=Release-prod] = release
+
+// The Kotlin framework is static, so the app links the system frameworks its Kotlin code uses (MapKit: the map
+// host, STORY-01-03-02). The target's `$(inherited) -ObjC` picks this up.
+OTHER_LDFLAGS = $(inherited) -framework MapKit

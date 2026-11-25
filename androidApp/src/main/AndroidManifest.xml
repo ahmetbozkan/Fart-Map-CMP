@@ -16,6 +16,10 @@
         <meta-data
             android:name="firebase_analytics_collection_enabled"
             android:value="${telemetryEnabled}" />
+        <!-- Maps SDK key per flavor, from untracked secrets.properties (STORY-01-03-02). -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${mapsApiKey}" />
 
         <activity
             android:exported="true"
