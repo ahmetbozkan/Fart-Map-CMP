@@ -26,19 +26,7 @@
 - Open items in `planning/product/Scope.md` §7a marked "Phase 1 launch": push preferences, sensitive zones.
 
 ## Owner actions (external consoles)
-- **Dev catalog seed (unblocks profile creation on dev):**
-  1. `gcloud auth application-default login`;
-  2. `cd backend/functions && npm run seed:catalog -- --project fart-map-dev`.
-
-  Until then, profile creates on dev are logged as `write_rejected`.
-- **Release-blocking:**
-  - seed the prod catalog before any prod release (EPIC-01-06; the seed script only seeds `fart-map-dev` and emulators);
-  - set up Authentication with Anonymous + Google on `fart-map-1a558`: release and Play app-signing SHA-1/SHA-256, then re-download the prod configs;
-  - iOS: meet App Store guideline 4.8 (Apple sign-in is Phase 2) and App Check (STORY-01-02-05) once the paid Apple Developer account exists.
-- Prod (`fart-map-1a558`) before the first release deploy: the same setup as dev (deploy roles incl. Service Account User, APIs incl. Cloud Run / Eventarc / Cloud Billing, the three service-agent roles, Blaze); expect one retry for Eventarc propagation.
-- Add the iOS configs on the Mac (`~/.fartmap/` + `scripts/inject-config.sh`) and `androidApp/secrets.properties` once the map lands.
-- Inter and JetBrains Mono font files (OFL) for `core/design`, or approve the download.
-- Later epics: App Check registration (STORY-01-02-05, deferred); RevenueCat project + Offerings, AdMob app + test units, Remote Config template, App Store Connect / Play Console products (EPIC-01-06); a domain for links + landing page (EPIC-01-10).
+The full checklist, with instructions, is `planning/OwnerTodo.md`: A now (CI minutes, dev catalog seed), B the Mac/iOS manual check, C prod parity, D the Maps key, E the paid Apple account (Apple sign-in, App Check), F monetization and launch consoles.
 
 ## Decided (owner, 2026-11-22)
 - Crash and analytics collection stays on in `prod` until the consent screen (EPIC-01-06) exists; then collection moves behind consent.
