@@ -11,13 +11,13 @@
 - Autopilot workflow merged (PR #10), with the hook-checked squash merge (PR #11, `4ddec11`).
 - STORY-01-02-02 Done (PR #13): public profile `users/{uid}` (generated name + free starter avatar, created on Active), starter catalog in `backend/catalog/starter-catalog.json` + `npm run seed:catalog`.
 - STORY-01-02-03 Done (PR #15): Google sign-in on Android (Credential Manager) and iOS (GoogleSignIn SDK). Apple moved to Phase 2, and -05 App Check is deferred (owner, issue #14).
-- STORY-01-02-04 **Blocked** (PR #16, reviewed, verify green locally): a guest links Google from the Profile tab; the `syncAccountProviders` callable re-derives `is_anonymous` / `linked_providers`. CI jobs refuse to start: GitHub Actions billing (owner, see the `needs-owner` issue).
+- STORY-01-02-04 Done (PR #16): a guest links Google from the Profile tab; the `syncAccountProviders` callable re-derives `is_anonymous` / `linked_providers`. **EPIC-01-02 complete** except the deferred -05 (App Check). The repo is public now, so CI minutes are free (owner, issue #17).
 
 ## Next
-1. **Owner: fix GitHub billing / the Actions spending limit**, re-run CI on PR #16 (or re-run the autopilot driver, which resumes it), then the merge finishes EPIC-01-02 (except the deferred -05).
+1. EPIC-01-03 (map). Owner: the Maps key (`OwnerTodo.md` D) is needed before the map renders.
 2. Owner: seed the dev catalog once (Owner actions), then check `users/{uid}` on a fresh dev install.
 3. On the Mac: run `FartMap Dev` once (shell, Google sign-in, Profile → Link Google), and commit the `Package.resolved` it updates (GoogleSignIn + FirebaseFunctions pins).
-4. EPIC-01-03 (map; the Maps key isn't in place yet).
+4. Owner: after the dev deploy, check that linking flips `is_anonymous` to false in `users/{uid}/private/account`.
 
 ## Pending owner decisions
 - Further minor-safe defaults for the 13–17 band (PUBLIC is already blocked for them) and the other Phase 1 launch items in `planning/product/Scope.md` §7a.
