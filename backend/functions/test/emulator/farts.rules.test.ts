@@ -2,8 +2,8 @@ import { assertFails, assertSucceeds, type RulesTestEnvironment } from "@firebas
 import type firebase from "firebase/compat/app";
 import { afterAll, beforeAll, beforeEach, describe, it } from "vitest";
 import {
-  ALICE, BOB, CAROL, FREE_SOUND, PAID_AVATAR, PAID_SOUND, anonymous, catalog, createEnv, newFart, seed, serverNow,
-  signedOut, storedFart, user, type Db,
+  ALICE, BOB, CAROL, FREE_SOUND, PAID_AVATAR, PAID_SOUND, PRECISE, anonymous, catalog, createEnv, createFart, newFart,
+  seed, serverNow, signedOut, storedFart, user, type Db,
 } from "./helpers";
 
 type Query = firebase.firestore.Query;
@@ -30,20 +30,20 @@ beforeEach(async () => {
 
 describe("farts: PUBLIC is for adults only (ADR-0023 amendment)", () => {
   it("an adult may post PUBLIC", async () => {
-    await assertSucceeds(user(env, ALICE).doc("farts/f1").set(newFart("f1", ALICE)));
+    await assertSucceeds(createFart(user(env, ALICE), "f1", newFart("f1", ALICE)));
   });
 
   it("a 13–17 user may not post PUBLIC, but may post FOLLOWERS or PRIVATE", async () => {
     const db = user(env, "teen-1");
-    await assertFails(db.doc("farts/f1").set(newFart("f1", "teen-1")));
-    await assertSucceeds(db.doc("farts/f2").set(newFart("f2", "teen-1", { visibility_mode: "FOLLOWERS" })));
-    await assertSucceeds(db.doc("farts/f3").set(newFart("f3", "teen-1", { visibility_mode: "PRIVATE" })));
+    await assertFails(createFart(db, "f1", newFart("f1", "teen-1")));
+    await assertSucceeds(createFart(db, "f2", newFart("f2", "teen-1", { visibility_mode: "FOLLOWERS" })));
+    await assertSucceeds(createFart(db, "f3", newFart("f3", "teen-1", { visibility_mode: "PRIVATE" })));
   });
 
   it("without an account doc there is no PUBLIC (fail closed)", async () => {
     const db = user(env, "no-account");
-    await assertFails(db.doc("farts/f1").set(newFart("f1", "no-account")));
-    await assertSucceeds(db.doc("farts/f2").set(newFart("f2", "no-account", { visibility_mode: "FOLLOWERS" })));
+    await assertFails(createFart(db, "f1", newFart("f1", "no-account")));
+    await assertSucceeds(createFart(db, "f2", newFart("f2", "no-account", { visibility_mode: "FOLLOWERS" })));
   });
 
   it("a 13–17 user may not switch an existing fart to PUBLIC; an adult may", async () => {
@@ -59,80 +59,110 @@ describe("farts: PUBLIC is for adults only (ADR-0023 amendment)", () => {
 
 describe("farts: create", () => {
   it("allows the author, including an anonymous session", async () => {
-    await assertSucceeds(user(env, ALICE).doc("farts/f1").set(newFart("f1", ALICE)));
-    await assertSucceeds(anonymous(env, "anon-1").doc("farts/f2").set(newFart("f2", "anon-1")));
+    await assertSucceeds(createFart(user(env, ALICE), "f1", newFart("f1", ALICE)));
+    await assertSucceeds(createFart(anonymous(env, "anon-1"), "f2", newFart("f2", "anon-1")));
   });
 
-  it("allows optional description and a free sound", async () => {
+  it("allows optional description and a free sound, also sent as null", async () => {
     const fart = newFart("f1", ALICE, { description_text: "Silent but deadly", sound_id: FREE_SOUND });
-    await assertSucceeds(user(env, ALICE).doc("farts/f1").set(fart));
+    await assertSucceeds(createFart(user(env, ALICE), "f1", fart));
+    // FirestoreFartRepository encodes absent optionals as null.
+    const nulls = newFart("f2", ALICE, { description_text: null, sound_id: null });
+    await assertSucceeds(createFart(user(env, ALICE), "f2", nulls));
+  });
+
+  it("allows a 500-emoji description and denies 501 (the limit counts characters, not UTF-16 units)", async () => {
+    const db = user(env, ALICE);
+    await assertSucceeds(createFart(db, "f1", newFart("f1", ALICE, { description_text: "💨".repeat(500) })));
+    await assertFails(createFart(db, "f2", newFart("f2", ALICE, { description_text: "💨".repeat(501) })));
   });
 
   it("denies signed-out users", async () => {
-    await assertFails(signedOut(env).doc("farts/f1").set(newFart("f1", ALICE)));
+    await assertFails(createFart(signedOut(env), "f1", newFart("f1", ALICE)));
   });
 
   it("denies writing as someone else or with a mismatched id", async () => {
-    await assertFails(user(env, BOB).doc("farts/f1").set(newFart("f1", ALICE)));
-    await assertFails(user(env, ALICE).doc("farts/f1").set(newFart("other", ALICE)));
+    await assertFails(createFart(user(env, BOB), "f1", newFart("f1", ALICE)));
+    await assertFails(createFart(user(env, ALICE), "f1", newFart("other", ALICE)));
   });
 
   it("denies precise coordinates or unknown keys on the public doc (ADR-0019)", async () => {
     const db = user(env, ALICE);
-    await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { lat: 41.008234, lng: 28.978359 })));
-    await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { voice_url: "gs://x" })));
+    await assertFails(createFart(db, "f1", newFart("f1", ALICE, { lat: 41.008234, lng: 28.978359 })));
+    await assertFails(createFart(db, "f1", newFart("f1", ALICE, { voice_url: "gs://x" })));
   });
 
   it("denies invalid enums and out-of-range values", async () => {
     const db = user(env, ALICE);
-    await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { visibility_mode: "EVERYONE" })));
-    await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { flavor_level: 6 })));
-    await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { flavor_level: 0 })));
-    await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { intensity_value: 1.5 })));
-    await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { public_lat: 91 })));
-    await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { description_text: "x".repeat(501) })));
+    await assertFails(createFart(db, "f1", newFart("f1", ALICE, { visibility_mode: "EVERYONE" })));
+    await assertFails(createFart(db, "f1", newFart("f1", ALICE, { flavor_level: 6 })));
+    await assertFails(createFart(db, "f1", newFart("f1", ALICE, { flavor_level: 0 })));
+    await assertFails(createFart(db, "f1", newFart("f1", ALICE, { intensity_value: 1.5 })));
+    await assertFails(createFart(db, "f1", newFart("f1", ALICE, { public_lat: 91 })));
+    await assertFails(createFart(db, "f1", newFart("f1", ALICE, { description_text: "x".repeat(501) })));
   });
 
   it("denies a coarse location key that is not a geohash-6 cell", async () => {
     const db = user(env, ALICE);
-    await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { coarse_location_key: "sxk9" })));
-    await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { coarse_location_key: "41.008234,28.978359" })));
-    await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { coarse_location_key: "sxk9wa" }))); // 'a' is not geohash
+    await assertFails(createFart(db, "f1", newFart("f1", ALICE, { coarse_location_key: "sxk9" })));
+    await assertFails(createFart(db, "f1", newFart("f1", ALICE, { coarse_location_key: "41.008234,28.978359" })));
+    await assertFails(createFart(db, "f1", newFart("f1", ALICE, { coarse_location_key: "sxk9wa" }))); // 'a' is not geohash
   });
 
   it("denies a cosmetic used as the wrong type", async () => {
-    await assertFails(user(env, ALICE).doc("farts/f1").set(newFart("f1", ALICE, { avatar_id: FREE_SOUND })));
+    await assertFails(createFart(user(env, ALICE), "f1", newFart("f1", ALICE, { avatar_id: FREE_SOUND })));
   });
 
   it("denies client-set counters, moderation flags or timestamps", async () => {
     const db = user(env, ALICE);
-    await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { reaction_count: 1 })));
-    await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { reaction_breakdown: { DEAD: 3 } })));
-    await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { report_count: 2 })));
-    await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { is_hidden: true })));
-    await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { created_at: new Date() })));
+    await assertFails(createFart(db, "f1", newFart("f1", ALICE, { reaction_count: 1 })));
+    await assertFails(createFart(db, "f1", newFart("f1", ALICE, { reaction_breakdown: { DEAD: 3 } })));
+    await assertFails(createFart(db, "f1", newFart("f1", ALICE, { report_count: 2 })));
+    await assertFails(createFart(db, "f1", newFart("f1", ALICE, { is_hidden: true })));
+    await assertFails(createFart(db, "f1", newFart("f1", ALICE, { created_at: new Date() })));
   });
 
   it("denies paid cosmetics without an entitlement and allows them with one (ADR-0016)", async () => {
     const db = user(env, ALICE);
-    await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { avatar_id: PAID_AVATAR })));
-    await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { sound_id: PAID_SOUND })));
-    await assertFails(db.doc("farts/f1").set(newFart("f1", ALICE, { avatar_id: "not-in-catalog" })));
+    await assertFails(createFart(db, "f1", newFart("f1", ALICE, { avatar_id: PAID_AVATAR })));
+    await assertFails(createFart(db, "f1", newFart("f1", ALICE, { sound_id: PAID_SOUND })));
+    await assertFails(createFart(db, "f1", newFart("f1", ALICE, { avatar_id: "not-in-catalog" })));
 
     await seed(env, { [`user_entitlements/${ALICE}`]: { user_id: ALICE, items: { [PAID_AVATAR]: { source: "PURCHASE" } } } });
-    await assertSucceeds(db.doc("farts/f1").set(newFart("f1", ALICE, { avatar_id: PAID_AVATAR })));
+    await assertSucceeds(createFart(db, "f1", newFart("f1", ALICE, { avatar_id: PAID_AVATAR })));
   });
 });
 
 describe("farts: private location (ADR-0019)", () => {
-  const location = () => ({ lat: 41.008234, lng: 28.978359, updated_at: serverNow() });
+  const location = () => ({ ...PRECISE, updated_at: serverNow() });
 
   it("allows the author to write it in the same batch as the fart", async () => {
+    await assertSucceeds(createFart(user(env, ALICE), "f1", newFart("f1", ALICE)));
+  });
+
+  it("denies a fart created without its private location in the same batch", async () => {
+    await assertFails(user(env, ALICE).doc("farts/f1").set(newFart("f1", ALICE)));
+    await assertFails(user(env, "teen-1").doc("farts/f2").set(newFart("f2", "teen-1", { visibility_mode: "PRIVATE" })));
+  });
+
+  it("denies creating it later for an existing fart, even by the author", async () => {
+    await seed(env, { "farts/f1": storedFart("f1", ALICE) });
+    await assertFails(user(env, ALICE).doc("farts/f1/private/location").set(location()));
+  });
+
+  it("denies moving it afterwards (update), even by the author", async () => {
+    await seed(env, { "farts/f1": storedFart("f1", ALICE), "farts/f1/private/location": { ...PRECISE } });
+    await assertFails(user(env, ALICE).doc("farts/f1/private/location").set(location()));
+    await assertFails(user(env, ALICE).doc("farts/f1/private/location").update({ lat: 40, updated_at: serverNow() }));
+  });
+
+  it("denies a creating batch with extra keys or another private doc id", async () => {
     const db = user(env, ALICE);
+    await assertFails(createFart(db, "f1", newFart("f1", ALICE), { ...PRECISE, note: "x" }));
     const batch = db.batch();
-    batch.set(db.doc("farts/f1"), newFart("f1", ALICE));
-    batch.set(db.doc("farts/f1/private/location"), location());
-    await assertSucceeds(batch.commit());
+    batch.set(db.doc("farts/f2"), newFart("f2", ALICE));
+    batch.set(db.doc("farts/f2/private/other"), location());
+    await assertFails(batch.commit());
   });
 
   it("denies other users writing it, extra keys, or other doc ids", async () => {

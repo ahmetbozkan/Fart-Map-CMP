@@ -2,7 +2,7 @@ import { logger } from "firebase-functions";
 
 // Keys whose values must never reach logs (planning/architecture/Observability.md §5).
 const FORBIDDEN_KEYS = new Set([
-  "lat", "lng", "latitude", "longitude", "private_lat", "private_lng",
+  "lat", "lng", "latitude", "longitude", "private_lat", "private_lng", "public_lat", "public_lng",
   "token", "fcm_token", "idToken", "accessToken", "refreshToken", "api_key", "apiKey",
   "description_text", "body",
 ]);

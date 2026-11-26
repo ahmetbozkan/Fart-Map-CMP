@@ -1,7 +1,7 @@
 import { assertFails, assertSucceeds, type RulesTestEnvironment } from "@firebase/rules-unit-testing";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { DEFAULT_SEED_CENTER, fartSeedDocs, SEED_AUTHOR_ID } from "../../src/admin/fartSeed";
-import { ALICE, BOB, FREE_AVATAR, FREE_SOUND, catalog, createEnv, seed, serverNow, signedOut, user } from "./helpers";
+import { ALICE, BOB, FREE_AVATAR, FREE_SOUND, catalog, createEnv, createFart, seed, serverNow, signedOut, user } from "./helpers";
 
 let env: RulesTestEnvironment;
 
@@ -32,8 +32,8 @@ describe("dev fart seed (STORY-01-03-01)", () => {
     // seed_fart_001 carries a sound_id (every third fart), so the optional field is covered too.
     const shape = { ...seedDocs()["farts/seed_fart_001"], fart_id: "f_shape", author_user_id: ALICE };
     expect(shape).toHaveProperty("sound_id");
-    await assertSucceeds(user(env, ALICE).doc("farts/f_shape").set(shape));
-    await assertFails(user(env, ALICE).doc("farts/f_extra").set({ ...shape, fart_id: "f_extra", lat: 41.0 }));
+    await assertSucceeds(createFart(user(env, ALICE), "f_shape", shape));
+    await assertFails(createFart(user(env, ALICE), "f_extra", { ...shape, fart_id: "f_extra", lat: 41.0 }));
   });
 
   it("the map's PUBLIC query lists every seeded fart for a signed-in user, but not when signed out", async () => {

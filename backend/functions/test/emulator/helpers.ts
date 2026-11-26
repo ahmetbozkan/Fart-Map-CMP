@@ -84,6 +84,20 @@ export function newFart(fartId: string, author: string, overrides: Data = {}): D
   };
 }
 
+/** The precise point of a test fart (owner-only `private/location`, ADR-0019). */
+export const PRECISE = { lat: 41.008234, lng: 28.978359 };
+
+/**
+ * Creates a fart the way the client does (FirestoreFartRepository): one batch with the public doc and its
+ * `private/location`. The rules deny a fart without its private location in the same batch.
+ */
+export function createFart(db: Db, fartId: string, fart: Data, location: Data = PRECISE): Promise<void> {
+  const batch = db.batch();
+  batch.set(db.doc(`farts/${fartId}`), fart);
+  batch.set(db.doc(`farts/${fartId}/private/location`), { ...location, updated_at: serverNow() });
+  return batch.commit();
+}
+
 /** A stored fart for read tests (seeded with rules disabled). */
 export function storedFart(fartId: string, author: string, overrides: Data = {}): Data {
   return newFart(fartId, author, overrides);

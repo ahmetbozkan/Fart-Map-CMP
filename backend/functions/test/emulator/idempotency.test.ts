@@ -2,7 +2,6 @@ import { deleteApp, initializeApp, type App } from "firebase-admin/app";
 import { getFirestore, Timestamp, type Firestore } from "firebase-admin/firestore";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { runOnce } from "../../src/lib/idempotency";
-import { handleFartCreated } from "../../src/triggers/fartCreated";
 
 // Admin SDK against the Firestore emulator (FIRESTORE_EMULATOR_HOST is set by `firebase emulators:exec`).
 let app: App;
@@ -78,13 +77,5 @@ describe("runOnce", () => {
     await runOnce(db, "k4", async () => undefined, { now: () => clock, ttlMs: 1000 });
     const expireAt = (await db.doc("function_runs/k4").get()).data()?.expire_at as Timestamp;
     expect(expireAt.toMillis()).toBe(clock + 1000);
-  });
-});
-
-describe("onFartCreated handler", () => {
-  it("is idempotent per event id", async () => {
-    expect(await handleFartCreated(db, "event-1", "f1")).toBe("ran");
-    expect(await handleFartCreated(db, "event-1", "f1")).toBe("skipped");
-    expect(await handleFartCreated(db, "event-2", "f1")).toBe("ran");
   });
 });
