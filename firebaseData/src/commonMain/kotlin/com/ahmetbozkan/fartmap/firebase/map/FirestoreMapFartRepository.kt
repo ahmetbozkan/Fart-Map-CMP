@@ -39,10 +39,10 @@ internal data class MapFartDto(
     @SerialName("visibility_mode") val visibilityMode: String = "",
 )
 
-/** The document id is the fart id; an unknown visibility reads as PRIVATE. */
 /** One cell listener's latest snapshot; [isTruncated] when it returned as many docs as its limit. */
 internal data class CellResult(val farts: List<MapFart>, val isFromCache: Boolean, val isTruncated: Boolean)
 
+/** The document id is the fart id; an unknown visibility reads as PRIVATE. */
 internal fun MapFartDto.toDomain(id: String) = MapFart(
     id = id,
     authorUid = authorUserId,
