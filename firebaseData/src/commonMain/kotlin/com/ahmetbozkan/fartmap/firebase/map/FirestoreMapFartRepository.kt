@@ -40,6 +40,9 @@ internal data class MapFartDto(
 )
 
 /** The document id is the fart id; an unknown visibility reads as PRIVATE. */
+/** One cell listener's latest snapshot; [isTruncated] when it returned as many docs as its limit. */
+internal data class CellResult(val farts: List<MapFart>, val isFromCache: Boolean, val isTruncated: Boolean)
+
 internal fun MapFartDto.toDomain(id: String) = MapFart(
     id = id,
     authorUid = authorUserId,
@@ -64,23 +67,19 @@ class FirestoreMapFartRepository(
     override fun observeMapFarts(query: MapQuery): Flow<MapFartsUpdate> {
         val base = baseQuery(query.source)
         val listeners: List<Flow<CellResult>> = when (val area = query.area) {
-            MapArea.World -> listOf(listen(base.limit(WORLD_LIMIT)))
+            MapArea.World -> listOf(listen(base.limit(WORLD_LIMIT), WORLD_LIMIT))
             is MapArea.Cells -> area.prefixes.map { prefix ->
                 listen(
                     base.where { "coarse_location_key" greaterThanOrEqualTo prefix }
                         .where { "coarse_location_key" lessThan prefix + RANGE_END }
                         .orderBy("coarse_location_key")
                         .limit(CELL_LIMIT),
+                    CELL_LIMIT,
                 )
             }
         }
-        if (listeners.isEmpty()) return flowOf(MapFartsUpdate.Loaded(emptyList(), isFromCache = false))
-        return combine(listeners) { cells ->
-            MapFartsUpdate.Loaded(
-                farts = cells.flatMap { it.farts }.distinctBy { it.id },
-                isFromCache = cells.any { it.isFromCache },
-            ) as MapFartsUpdate
-        }.catch { failure ->
+        if (listeners.isEmpty()) return flowOf(merge(emptyList()))
+        return combine(listeners) { cells -> merge(cells.toList()) }.catch { failure ->
             if (failure is CancellationException) throw failure
             val error = FirestoreWriteErrorMapper.map(failure)
             logger.error(
@@ -106,12 +105,13 @@ class FirestoreMapFartRepository(
         return scoped.where { "is_removed" equalTo false }
     }
 
-    private fun listen(query: Query): Flow<CellResult> =
-        query.snapshots(includeMetadataChanges = true).map { snapshot -> snapshot.toCellResult() }
+    private fun listen(query: Query, limit: Int): Flow<CellResult> =
+        query.snapshots(includeMetadataChanges = true).map { snapshot -> snapshot.toCellResult(limit) }
 
-    private fun QuerySnapshot.toCellResult() = CellResult(
+    private fun QuerySnapshot.toCellResult(limit: Int) = CellResult(
         farts = documents.mapNotNull { it.toMapFart() },
         isFromCache = metadata.isFromCache,
+        isTruncated = documents.size >= limit,
     )
 
     // A malformed document is skipped, not fatal: one bad doc must not blank the whole map. No content is logged.
@@ -134,9 +134,17 @@ class FirestoreMapFartRepository(
         return null
     }
 
-    private class CellResult(val farts: List<MapFart>, val isFromCache: Boolean)
-
     internal companion object {
+        /**
+         * Joins the latest result of every cell listener: farts de-duplicated by id, cached if any cell is, truncated if
+         * any cell hit its limit (the map then says "zoom in" instead of "nothing here").
+         */
+        fun merge(cells: List<CellResult>): MapFartsUpdate = MapFartsUpdate.Loaded(
+            farts = cells.flatMap { it.farts }.distinctBy { it.id },
+            isFromCache = cells.any { it.isFromCache },
+            isTruncated = cells.any { it.isTruncated },
+        )
+
         const val CELL_LIMIT = 50
         const val WORLD_LIMIT = 200
 

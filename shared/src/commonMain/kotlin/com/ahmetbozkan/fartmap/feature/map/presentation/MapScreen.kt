@@ -49,6 +49,8 @@ import com.ahmetbozkan.fartmap.resources.map_filter_mine
 import com.ahmetbozkan.fartmap.resources.map_followers_body
 import com.ahmetbozkan.fartmap.resources.map_followers_title
 import com.ahmetbozkan.fartmap.resources.map_offline
+import com.ahmetbozkan.fartmap.resources.map_truncated_body
+import com.ahmetbozkan.fartmap.resources.map_truncated_title
 import com.ahmetbozkan.fartmap.resources.state_loading
 import com.ahmetbozkan.fartmap.resources.state_retry
 import org.jetbrains.compose.resources.StringResource
@@ -175,6 +177,11 @@ private fun DataCard(state: MapState, onRetry: () -> Unit, modifier: Modifier = 
                 }
             },
         )
+        status is MapDataStatus.Ready && state.farts.isEmpty() && status.isTruncated -> MessageCard(
+            title = stringResource(Res.string.map_truncated_title),
+            body = stringResource(Res.string.map_truncated_body),
+            modifier = modifier,
+        )
         status is MapDataStatus.Ready && state.farts.isEmpty() -> MessageCard(
             title = stringResource(Res.string.map_empty_title),
             body = stringResource(
@@ -237,6 +244,11 @@ private fun MapScreenSuccessPreview() = Preview(
 @Preview
 @Composable
 private fun MapScreenEmptyPreview() = Preview(MapState(status = MapDataStatus.Ready(false)))
+
+@Preview
+@Composable
+private fun MapScreenTruncatedPreview() =
+    Preview(MapState(status = MapDataStatus.Ready(isFromCache = false, isTruncated = true)))
 
 @Preview
 @Composable

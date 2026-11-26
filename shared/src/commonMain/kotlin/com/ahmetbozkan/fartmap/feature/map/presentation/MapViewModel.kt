@@ -26,7 +26,6 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
@@ -92,7 +91,17 @@ class MapViewModel(
         if (source != lastSource) {
             lastSource = source
             loaded = emptyList()
-            setState { copy(farts = emptyList(), status = MapDataStatus.Loading, uid = subscription.uid) }
+            setState {
+                copy(
+                    farts = emptyList(),
+                    selectedMarkerId = null,
+                    status = MapDataStatus.Loading,
+                    uid = subscription.uid
+                )
+            }
+        } else if (state.value.status is MapDataStatus.Failed) {
+            // Retry. A pan to a new area keeps Ready (and the offline chip) until the new result replaces it.
+            setState { copy(status = MapDataStatus.Loading) }
         }
         val uid = subscription.uid
         val area = subscription.area
@@ -104,7 +113,6 @@ class MapViewModel(
             else -> {
                 val source = if (subscription.filter == MapFilter.MINE) MapSource.Mine(uid) else MapSource.Public
                 repository.observeMapFarts(MapQuery(source, area))
-                    .onStart { setState { copy(status = MapDataStatus.Loading) } }
             }
         }
     }
@@ -116,7 +124,7 @@ class MapViewModel(
                 setState {
                     copy(
                         farts = visible(loaded, viewport),
-                        status = MapDataStatus.Ready(update.isFromCache),
+                        status = MapDataStatus.Ready(update.isFromCache, update.isTruncated),
                         nowEpochMs = clock.now().toEpochMilliseconds(),
                     )
                 }
@@ -143,10 +151,11 @@ class MapViewModel(
         area.value = GeohashCover.cover(idle.viewport)?.let(MapArea::Cells) ?: MapArea.World
     }
 
+    /** A tap on an id that has left State (a refresh raced the tap) is ignored: nothing to open or report. */
     private fun onMarkerTapped(markerId: String) {
-        setState { copy(selectedMarkerId = markerId) }
         val current = state.value
         val fart = current.farts.firstOrNull { it.id == markerId } ?: return
+        setState { copy(selectedMarkerId = markerId) }
         analytics.track(
             AnalyticsEvent.MarkerOpened(
                 isOwn = fart.authorUid == current.uid,

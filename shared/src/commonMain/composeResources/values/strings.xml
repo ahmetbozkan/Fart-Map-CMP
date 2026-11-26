@@ -43,6 +43,8 @@
     <string name="map_empty_mine_body">You haven't left your mark around here. Yet.</string>
     <string name="map_followers_title">Your crew hasn't arrived</string>
     <string name="map_followers_body">Following people is coming soon. Until then, Everyone has plenty of wind.</string>
+    <string name="map_truncated_title">Too much wind out here</string>
+    <string name="map_truncated_body">This area is packed. Zoom in to see who let what go.</string>
     <string name="map_offline">Offline. Showing what the wind left behind.</string>
     <string name="map_marker_label">A level-%1$d fart, %2$s</string>
     <string name="map_marker_label_own">Your level-%1$d fart, %2$s</string>

@@ -32,8 +32,11 @@ data class MapState(
 sealed interface MapDataStatus {
     data object Loading : MapDataStatus
 
-    /** [isFromCache]: served by the offline cache, shown with the offline chip (LocalData.md §4). */
-    data class Ready(val isFromCache: Boolean) : MapDataStatus
+    /**
+     * [isFromCache]: served by the offline cache, shown with the offline chip (LocalData.md §4). [isTruncated]: a
+     * listener hit its document limit, so an empty view means "zoom in", not "nothing here".
+     */
+    data class Ready(val isFromCache: Boolean, val isTruncated: Boolean = false) : MapDataStatus
 
     data class Failed(val error: AppError) : MapDataStatus
 }

@@ -34,9 +34,16 @@ sealed interface MapArea {
 
 data class MapQuery(val source: MapSource, val area: MapArea)
 
-/** One result of a live map query. [Failed] ends the flow; the caller re-subscribes to retry. */
+/**
+ * One result of a live map query. [Failed] ends the flow; the caller re-subscribes to retry. [Loaded.isTruncated]: a
+ * listener hit its document limit, so more farts may exist in the area than were returned.
+ */
 sealed interface MapFartsUpdate {
-    data class Loaded(val farts: List<MapFart>, val isFromCache: Boolean) : MapFartsUpdate
+    data class Loaded(
+        val farts: List<MapFart>,
+        val isFromCache: Boolean,
+        val isTruncated: Boolean = false,
+    ) : MapFartsUpdate
 
     data class Failed(val error: AppError) : MapFartsUpdate
 }

@@ -285,12 +285,47 @@ class MapViewModelTest {
     }
 
     @Test
-    fun aTapOnAnUnknownMarkerIsStoredButNotTracked() {
+    fun aTapOnAnUnknownMarkerIsIgnored() {
         val vm = viewModel()
 
         vm.onAction(MapAction.MarkerTapped("gone"))
 
-        assertEquals("gone", vm.state.value.selectedMarkerId)
+        assertNull(vm.state.value.selectedMarkerId)
         assertTrue(tracked.isEmpty())
+    }
+
+    @Test
+    fun panningToANewCoverKeepsReadyAndTheOfflineChipUntilTheNewResult() = runTest {
+        val vm = viewModel()
+        vm.idle()
+        repository.emit(MapFartsUpdate.Loaded(listOf(inside), isFromCache = true))
+
+        vm.idle(tokyo)
+
+        assertEquals(MapDataStatus.Ready(isFromCache = true), vm.state.value.status, "no spinner flash on a pan")
+        assertTrue(vm.state.value.farts.isEmpty(), "Istanbul's farts are outside the Tokyo view")
+    }
+
+    @Test
+    fun aTruncatedResultIsMarkedSoTheEmptyCardIsNotShown() = runTest {
+        val vm = viewModel()
+        vm.idle()
+
+        repository.emit(MapFartsUpdate.Loaded(listOf(outside), isFromCache = false, isTruncated = true))
+
+        assertEquals(MapDataStatus.Ready(isFromCache = false, isTruncated = true), vm.state.value.status)
+        assertTrue(vm.state.value.farts.isEmpty())
+    }
+
+    @Test
+    fun switchingTheFilterClearsTheSelectedMarker() = runTest {
+        val vm = viewModel()
+        vm.idle()
+        repository.emit(MapFartsUpdate.Loaded(listOf(inside), isFromCache = false))
+        vm.onAction(MapAction.MarkerTapped("in"))
+
+        vm.onAction(MapAction.FilterSelected(MapFilter.MINE))
+
+        assertNull(vm.state.value.selectedMarkerId, "a sheet must never open another filter's marker")
     }
 }
