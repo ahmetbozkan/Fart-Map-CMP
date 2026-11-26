@@ -14,6 +14,18 @@ class DeviceLocation(val lat: Double, val lng: Double) {
     override fun hashCode(): Int = 31 * lat.hashCode() + lng.hashCode()
 
     override fun toString(): String = "DeviceLocation(redacted)"
+
+    companion object {
+        /**
+         * A platform fix as a [DeviceLocation], or null when its coordinates are not finite or out of range (a mock
+         * provider or a buggy OEM). Providers map null to [LocationLookup.Unavailable], so they never throw.
+         */
+        fun orNull(lat: Double, lng: Double): DeviceLocation? {
+            val valid = lat.isFinite() && lat in -Geohash.MAX_LAT..Geohash.MAX_LAT &&
+                lng.isFinite() && lng in -Geohash.MAX_LNG..Geohash.MAX_LNG
+            return if (valid) DeviceLocation(lat, lng) else null
+        }
+    }
 }
 
 /**

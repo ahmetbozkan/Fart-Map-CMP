@@ -1,5 +1,6 @@
 package com.ahmetbozkan.fartmap.core.domain.location
 
+import kotlin.math.abs
 import kotlin.math.log2
 import kotlin.math.pow
 
@@ -25,7 +26,20 @@ data class MapCamera(
         return (FULL_TURN / 2.0.pow(zoom.toDouble()) * widthPoints / TILE_POINTS).coerceAtMost(FULL_TURN)
     }
 
+    /**
+     * True when [other] is this camera up to SDK rounding: a recreated map or a clamped zoom reports a camera a hair
+     * off the one it was given, which is not a user gesture.
+     */
+    fun isNear(other: MapCamera): Boolean =
+        abs(lat - other.lat) <= SAME_DEGREES && abs(lng - other.lng) <= SAME_DEGREES && abs(zoom - other.zoom) <= SAME_ZOOM
+
+    /** The camera may be the user's own position (a "center on me" move), so it never prints coordinates. */
+    override fun toString(): String = "MapCamera(redacted, zoom=$zoom)"
+
     companion object {
+        /** About 10 m: far below any pan a finger makes at street zoom, far above float rounding. */
+        private const val SAME_DEGREES = 1e-4
+        private const val SAME_ZOOM = 0.05f
         const val MIN_ZOOM = 0f
         const val MAX_ZOOM = 21f
         private const val TILE_POINTS = 256.0

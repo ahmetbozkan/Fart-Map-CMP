@@ -69,7 +69,7 @@ class MapViewModel(
     private var lastSource: Pair<MapFilter, String?>? = null
     private var mapViewedPending = false
 
-    /** The first camera the map reported; a different one later means the user moved the map. */
+    /** The first camera the map reported; one clearly away from it (and from State's) later means the user moved. */
     private var firstCamera: MapCamera? = null
     private var userMovedCamera = false
 
@@ -233,9 +233,15 @@ class MapViewModel(
     }
 
     private fun onCameraIdle(idle: MapAction.CameraIdle) {
-        val first = firstCamera
-        if (first == null) firstCamera = idle.camera else if (idle.camera != first) userMovedCamera = true
         val current = state.value
+        // The first report is the baseline. Later, a recreated map (tab switch) opens at State's camera and may report
+        // it a hair off; only a camera clearly away from both counts as the user moving the map.
+        val first = firstCamera
+        if (first == null) {
+            firstCamera = idle.camera
+        } else if (!idle.camera.isNear(first) && !idle.camera.isNear(current.camera)) {
+            userMovedCamera = true
+        }
         if (idle.viewport == current.viewport && idle.camera == current.camera) return
         setState { copy(viewport = idle.viewport, camera = idle.camera, farts = visible(loaded, idle.viewport)) }
         area.value = GeohashCover.cover(idle.viewport)?.let(MapArea::Cells) ?: MapArea.World

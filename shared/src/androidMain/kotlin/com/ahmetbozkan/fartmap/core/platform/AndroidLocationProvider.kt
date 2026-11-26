@@ -119,11 +119,17 @@ internal class AndroidLocationProvider(
         return try {
             val fix = fused.getCurrentLocation(request, cancellation.token)
                 .awaitOrNull(operation = "current_location", onCancel = cancellation::cancel)
-            if (fix == null) {
-                warn(operation = "current_location", reason = "no_fix")
-                LocationLookup.Unavailable
+            val found = fix?.toDeviceLocation()
+            val failure = when {
+                fix == null -> "no_fix"
+                found == null -> "invalid_fix"
+                else -> null
+            }
+            if (found != null) {
+                LocationLookup.Found(found)
             } else {
-                LocationLookup.Found(fix.toDeviceLocation())
+                warn(operation = "current_location", reason = failure.orEmpty())
+                LocationLookup.Unavailable
             }
         } catch (revoked: SecurityException) {
             warn(operation = "current_location", reason = revoked::class.simpleName.orEmpty())
@@ -134,7 +140,8 @@ internal class AndroidLocationProvider(
     override suspend fun lastKnownLocation(): DeviceLocation? {
         if (ContextCompat.checkSelfPermission(context, PERMISSION) != PackageManager.PERMISSION_GRANTED) return null
         return try {
-            fused.lastLocation.awaitOrNull(operation = "last_location")?.toDeviceLocation()
+            val fix = fused.lastLocation.awaitOrNull(operation = "last_location")
+            fix?.toDeviceLocation().also { if (fix != null && it == null) warn("last_location", "invalid_fix") }
         } catch (revoked: SecurityException) {
             warn(operation = "last_location", reason = revoked::class.simpleName.orEmpty())
             null
@@ -172,7 +179,7 @@ internal class AndroidLocationProvider(
             continuation.invokeOnCancellation { onCancel() }
         }
 
-    private fun Location.toDeviceLocation() = DeviceLocation(lat = latitude, lng = longitude)
+    private fun Location.toDeviceLocation(): DeviceLocation? = DeviceLocation.orNull(lat = latitude, lng = longitude)
 
     private fun warn(operation: String, reason: String) = logger.warn(
         feature = "location",

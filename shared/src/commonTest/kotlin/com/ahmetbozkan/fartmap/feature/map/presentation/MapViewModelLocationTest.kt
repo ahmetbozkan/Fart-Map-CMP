@@ -161,6 +161,22 @@ class MapViewModelLocationTest {
         assertEquals(listOf(centeredOn(here)), moves)
     }
 
+    @Test
+    fun aRecreatedMapReportingTheSameCameraWithRoundingIsNotAUserMove() = runTest {
+        location.status = LocationPermission.GRANTED
+        location.lookupGate = CompletableDeferred()
+        val vm = viewModel()
+        val moves = moves(vm)
+        val start = MapState.DEFAULT_CAMERA
+
+        vm.onAction(MapAction.CameraIdle(viewport, start))
+        // Tab switch and back: the new map opens at State's camera and the SDK reports it a hair off.
+        vm.onAction(MapAction.CameraIdle(viewport, start.copy(lat = start.lat + 1e-7, zoom = start.zoom + 0.01f)))
+        location.lookupGate?.complete(Unit)
+
+        assertEquals(listOf(centeredOn(here)), moves)
+    }
+
     // "Center on me" (Acceptance 2, 4, 5, 7)
 
     @Test
