@@ -50,13 +50,14 @@ internal class AndroidLocationProvider(
         if (isGranted()) LocationPermission.GRANTED else LocationPermission.NOT_DETERMINED
 
     override suspend fun requestPermission(): LocationPermission {
-        if (isGranted()) return LocationPermission.GRANTED
         val activity = activities.activity as? ComponentActivity
-        if (activity == null) {
-            warn(operation = "request_permission", reason = "no_activity")
-            return LocationPermission.NOT_DETERMINED
+        return when {
+            isGranted() -> LocationPermission.GRANTED
+            activity == null -> LocationPermission.NOT_DETERMINED.also {
+                warn(operation = "request_permission", reason = "no_activity")
+            }
+            else -> withContext(Dispatchers.Main.immediate) { ask(activity) }
         }
-        return withContext(Dispatchers.Main.immediate) { ask(activity) }
     }
 
     /**
@@ -141,7 +142,8 @@ internal class AndroidLocationProvider(
     }
 
     override fun openAppSettings() {
-        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null))
+        val appPage = Uri.fromParts("package", context.packageName, null)
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, appPage)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         try {
             context.startActivity(intent)

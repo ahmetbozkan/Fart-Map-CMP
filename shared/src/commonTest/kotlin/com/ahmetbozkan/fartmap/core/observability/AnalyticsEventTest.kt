@@ -37,7 +37,8 @@ class AnalyticsEventTest {
     fun locationPermissionResultCarriesOnlyTheResult() {
         val wires = LocationPermissionResult.Result.entries.map { LocationPermissionResult(it).params }
 
-        assertEquals("location_permission_result", LocationPermissionResult(LocationPermissionResult.Result.DENIED).name)
+        val denied = LocationPermissionResult(LocationPermissionResult.Result.DENIED)
+        assertEquals("location_permission_result", denied.name)
         assertEquals(
             listOf<Map<String, Any>>(
                 mapOf("result" to "granted"),

@@ -175,6 +175,7 @@ The minimum event set that makes `Metrics.md` §4–§8 measurable in Phase 1. N
 | `report_submitted` / `block_applied` | safety action | `target_type`, `reason_code` | Counter-metrics (§8) |
 | `account_link_prompted` / `account_linked` | nudge shown / link success | `provider` | Identity, retention |
 | `notification_permission_prompted` / `notification_permission_result` | in-context prompt | `granted` | Notification trust |
+| `location_permission_result` | a foreground location request ("center on me") ended with a decision; not sent when already granted, already blocked, or undecided | `result` (granted/denied/blocked) | Location trust, map activation |
 | `notification_opened` | deep link resolved | `type` | Retention via social trigger |
 | `cosmetic_sheet_shown` | locked item tapped | `item_type`, `options` (buy/ad) | Monetization funnel |
 | `purchase_started` / `purchase_completed` / `purchase_failed` | store flow | `item_type`, `result_category` | Conversion |

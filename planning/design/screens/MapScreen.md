@@ -23,9 +23,9 @@
 - Navigation/back behavior: map remains hub context; modal/sheet dismiss returns to map.
 
 ## Layout Structure
-- Top-level regions: full-screen map canvas, overlay top app bar, filter row (Mine / Followers / Everyone), marker layer, FAB, bottom navigation (Map / Social / Rank / Profile, ADR-0020).
+- Top-level regions: full-screen map canvas, overlay top app bar, filter row (Mine / Followers / Everyone), marker layer, "center on me" button, FAB, bottom navigation (Map / Social / Rank / Profile, ADR-0020).
 - Primary CTA: log action FAB.
-- Secondary actions: marker tap, filter controls, navigation tabs.
+- Secondary actions: marker tap, filter controls, "center on me", navigation tabs.
 
 ## UI States
 - Loading: base map visible while marker layer hydrates.
@@ -33,6 +33,7 @@
 - Success: markers visible and interactive.
 - Error: recoverable data-load failure with retry action.
 - Offline: local/cached markers shown with sync-later indication where applicable.
+- Location notices ("center on me", STORY-01-03-04): locating (spinner on the button), denied, blocked (with "Open settings"), location services off, no fix. Each is a dismissible card; the map stays fully usable. No permission prompt at launch.
 
 ## Interactions
 - User actions: pan/zoom map, tap marker, tap FAB, apply filters, switch tab.

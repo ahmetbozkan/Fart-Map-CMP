@@ -170,7 +170,7 @@ MVP is the minimum scope that makes Phase 1 meaningful, safe, and shippable — 
 ### What must exist before launch
 
 **Map**
-- Full-screen interactive map centered on user location (MAP-01)
+- Full-screen interactive map centered on user location (MAP-01). Location is asked on the first "center on me" tap, never at launch; once granted, later starts open on the user (owner, 2026-11-26, issue #25; `Growth.md` §2)
 - Fart markers visible on map; tappable for preview (MAP-02)
 - Public markers from other users visible within discovery radius
 - Marker visual style reflects flavor level

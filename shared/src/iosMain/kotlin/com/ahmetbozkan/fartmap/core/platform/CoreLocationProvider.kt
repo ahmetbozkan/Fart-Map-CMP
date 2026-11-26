@@ -3,6 +3,7 @@
 package com.ahmetbozkan.fartmap.core.platform
 
 import com.ahmetbozkan.fartmap.core.domain.location.DeviceLocation
+import com.ahmetbozkan.fartmap.core.domain.location.Geohash
 import com.ahmetbozkan.fartmap.core.domain.location.LocationLookup
 import com.ahmetbozkan.fartmap.core.domain.location.LocationPermission
 import com.ahmetbozkan.fartmap.core.observability.Logger
@@ -158,7 +159,8 @@ private fun CLAuthorizationStatus.toPermission(): LocationPermission = when (thi
 
 /** Null for Core Location's invalid coordinate (it never reaches [DeviceLocation]'s range check). */
 private fun CLLocation.toDeviceLocation(): DeviceLocation? = coordinate.useContents {
-    if (latitude in -90.0..90.0 && longitude in -180.0..180.0) DeviceLocation(latitude, longitude) else null
+    val valid = latitude in -Geohash.MAX_LAT..Geohash.MAX_LAT && longitude in -Geohash.MAX_LNG..Geohash.MAX_LNG
+    if (valid) DeviceLocation(latitude, longitude) else null
 }
 
 /** Reports the first decided status; iOS also calls this once with the current (undecided) status at creation. */
