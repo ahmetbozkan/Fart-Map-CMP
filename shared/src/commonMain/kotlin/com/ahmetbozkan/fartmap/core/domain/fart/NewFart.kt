@@ -39,19 +39,24 @@ private const val MAX_LNG = 180.0
  * restart is never reported to the user (LocalData.md §3.5). Returns the first failing field (an identifier, never the
  * value), or null when the fart is valid.
  */
-fun validateNewFart(fart: NewFart): AppError.ValidationFailed? {
-    val failedField = when {
-        !fart.lat.isFinite() || fart.lat !in -MAX_LAT..MAX_LAT -> "lat"
-        !fart.lng.isFinite() || fart.lng !in -MAX_LNG..MAX_LNG -> "lng"
-        fart.flavorLevel !in NewFart.FLAVOR_RANGE -> "flavor_level"
-        !fart.intensityValue.isFinite() || fart.intensityValue !in 0.0..1.0 -> "intensity_value"
-        fart.avatarId.isBlank() -> "avatar_id"
-        fart.soundId != null && fart.soundId.isBlank() -> "sound_id"
-        fart.descriptionText != null && fart.descriptionText.codePointLength() > NewFart.DESCRIPTION_MAX ->
-            "description_text"
-        else -> null
-    }
-    return failedField?.let { AppError.ValidationFailed(it) }
+fun validateNewFart(fart: NewFart): AppError.ValidationFailed? =
+    (pointError(fart) ?: contentError(fart))?.let { AppError.ValidationFailed(it) }
+
+private fun Double.isWithin(limit: Double) = isFinite() && this in -limit..limit
+
+private fun pointError(fart: NewFart): String? = when {
+    !fart.lat.isWithin(MAX_LAT) -> "lat"
+    !fart.lng.isWithin(MAX_LNG) -> "lng"
+    else -> null
+}
+
+private fun contentError(fart: NewFart): String? = when {
+    fart.flavorLevel !in NewFart.FLAVOR_RANGE -> "flavor_level"
+    !fart.intensityValue.isFinite() || fart.intensityValue !in 0.0..1.0 -> "intensity_value"
+    fart.avatarId.isBlank() -> "avatar_id"
+    fart.soundId?.isBlank() == true -> "sound_id"
+    (fart.descriptionText?.codePointLength() ?: 0) > NewFart.DESCRIPTION_MAX -> "description_text"
+    else -> null
 }
 
 /** Unicode code points: a surrogate pair (most emoji) counts once. */
