@@ -12,22 +12,30 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import com.ahmetbozkan.fartmap.core.domain.location.MapCamera
 import com.ahmetbozkan.fartmap.core.domain.location.MapViewport
+import com.ahmetbozkan.fartmap.core.observability.Logger
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 
 /** [MapHost] on Google Maps Compose. The API key comes from the manifest (`androidApp` flavor placeholder). */
-internal class GoogleMapsMapHost : MapHost {
+internal class GoogleMapsMapHost(private val logger: Logger) : MapHost {
 
     @Composable
     override fun Content(
         markers: List<MapMarker>,
         initialCamera: MapCamera,
+        cameraMoves: Flow<MapCamera>,
         onMarkerTap: (markerId: String) -> Unit,
         onCameraIdle: (viewport: MapViewport, camera: MapCamera) -> Unit,
         modifier: Modifier,
@@ -62,6 +70,12 @@ internal class GoogleMapsMapHost : MapHost {
                 }
         }
 
+        // Moves wait for the loaded map (the projection exists then); the idle reporter above reports the result.
+        LaunchedEffect(cameraPositionState, mapLoaded, cameraMoves) {
+            if (!mapLoaded) return@LaunchedEffect
+            cameraMoves.collect { camera -> animateTo(cameraPositionState, camera) }
+        }
+
         GoogleMap(
             modifier = modifier,
             cameraPositionState = cameraPositionState,
@@ -84,9 +98,27 @@ internal class GoogleMapsMapHost : MapHost {
         }
     }
 
+    private suspend fun animateTo(state: CameraPositionState, camera: MapCamera) {
+        val update = CameraUpdateFactory.newCameraPosition(
+            CameraPosition.fromLatLngZoom(LatLng(camera.lat, camera.lng), camera.zoom),
+        )
+        try {
+            state.animate(update)
+        } catch (interrupted: CancellationException) {
+            // A gesture stops the animation with a CancellationException; only a cancelled collector rethrows.
+            currentCoroutineContext().ensureActive()
+            logger.debug(
+                feature = "map",
+                operation = "camera_move",
+                event = "camera_move_interrupted",
+                attributes = mapOf("reason" to interrupted::class.simpleName.orEmpty()),
+            )
+        }
+    }
+
     private companion object {
-        // Zoom buttons, toolbar and my-location button off: gestures cover zoom, and the FAB / "center on me" take
-        // that space later (STORY-01-03-04, EPIC-01-04).
+        // Zoom buttons, toolbar and my-location button off: gestures cover zoom, and the shared "center on me"
+        // button (STORY-01-03-04) and the FAB (EPIC-01-04) take that space.
         val UI_SETTINGS = MapUiSettings(
             zoomControlsEnabled = false,
             mapToolbarEnabled = false,

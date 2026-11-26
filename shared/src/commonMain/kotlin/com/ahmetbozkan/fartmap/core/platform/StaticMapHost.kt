@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.ahmetbozkan.fartmap.core.domain.location.MapCamera
 import com.ahmetbozkan.fartmap.core.domain.location.MapViewport
+import kotlinx.coroutines.flow.Flow
 
 /** A flat stand-in for the native map, for previews and tests: no SDK, no Koin, no callbacks fired. */
 object StaticMapHost : MapHost {
@@ -14,6 +15,7 @@ object StaticMapHost : MapHost {
     override fun Content(
         markers: List<MapMarker>,
         initialCamera: MapCamera,
+        cameraMoves: Flow<MapCamera>,
         onMarkerTap: (markerId: String) -> Unit,
         onCameraIdle: (viewport: MapViewport, camera: MapCamera) -> Unit,
         modifier: Modifier,

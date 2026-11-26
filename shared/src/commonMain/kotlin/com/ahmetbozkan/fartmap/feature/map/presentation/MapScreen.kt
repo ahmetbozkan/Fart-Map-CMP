@@ -13,13 +13,17 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -31,6 +35,7 @@ import com.ahmetbozkan.fartmap.core.design.FartMapTheme
 import com.ahmetbozkan.fartmap.core.design.PillShape
 import com.ahmetbozkan.fartmap.core.design.Spacing
 import com.ahmetbozkan.fartmap.core.design.components.messageResource
+import com.ahmetbozkan.fartmap.core.domain.location.MapCamera
 import com.ahmetbozkan.fartmap.core.domain.map.MapFilter
 import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
 import com.ahmetbozkan.fartmap.core.observability.AppError
@@ -39,6 +44,7 @@ import com.ahmetbozkan.fartmap.core.platform.MapMarker
 import com.ahmetbozkan.fartmap.core.platform.StaticMapHost
 import com.ahmetbozkan.fartmap.feature.map.domain.MapFart
 import com.ahmetbozkan.fartmap.resources.Res
+import com.ahmetbozkan.fartmap.resources.ic_my_location
 import com.ahmetbozkan.fartmap.resources.map_empty_body
 import com.ahmetbozkan.fartmap.resources.map_empty_mine_body
 import com.ahmetbozkan.fartmap.resources.map_empty_title
@@ -48,12 +54,28 @@ import com.ahmetbozkan.fartmap.resources.map_filter_label
 import com.ahmetbozkan.fartmap.resources.map_filter_mine
 import com.ahmetbozkan.fartmap.resources.map_followers_body
 import com.ahmetbozkan.fartmap.resources.map_followers_title
+import com.ahmetbozkan.fartmap.resources.map_locate_me
+import com.ahmetbozkan.fartmap.resources.map_locating
+import com.ahmetbozkan.fartmap.resources.map_location_blocked_body
+import com.ahmetbozkan.fartmap.resources.map_location_blocked_title
+import com.ahmetbozkan.fartmap.resources.map_location_denied_body
+import com.ahmetbozkan.fartmap.resources.map_location_denied_title
+import com.ahmetbozkan.fartmap.resources.map_location_dismiss
+import com.ahmetbozkan.fartmap.resources.map_location_off_body
+import com.ahmetbozkan.fartmap.resources.map_location_off_title
+import com.ahmetbozkan.fartmap.resources.map_location_open_settings
+import com.ahmetbozkan.fartmap.resources.map_location_unavailable_body
+import com.ahmetbozkan.fartmap.resources.map_location_unavailable_title
 import com.ahmetbozkan.fartmap.resources.map_offline
 import com.ahmetbozkan.fartmap.resources.map_truncated_body
 import com.ahmetbozkan.fartmap.resources.map_truncated_title
 import com.ahmetbozkan.fartmap.resources.state_loading
 import com.ahmetbozkan.fartmap.resources.state_retry
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
 import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -68,7 +90,21 @@ fun MapRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
     // NavHost composes only the current tab, so this runs each time the Map tab is shown (map_viewed).
     LaunchedEffect(Unit) { viewModel.onAction(MapAction.Shown) }
-    MapScreen(state = state, mapHost = mapHost, onAction = viewModel::onAction, modifier = modifier)
+    // The host is the only consumer of the VM's events; the exhaustive `when` makes a new event a compile error here.
+    val cameraMoves = remember(viewModel) {
+        viewModel.events.map { event ->
+            when (event) {
+                is MapEvent.MoveCamera -> event.camera
+            }
+        }
+    }
+    MapScreen(
+        state = state,
+        mapHost = mapHost,
+        onAction = viewModel::onAction,
+        modifier = modifier,
+        cameraMoves = cameraMoves,
+    )
 }
 
 @Composable
@@ -77,6 +113,7 @@ fun MapScreen(
     mapHost: MapHost,
     onAction: (MapAction) -> Unit,
     modifier: Modifier = Modifier,
+    cameraMoves: Flow<MapCamera> = emptyFlow(),
 ) {
     val markers = state.farts.map { fart ->
         MapMarker(
@@ -90,6 +127,7 @@ fun MapScreen(
         mapHost.Content(
             markers = markers,
             initialCamera = state.camera,
+            cameraMoves = cameraMoves,
             onMarkerTap = { onAction(MapAction.MarkerTapped(it)) },
             onCameraIdle = { viewport, camera -> onAction(MapAction.CameraIdle(viewport, camera)) },
             modifier = Modifier.fillMaxSize(),
@@ -102,12 +140,75 @@ fun MapScreen(
             FilterRow(selected = state.filter, onSelect = { onAction(MapAction.FilterSelected(it)) })
             StatusIndicator(state.status)
         }
-        DataCard(
-            state = state,
-            onRetry = { onAction(MapAction.Retry) },
-            modifier = Modifier.align(Alignment.BottomCenter).padding(Spacing.screenEdge),
-        )
+        Column(
+            modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(Spacing.screenEdge),
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+        ) {
+            LocateButton(isLocating = state.isLocating, onClick = { onAction(MapAction.LocateMe) })
+            state.locationNotice?.let { notice ->
+                LocationNoticeCard(
+                    notice = notice,
+                    onDismiss = { onAction(MapAction.DismissLocationNotice) },
+                    onOpenSettings = { onAction(MapAction.OpenLocationSettings) },
+                )
+            }
+            DataCard(state = state, onRetry = { onAction(MapAction.Retry) })
+        }
     }
+}
+
+/** "Center on me" (STORY-01-03-04): asks for location on the first tap, then centers the map. */
+@Composable
+private fun LocateButton(isLocating: Boolean, onClick: () -> Unit) {
+    val description = stringResource(if (isLocating) Res.string.map_locating else Res.string.map_locate_me)
+    FilledTonalIconButton(
+        onClick = onClick,
+        enabled = !isLocating,
+        modifier = Modifier.size(Spacing.minTouchTarget).semantics { contentDescription = description },
+    ) {
+        if (isLocating) {
+            CircularProgressIndicator(modifier = Modifier.size(Spacing.xl), strokeWidth = Spacing.xxs)
+        } else {
+            Icon(painter = painterResource(Res.drawable.ic_my_location), contentDescription = null)
+        }
+    }
+}
+
+private val noticeTexts: Map<LocationNotice, Pair<StringResource, StringResource>> = mapOf(
+    LocationNotice.DENIED to (Res.string.map_location_denied_title to Res.string.map_location_denied_body),
+    LocationNotice.BLOCKED to (Res.string.map_location_blocked_title to Res.string.map_location_blocked_body),
+    LocationNotice.SERVICES_OFF to (Res.string.map_location_off_title to Res.string.map_location_off_body),
+    LocationNotice.UNAVAILABLE to
+        (Res.string.map_location_unavailable_title to Res.string.map_location_unavailable_body),
+)
+
+@Composable
+private fun LocationNoticeCard(notice: LocationNotice, onDismiss: () -> Unit, onOpenSettings: () -> Unit) {
+    val (title, body) = noticeTexts.getValue(notice)
+    MessageCard(
+        title = stringResource(title),
+        body = stringResource(body),
+        action = {
+            Row(
+                modifier = Modifier.padding(top = Spacing.md),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+            ) {
+                TextButton(onClick = onDismiss, modifier = Modifier.heightIn(min = Spacing.minTouchTarget)) {
+                    Text(stringResource(Res.string.map_location_dismiss))
+                }
+                if (notice == LocationNotice.BLOCKED) {
+                    Button(
+                        onClick = onOpenSettings,
+                        shape = PillShape,
+                        modifier = Modifier.heightIn(min = Spacing.minTouchTarget),
+                    ) {
+                        Text(stringResource(Res.string.map_location_open_settings))
+                    }
+                }
+            }
+        },
+    )
 }
 
 private val filterLabels: List<Pair<MapFilter, StringResource>> = listOf(
@@ -258,6 +359,36 @@ private fun MapScreenFollowersPreview() =
 @Preview
 @Composable
 private fun MapScreenErrorPreview() = Preview(MapState(status = MapDataStatus.Failed(AppError.NetworkUnavailable)))
+
+@Preview
+@Composable
+private fun MapScreenLocatingPreview() = Preview(
+    MapState(farts = previewFarts, status = MapDataStatus.Ready(false), isLocating = true, nowEpochMs = PREVIEW_NOW),
+)
+
+@Preview
+@Composable
+private fun MapScreenLocationDeniedPreview() = Preview(
+    MapState(farts = previewFarts, status = MapDataStatus.Ready(false), locationNotice = LocationNotice.DENIED),
+)
+
+@Preview
+@Composable
+private fun MapScreenLocationBlockedPreview() = Preview(
+    MapState(farts = previewFarts, status = MapDataStatus.Ready(false), locationNotice = LocationNotice.BLOCKED),
+)
+
+@Preview
+@Composable
+private fun MapScreenLocationOffPreview() = Preview(
+    MapState(status = MapDataStatus.Ready(false), locationNotice = LocationNotice.SERVICES_OFF),
+)
+
+@Preview
+@Composable
+private fun MapScreenLocationUnavailablePreview() = Preview(
+    MapState(farts = previewFarts, status = MapDataStatus.Ready(false), locationNotice = LocationNotice.UNAVAILABLE),
+)
 
 @Preview
 @Composable

@@ -4,21 +4,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.ahmetbozkan.fartmap.core.domain.location.MapCamera
 import com.ahmetbozkan.fartmap.core.domain.location.MapViewport
+import kotlinx.coroutines.flow.Flow
 
 /**
  * The native map (ADR-0008, `TechStack.md` §Maps): Google Maps Compose on Android, MapKit on iOS. It draws
- * [MapMarker]s and reports taps and the visible area; it owns no data and asks for no permission.
+ * [MapMarker]s, moves the camera on request and reports taps and the visible area; it owns no data and asks for no
+ * permission (no my-location layer: [LocationProvider] does location).
  */
 interface MapHost {
     /**
-     * [initialCamera] is applied once, when the map first has a size; later changes are the user's gestures.
-     * [onCameraIdle] fires whenever the camera comes to rest (including after the first layout) with the visible
-     * area and the camera, so the caller can restore the same view when the map is recreated (a tab switch).
+     * [initialCamera] is applied once, when the map first has a size; later changes are the user's gestures and
+     * [cameraMoves]: each emission animates the camera there once ("center on me"), and one that arrives before the
+     * map has a size is applied when it does. [onCameraIdle] fires whenever the camera comes to rest (including after
+     * the first layout and after a move) with the visible area and the camera, so the caller can restore the same
+     * view when the map is recreated (a tab switch).
      */
     @Composable
     fun Content(
         markers: List<MapMarker>,
         initialCamera: MapCamera,
+        cameraMoves: Flow<MapCamera>,
         onMarkerTap: (markerId: String) -> Unit,
         onCameraIdle: (viewport: MapViewport, camera: MapCamera) -> Unit,
         modifier: Modifier,
