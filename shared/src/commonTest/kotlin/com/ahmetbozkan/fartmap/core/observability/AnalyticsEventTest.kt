@@ -1,6 +1,7 @@
 package com.ahmetbozkan.fartmap.core.observability
 
 import com.ahmetbozkan.fartmap.core.domain.map.MapFilter
+import com.ahmetbozkan.fartmap.core.observability.AnalyticsEvent.LocationPermissionResult
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsEvent.MapViewed
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsEvent.MarkerOpened
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsEvent.MarkerSource
@@ -30,5 +31,20 @@ class AnalyticsEventTest {
 
         assertEquals("marker_opened", event.name)
         assertEquals(mapOf<String, Any>("is_own" to true, "source" to "map"), event.params)
+    }
+
+    @Test
+    fun locationPermissionResultCarriesOnlyTheResult() {
+        val wires = LocationPermissionResult.Result.entries.map { LocationPermissionResult(it).params }
+
+        assertEquals("location_permission_result", LocationPermissionResult(LocationPermissionResult.Result.DENIED).name)
+        assertEquals(
+            listOf<Map<String, Any>>(
+                mapOf("result" to "granted"),
+                mapOf("result" to "denied"),
+                mapOf("result" to "blocked"),
+            ),
+            wires,
+        )
     }
 }

@@ -7,6 +7,7 @@ import com.ahmetbozkan.fartmap.core.domain.map.MapFilter
 import com.ahmetbozkan.fartmap.core.domain.session.SessionState
 import com.ahmetbozkan.fartmap.core.domain.visibility.AgeBand
 import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
+import com.ahmetbozkan.fartmap.core.fakes.FakeLocationProvider
 import com.ahmetbozkan.fartmap.core.fakes.FakeMapFartRepository
 import com.ahmetbozkan.fartmap.core.fakes.FakePreferencesRepository
 import com.ahmetbozkan.fartmap.core.fakes.InMemorySessionRepository
@@ -73,7 +74,8 @@ class MapViewModelTest {
             visibility = VisibilityMode.PUBLIC
         )
 
-    private fun viewModel() = MapViewModel(repository, sessions, preferences, analytics, clock)
+    private fun viewModel() =
+        MapViewModel(repository, sessions, preferences, analytics, FakeLocationProvider(), clock)
 
     private fun MapViewModel.idle(viewport: MapViewport = istanbul, cam: MapCamera = camera) =
         onAction(MapAction.CameraIdle(viewport, cam))
