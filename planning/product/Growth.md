@@ -24,7 +24,7 @@ A novelty app lives or dies on its first weeks of organic installs. This documen
 | **Sign in with Apple (guideline 4.8)** | An app that offers Google sign-in must also offer an equivalent privacy-focused login (Sign in with Apple qualifies) | Apple sign-in moved to Phase 2 (owner, 2026-11-25: no paid Apple Developer account yet), and Phase 1 ships Google + anonymous. **Release-blocking for iOS:** 4.8 must be met before the first iOS store submission, either by shipping Sign in with Apple (ADR-0018 still allows it) or by owner decision on another compliant option |
 | **Age rating** | Crude humor plus UGC | 12+ (Apple) / Teen (Google); 13+ age band enforced |
 | **Privacy disclosures** | App Privacy labels, Play Data Safety, ATT prompt, UMP consent | Generated from the actual data map (`DataContracts.md`) at release time |
-| **Location permission** | Foreground only; purpose string must explain the map | Ask at first map use, never at launch |
+| **Location permission** | Foreground only; purpose string must explain the map | Ask at first map use, never at launch: the first "center on me" tap; once granted, later starts center on the user without asking (owner, 2026-11-26, issue #25). Approximate only on Android in Phase 1 (STORY-01-03-04) |
 | **Name / brand** | "Fart" in the name can trip filters in some markets and ad networks | Keep it (it's the hook), but test the AdMob and RevenueCat app review early with test builds |
 
 ## 3) ASO (store discoverability)

@@ -11,6 +11,22 @@ import kotlin.test.assertTrue
 class MapCameraTest {
 
     @Test
+    fun toStringNeverPrintsTheCoordinates() {
+        val text = MapCamera(41.0123, 29.0456, zoom = 15f).toString()
+
+        assertTrue("41.0123" !in text && "29.0456" !in text, text)
+    }
+
+    @Test
+    fun isNearToleratesSdkRoundingButNotAPan() {
+        val camera = MapCamera(41.0, 29.0, zoom = 12f)
+
+        assertTrue(camera.isNear(MapCamera(41.0 + 1e-6, 29.0 - 1e-6, zoom = 12.01f)))
+        assertTrue(!camera.isNear(MapCamera(41.01, 29.0, zoom = 12f)))
+        assertTrue(!camera.isNear(MapCamera(41.0, 29.0, zoom = 12.5f)))
+    }
+
+    @Test
     fun zoomZeroOnOneTileShowsTheWholeWorldWidth() {
         assertEquals(360.0, MapCamera(0.0, 0.0, zoom = 0f).lngSpan(widthPoints = 256.0))
     }

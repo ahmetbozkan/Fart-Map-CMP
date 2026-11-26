@@ -93,7 +93,7 @@ private val featureModule = module {
     viewModelOf(::AuthViewModel)
     viewModelOf(::AgeGateViewModel)
     viewModelOf(::ProfileViewModel)
-    viewModel { MapViewModel(get(), get(), get(), get(), clock = Clock.System) }
+    viewModel { MapViewModel(get(), get(), get(), get(), get(), clock = Clock.System) }
 }
 
 @OptIn(ExperimentalTime::class)

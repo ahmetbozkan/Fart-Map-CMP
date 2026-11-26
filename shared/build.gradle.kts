@@ -45,6 +45,9 @@ kotlin {
             implementation(libs.googleid)
             // Map host (STORY-01-03-02): Google Maps Compose.
             implementation(libs.maps.compose)
+            // Device location (STORY-01-03-04): fused location + the Activity result registry for the prompt.
+            implementation(libs.play.services.location)
+            implementation(libs.androidx.activity.compose)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)

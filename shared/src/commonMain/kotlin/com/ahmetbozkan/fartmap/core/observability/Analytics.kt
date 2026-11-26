@@ -39,6 +39,15 @@ sealed interface AnalyticsEvent {
 
     enum class MarkerSource(val wireName: String) { MAP("map") }
 
+    /** A foreground location permission request ended with a decision ("center on me", STORY-01-03-04). */
+    data class LocationPermissionResult(val result: Result) : AnalyticsEvent {
+        override val name = "location_permission_result"
+        override val params: Map<String, Any>
+            get() = mapOf("result" to result.wireName)
+
+        enum class Result(val wireName: String) { GRANTED("granted"), DENIED("denied"), BLOCKED("blocked") }
+    }
+
     companion object {
         private const val FEW = 10
         private const val MANY = 50

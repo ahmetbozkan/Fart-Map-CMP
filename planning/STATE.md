@@ -15,14 +15,15 @@
 - EPIC-01-03 (map) started and split into -01..-04 (ROADMAP). STORY-01-03-01 Done (PR #22): geohash-6 fuzzed projection in Kotlin (`core/domain/location`) and TS (`backend/functions/src/lib/location.ts`), proven equal by shared vectors; dev fart seed `npm run seed:farts`.
 - STORY-01-03-02 Done (PR #23): the Map tab is a native map (Google Maps Compose / MapKit in Kotlin) behind `core/platform/MapHost`; default camera Istanbul, no permission asked; the camera survives tab switches.
 - STORY-01-03-03 Done (PR #24): live markers from geohash-range listeners (`GeohashCover`, composite indexes), Mine / Followers (humorous card) / Everyone persisted in `map_filter_last_selected`, loading / empty / error+retry / offline states, `map_viewed` and `marker_opened`.
+- STORY-01-03-04 Done: `core/platform/LocationProvider` (Play Services Location, coarse only / Core Location, in Kotlin), "center on me" asks on the first tap, denied / blocked / location-off notices, later starts open on the user, `location_permission_result`. **EPIC-01-03 complete.**
 
 ## Next
-1. Owner: run the EPIC-01-02 test plan (`planning/testing/EPIC-01-02.md`, Android + iOS) and file failures as `bug` issues. Needs the dev catalog seed first (`OwnerTodo.md` A).
-2. STORY-01-03-04 (device location, "center on me"): blocked on the permission-timing decision below. Owner: `.claude/rules/ios-shell.md` wording update suggested in `stories/STORY-01-03-02.md` Evidence (autopilot can't edit `.claude/`). Owner: seed dev test farts before the EPIC-01-03 test plan (`OwnerTodo.md` D).
-3. On the Mac: commit the `Package.resolved` Xcode updates (GoogleSignIn + FirebaseFunctions pins).
+1. Owner: run the EPIC-01-03 test plan (`planning/testing/EPIC-01-03.md`, Android + iOS) and file failures as `bug` issues. Seed the dev catalog and dev test farts first (`OwnerTodo.md` A, D).
+2. Owner: run the EPIC-01-02 test plan (`planning/testing/EPIC-01-02.md`) if not done yet.
+3. EPIC-01-04 (Log Fart) is next: split into stories when it starts (decides fine location for the owner-only precise point). Owner: `.claude/rules/ios-shell.md` wording update suggested in `stories/STORY-01-03-02.md` Evidence (autopilot can't edit `.claude/`).
+4. On the Mac: commit the `Package.resolved` Xcode updates (GoogleSignIn + FirebaseFunctions pins).
 
 ## Pending owner decisions
-- **Location permission timing (blocks STORY-01-03-04).** `Growth.md` §2 says "ask at first map use, never at launch", and `Scope.md` says the map is "centered on user location". Recommended default: the map opens at a default camera without asking, and the first "center on me" tap asks for foreground location. Reply in the -04 escalation, or here.
 - Further minor-safe defaults for the 13–17 band (PUBLIC is already blocked for them) and the other Phase 1 launch items in `planning/product/Scope.md` §7a.
 - Launch catalog prices (RevenueCat Offerings) and the owned domain for App Links / Universal Links (ADR-0023/0024).
 - Minimum iOS version (the template uses 18.2).
@@ -35,6 +36,7 @@ The full checklist, with instructions, is `planning/OwnerTodo.md`: A now (CI min
 - Crash and analytics collection stays on in `prod` until the consent screen (EPIC-01-06) exists; then collection moves behind consent.
 - PUBLIC is adults-only, enforced in rules (2026-11-23, ADR-0023 amendment): 13–17 users post FOLLOWERS or PRIVATE only.
 - Autopilot may merge its own PRs after review and green CI, checked by the guard hook (2026-11-23; GitHub Free, no auto-merge). Defaults: stop at each epic boundary, merge everything that passes (flags `--cross-epics`, `--hold-sensitive`).
+- Location permission (2026-11-26, issue #25): asked on the first "center on me" tap, never at launch; once granted, later starts open on the user.
 - Phase 1 implementation prioritizes functionality; visual design (contrast, `surfaceContainer*` roles, fonts, icons) is revisited after implementation.
 
 ## Provisional
