@@ -18,7 +18,7 @@
 
 ## Next
 1. Owner: run the EPIC-01-02 test plan (`planning/testing/EPIC-01-02.md`, Android + iOS) and file failures as `bug` issues. Needs the dev catalog seed first (`OwnerTodo.md` A).
-2. STORY-01-03-04 (device location, "center on me"): blocked on the permission-timing decision below. Owner: `.claude/rules/ios-shell.md` wording update suggested in `stories/STORY-01-03-02.md` Evidence (autopilot can't edit `.claude/`). Owner: seed dev test farts before the EPIC-01-03 test plan (`OwnerTodo.md` D).
+2. STORY-01-03-04 (device location, "center on me"): Blocked on the permission-timing decision below (story drafted on branch `25-device-location`, needs-owner issue open). Owner: `.claude/rules/ios-shell.md` wording update suggested in `stories/STORY-01-03-02.md` Evidence (autopilot can't edit `.claude/`). Owner: seed dev test farts before the EPIC-01-03 test plan (`OwnerTodo.md` D).
 3. On the Mac: commit the `Package.resolved` Xcode updates (GoogleSignIn + FirebaseFunctions pins).
 
 ## Pending owner decisions
