@@ -1,9 +1,12 @@
 import { assertFails, assertSucceeds, type RulesTestEnvironment } from "@firebase/rules-unit-testing";
+import type firebase from "firebase/compat/app";
 import { afterAll, beforeAll, beforeEach, describe, it } from "vitest";
 import {
   ALICE, BOB, CAROL, FREE_SOUND, PAID_AVATAR, PAID_SOUND, anonymous, catalog, createEnv, newFart, seed, serverNow,
-  signedOut, storedFart, user,
+  signedOut, storedFart, user, type Db,
 } from "./helpers";
+
+type Query = firebase.firestore.Query;
 
 let env: RulesTestEnvironment;
 
@@ -230,6 +233,59 @@ describe("farts: queries", () => {
     await assertFails(db.collection("farts").where("author_user_id", "==", ALICE).get());
     await assertFails(signedOut(env).collection("farts").where("visibility_mode", "==", "PUBLIC")
       .where("is_hidden", "==", false).where("is_removed", "==", false).get());
+  });
+});
+
+// The exact shapes FirestoreMapFartRepository sends (STORY-01-03-03): a geohash prefix range per cell, or one world
+// query, each with a limit. Composite indexes for these live in firestore.indexes.json (test/indexes.test.ts).
+describe("farts: map queries (STORY-01-03-03)", () => {
+  const PREFIX = "sxk9";
+
+  beforeEach(async () => {
+    await seed(env, {
+      "farts/p": storedFart("p", ALICE, { coarse_location_key: "sxk97b" }),
+      "farts/h": storedFart("h", ALICE, { coarse_location_key: "sxk97b", is_hidden: true }),
+      "farts/x": storedFart("x", ALICE, { coarse_location_key: "sxk97b", visibility_mode: "PRIVATE" }),
+    });
+  });
+
+  const publicBase = (db: Db): Query => db.collection("farts")
+    .where("visibility_mode", "==", "PUBLIC")
+    .where("is_hidden", "==", false)
+    .where("is_removed", "==", false);
+
+  const inCell = (q: Query): Query => q
+    .where("coarse_location_key", ">=", PREFIX)
+    .where("coarse_location_key", "<", PREFIX + "~")
+    .orderBy("coarse_location_key")
+    .limit(50);
+
+  it("allows the public cell query and the public world query", async () => {
+    await assertSucceeds(inCell(publicBase(user(env, BOB))).get());
+    await assertSucceeds(publicBase(user(env, BOB)).limit(200).get());
+    await assertSucceeds(inCell(publicBase(anonymous(env, "anon-1"))).get());
+  });
+
+  it("allows the owner's Mine cell query and Mine world query", async () => {
+    const mine = user(env, ALICE).collection("farts")
+      .where("author_user_id", "==", ALICE)
+      .where("is_removed", "==", false);
+    await assertSucceeds(inCell(mine).get());
+    await assertSucceeds(mine.limit(200).get());
+  });
+
+  it("denies cell queries missing a public-safety constraint, FOLLOWERS, others' Mine, and signed-out", async () => {
+    const db = user(env, BOB);
+    await assertFails(inCell(db.collection("farts")
+      .where("visibility_mode", "==", "PUBLIC").where("is_hidden", "==", false)).get());
+    await assertFails(inCell(db.collection("farts")
+      .where("visibility_mode", "==", "PUBLIC").where("is_removed", "==", false)).get());
+    await assertFails(inCell(db.collection("farts")
+      .where("visibility_mode", "==", "FOLLOWERS").where("is_hidden", "==", false)
+      .where("is_removed", "==", false)).get());
+    await assertFails(inCell(db.collection("farts")
+      .where("author_user_id", "==", ALICE).where("is_removed", "==", false)).get());
+    await assertFails(inCell(publicBase(signedOut(env))).get());
   });
 });
 

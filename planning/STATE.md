@@ -1,7 +1,7 @@
 # STATE
 
 > Live operating state. Keep it under about 40 lines; history belongs in git and PRs, decisions in `planning/decisions/`. The SessionStart hook prints the "Now" block. Update it with every story status change.
-> Last updated: 2026-11-25.
+> Last updated: 2026-11-26.
 
 ## Now
 - Phase 1, EPIC-01-01. STORY-01-01-01 Done. Planning consolidation, `.claude/` setup, static analysis and ADR-0022/0023/0024 acceptance merged (PRs #2–#5).
@@ -13,11 +13,12 @@
 - STORY-01-02-03 Done (PR #15): Google sign-in on Android (Credential Manager) and iOS (GoogleSignIn SDK). Apple moved to Phase 2, and -05 App Check is deferred (owner, issue #14).
 - STORY-01-02-04 Done (PR #16): a guest links Google from the Profile tab; the `syncAccountProviders` callable re-derives `is_anonymous` / `linked_providers`. **EPIC-01-02 complete** except the deferred -05 (App Check). The repo is public now, so CI minutes are free (owner, issue #17).
 - EPIC-01-03 (map) started and split into -01..-04 (ROADMAP). STORY-01-03-01 Done (PR #22): geohash-6 fuzzed projection in Kotlin (`core/domain/location`) and TS (`backend/functions/src/lib/location.ts`), proven equal by shared vectors; dev fart seed `npm run seed:farts`.
-- STORY-01-03-02 Done (PR #23): the Map tab is a native map (Google Maps Compose / MapKit in Kotlin) behind `core/platform/MapHost`; default camera Istanbul, no permission asked; the camera survives tab switches. No marker data yet (-03).
+- STORY-01-03-02 Done (PR #23): the Map tab is a native map (Google Maps Compose / MapKit in Kotlin) behind `core/platform/MapHost`; default camera Istanbul, no permission asked; the camera survives tab switches.
+- STORY-01-03-03 Done (PR #24): live markers from geohash-range listeners (`GeohashCover`, composite indexes), Mine / Followers (humorous card) / Everyone persisted in `map_filter_last_selected`, loading / empty / error+retry / offline states, `map_viewed` and `marker_opened`.
 
 ## Next
 1. Owner: run the EPIC-01-02 test plan (`planning/testing/EPIC-01-02.md`, Android + iOS) and file failures as `bug` issues. Needs the dev catalog seed first (`OwnerTodo.md` A).
-2. STORY-01-03-03 (map data and filters; also proves -02's markers and taps on device). Owner: `.claude/rules/ios-shell.md` wording update suggested in `stories/STORY-01-03-02.md` Evidence (autopilot can't edit `.claude/`). Owner: seed dev test farts before the EPIC-01-03 test plan (`OwnerTodo.md` D).
+2. STORY-01-03-04 (device location, "center on me"): blocked on the permission-timing decision below. Owner: `.claude/rules/ios-shell.md` wording update suggested in `stories/STORY-01-03-02.md` Evidence (autopilot can't edit `.claude/`). Owner: seed dev test farts before the EPIC-01-03 test plan (`OwnerTodo.md` D).
 3. On the Mac: commit the `Package.resolved` Xcode updates (GoogleSignIn + FirebaseFunctions pins).
 
 ## Pending owner decisions

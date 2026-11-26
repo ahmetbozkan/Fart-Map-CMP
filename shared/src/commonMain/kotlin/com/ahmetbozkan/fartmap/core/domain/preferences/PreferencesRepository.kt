@@ -1,5 +1,6 @@
 package com.ahmetbozkan.fartmap.core.domain.preferences
 
+import com.ahmetbozkan.fartmap.core.domain.map.MapFilter
 import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
 import com.ahmetbozkan.fartmap.core.observability.AppResult
 import kotlinx.coroutines.flow.Flow
@@ -17,6 +18,11 @@ interface PreferencesRepository {
     suspend fun lastVisibilityMode(): VisibilityMode?
 
     suspend fun setLastVisibilityMode(mode: VisibilityMode): AppResult<Unit>
+
+    /** The map filter last picked (`map_filter_last_selected`, device-scoped); EVERYONE if never set or unknown. */
+    suspend fun mapFilter(): MapFilter
+
+    suspend fun setMapFilter(filter: MapFilter): AppResult<Unit>
 
     /** Removes everything tied to the signed-in user (sign-out, account switch). */
     suspend fun clearUserScoped(): AppResult<Unit>

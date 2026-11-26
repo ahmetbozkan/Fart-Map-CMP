@@ -2,6 +2,7 @@ package com.ahmetbozkan.fartmap.core.data.preferences
 
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.ahmetbozkan.fartmap.core.domain.map.MapFilter
 import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
 import com.ahmetbozkan.fartmap.core.observability.Logger
 import kotlinx.coroutines.flow.first
@@ -41,6 +42,22 @@ class DataStorePreferencesRepositoryTest {
 
         store.edit { it[stringPreferencesKey("last_visibility_mode")] = "EVERYONE" }
         assertEquals(VisibilityMode.PRIVATE, repo.lastVisibilityMode())
+    }
+
+    @Test
+    fun mapFilterDefaultsToEveryoneRoundTripsAndSurvivesSignOutClearing() = runTest {
+        val store = newStore()
+        val repo = DataStorePreferencesRepository(store, logger)
+        assertEquals(MapFilter.EVERYONE, repo.mapFilter())
+
+        repo.setMapFilter(MapFilter.MINE)
+        assertEquals(MapFilter.MINE, repo.mapFilter())
+
+        repo.clearUserScoped()
+        assertEquals(MapFilter.MINE, repo.mapFilter(), "the filter is device-scoped")
+
+        store.edit { it[stringPreferencesKey("map_filter_last_selected")] = "FRIENDS" }
+        assertEquals(MapFilter.EVERYONE, repo.mapFilter(), "an unknown stored value reads as EVERYONE")
     }
 
     @Test

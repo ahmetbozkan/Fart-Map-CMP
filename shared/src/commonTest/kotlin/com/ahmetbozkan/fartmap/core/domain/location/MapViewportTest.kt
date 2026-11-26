@@ -9,6 +9,20 @@ import kotlin.test.assertTrue
 class MapViewportTest {
 
     @Test
+    fun containsIncludesEdgesAndWrapsAcrossTheAntimeridian() {
+        val city = MapViewport(south = 40.9, west = 28.8, north = 41.1, east = 29.2)
+        assertTrue(city.contains(41.0, 29.0))
+        assertTrue(city.contains(40.9, 29.2), "edges count")
+        assertFalse(city.contains(41.2, 29.0))
+        assertFalse(city.contains(41.0, 29.3))
+
+        val fiji = MapViewport(south = -19.0, west = 179.0, north = -17.0, east = -179.0)
+        assertTrue(fiji.contains(-18.0, 179.5))
+        assertTrue(fiji.contains(-18.0, -179.5))
+        assertFalse(fiji.contains(-18.0, 0.0))
+    }
+
+    @Test
     fun ordinarySpanIsCenteredOnThePoint() {
         val viewport = MapViewport.fromCenterSpan(41.0, 29.0, latDelta = 0.2, lngDelta = 0.4)
 

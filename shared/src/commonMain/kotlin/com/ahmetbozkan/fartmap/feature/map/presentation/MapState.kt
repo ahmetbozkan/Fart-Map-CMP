@@ -2,18 +2,25 @@ package com.ahmetbozkan.fartmap.feature.map.presentation
 
 import com.ahmetbozkan.fartmap.core.domain.location.MapCamera
 import com.ahmetbozkan.fartmap.core.domain.location.MapViewport
-import com.ahmetbozkan.fartmap.core.platform.MapMarker
+import com.ahmetbozkan.fartmap.core.domain.map.MapFilter
+import com.ahmetbozkan.fartmap.core.observability.AppError
+import com.ahmetbozkan.fartmap.feature.map.domain.MapFart
 
 /**
- * The Map tab (MAP-01). Markers stay empty until the data story (STORY-01-03-03); [viewport] is what that story
- * queries, and [selectedMarkerId] is what the detail sheet (EPIC-01-05) opens. [camera] follows the user's gestures,
- * so a recreated map (after a tab switch) opens where it was left.
+ * The Map tab (MAP-01..03). [farts] are the loaded farts inside [viewport] for [filter]; [status] says whether that
+ * data is loading, ready (possibly from the offline cache) or failed. [camera] follows the user's gestures, so a
+ * recreated map (after a tab switch) opens where it was left. [selectedMarkerId] is what the detail sheet (EPIC-01-05)
+ * opens. [uid] marks the user's own farts; [nowEpochMs] anchors "2 hours ago" in marker labels.
  */
 data class MapState(
     val camera: MapCamera = DEFAULT_CAMERA,
-    val markers: List<MapMarker> = emptyList(),
     val viewport: MapViewport? = null,
     val selectedMarkerId: String? = null,
+    val filter: MapFilter = MapFilter.DEFAULT,
+    val farts: List<MapFart> = emptyList(),
+    val status: MapDataStatus = MapDataStatus.Loading,
+    val uid: String? = null,
+    val nowEpochMs: Long = 0L,
 ) {
     companion object {
         /** Istanbul at city zoom, the dev fart seed's center; "center on me" arrives with STORY-01-03-04. */
@@ -21,11 +28,31 @@ data class MapState(
     }
 }
 
+/** The marker layer's data state (`MapScreen.md` UI states); the base map is always visible. */
+sealed interface MapDataStatus {
+    data object Loading : MapDataStatus
+
+    /**
+     * [isFromCache]: served by the offline cache, shown with the offline chip (LocalData.md §4). [isTruncated]: a
+     * listener hit its document limit, so an empty view means "zoom in", not "nothing here".
+     */
+    data class Ready(val isFromCache: Boolean, val isTruncated: Boolean = false) : MapDataStatus
+
+    data class Failed(val error: AppError) : MapDataStatus
+}
+
 sealed interface MapAction {
+    /** The Map tab entered composition (tab shown); drives `map_viewed`. */
+    data object Shown : MapAction
+
     data class CameraIdle(val viewport: MapViewport, val camera: MapCamera) : MapAction
 
     data class MarkerTapped(val markerId: String) : MapAction
+
+    data class FilterSelected(val filter: MapFilter) : MapAction
+
+    data object Retry : MapAction
 }
 
-/** No one-time effects yet; STORY-01-03-03 and EPIC-01-05 add them. */
+/** No one-time effects yet; the detail sheet (EPIC-01-05) adds them. */
 sealed interface MapEvent

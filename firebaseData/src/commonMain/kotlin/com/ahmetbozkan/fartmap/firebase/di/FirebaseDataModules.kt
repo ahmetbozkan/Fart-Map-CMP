@@ -7,9 +7,11 @@ import com.ahmetbozkan.fartmap.core.domain.session.AuthGateway
 import com.ahmetbozkan.fartmap.core.domain.session.LocalDataReset
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsTracker
 import com.ahmetbozkan.fartmap.core.observability.LogSink
+import com.ahmetbozkan.fartmap.feature.map.domain.MapFartRepository
 import com.ahmetbozkan.fartmap.firebase.firestore.FirestoreLocalDataReset
 import com.ahmetbozkan.fartmap.firebase.firestore.FirestoreProvider
 import com.ahmetbozkan.fartmap.firebase.firestore.FirestoreWriteErrorMapper
+import com.ahmetbozkan.fartmap.firebase.map.FirestoreMapFartRepository
 import com.ahmetbozkan.fartmap.firebase.profile.FirestoreProfileRepository
 import com.ahmetbozkan.fartmap.firebase.session.FirebaseAuthGateway
 import com.ahmetbozkan.fartmap.firebase.session.FirestoreAccountRepository
@@ -41,4 +43,5 @@ private val firestoreModule = module {
     single { FirestoreProvider() }
     single<WriteErrorMapper> { FirestoreWriteErrorMapper }
     single<LocalDataReset> { FirestoreLocalDataReset(get(), get()) }
+    single<MapFartRepository> { FirestoreMapFartRepository(get(), get()) }
 }

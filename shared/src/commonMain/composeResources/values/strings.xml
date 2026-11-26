@@ -34,6 +34,34 @@
     <string name="profile_link_success">Linked. Your legacy is safe now.</string>
     <string name="profile_link_conflict">That Google account already has its own Fart Map. You're still here as a guest.</string>
 
+    <string name="map_filter_mine">Mine</string>
+    <string name="map_filter_followers">Followers</string>
+    <string name="map_filter_everyone">Everyone</string>
+    <string name="map_filter_label">Whose farts to show</string>
+    <string name="map_empty_title">Suspiciously fresh air</string>
+    <string name="map_empty_body">Nobody has dropped one here yet. Somebody has to go first.</string>
+    <string name="map_empty_mine_body">You haven't left your mark around here. Yet.</string>
+    <string name="map_followers_title">Your crew hasn't arrived</string>
+    <string name="map_followers_body">Following people is coming soon. Until then, Everyone has plenty of wind.</string>
+    <string name="map_truncated_title">Too much wind out here</string>
+    <string name="map_truncated_body">This area is packed. Zoom in to see who let what go.</string>
+    <string name="map_offline">Offline. Showing what the wind left behind.</string>
+    <string name="map_marker_label">A level-%1$d fart, %2$s</string>
+    <string name="map_marker_label_own">Your level-%1$d fart, %2$s</string>
+    <string name="map_age_just_now">just now</string>
+    <plurals name="map_age_minutes">
+        <item quantity="one">%1$d minute ago</item>
+        <item quantity="other">%1$d minutes ago</item>
+    </plurals>
+    <plurals name="map_age_hours">
+        <item quantity="one">%1$d hour ago</item>
+        <item quantity="other">%1$d hours ago</item>
+    </plurals>
+    <plurals name="map_age_days">
+        <item quantity="one">%1$d day ago</item>
+        <item quantity="other">%1$d days ago</item>
+    </plurals>
+
     <string name="state_loading">Loading</string>
     <string name="state_retry">Try again</string>
     <string name="error_network">You're offline. The wind can't carry this one.</string>

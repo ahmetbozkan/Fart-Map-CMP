@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.PreferencesSerializer
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.ahmetbozkan.fartmap.core.domain.map.MapFilter
 import com.ahmetbozkan.fartmap.core.domain.preferences.PreferencesRepository
 import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
 import com.ahmetbozkan.fartmap.core.observability.AppError
@@ -46,6 +47,14 @@ class DataStorePreferencesRepository(
 
     override suspend fun setLastVisibilityMode(mode: VisibilityMode): AppResult<Unit> = write("write_visibility") {
         store.edit { it[LAST_VISIBILITY_MODE] = mode.wireName }
+    }
+
+    override suspend fun mapFilter(): MapFilter = guarded("read_map_filter", fallback = MapFilter.DEFAULT) {
+        MapFilter.fromWire(store.data.first()[MAP_FILTER_LAST_SELECTED])
+    }
+
+    override suspend fun setMapFilter(filter: MapFilter): AppResult<Unit> = write("write_map_filter") {
+        store.edit { it[MAP_FILTER_LAST_SELECTED] = filter.wireName }
     }
 
     override suspend fun clearUserScoped(): AppResult<Unit> = write("clear_user_scoped") {
@@ -99,6 +108,7 @@ class DataStorePreferencesRepository(
         // Device-scoped: survives sign-out.
         private val FIRST_OPEN_DONE = booleanPreferencesKey("first_open_done")
         private val AGE_GATE_BLOCKED = booleanPreferencesKey("age_gate_blocked")
+        private val MAP_FILTER_LAST_SELECTED = stringPreferencesKey("map_filter_last_selected")
 
         // User-scoped: wiped on sign-out. Every new user key must be added to USER_SCOPED_KEYS.
         private val LAST_VISIBILITY_MODE = stringPreferencesKey("last_visibility_mode")

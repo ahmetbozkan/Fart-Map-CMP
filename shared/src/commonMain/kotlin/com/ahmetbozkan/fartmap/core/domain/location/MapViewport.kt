@@ -12,6 +12,12 @@ data class MapViewport(
 ) {
     val crossesAntimeridian: Boolean get() = west > east
 
+    /** True when the point is inside, edges included; a view across the antimeridian wraps. */
+    fun contains(lat: Double, lng: Double): Boolean {
+        if (lat < south || lat > north) return false
+        return if (crossesAntimeridian) lng >= west || lng <= east else lng in west..east
+    }
+
     companion object {
         private const val MAX_LAT = Geohash.MAX_LAT
         private const val MAX_LNG = Geohash.MAX_LNG

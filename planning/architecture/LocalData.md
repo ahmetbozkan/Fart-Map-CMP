@@ -42,7 +42,7 @@
 | `last_visibility_mode` | Unset → the Phase 1 default **PUBLIC** for the 18+ age band (ADR-0023); the 13–17 band and an unknown band get FOLLOWERS and are never offered PUBLIC (enforced by rules, ADR-0023 amendment). Once the user picks a value, the last-used value wins if it is still allowed |
 | `log_draft` | Serialized Log Fart draft; survives process death; cleared on successful hand-off (CREATE-03 `DRAFT`) |
 | `play_marker_sounds_enabled` | true |
-| `map_filter_last_selected` | EVERYONE |
+| `map_filter_last_selected` | EVERYONE (MINE / FOLLOWERS / EVERYONE; unknown → EVERYONE). Device-scoped: kept by sign-out |
 | `onboarding_completed` | false |
 | `show_following_list_public` | Mirror of the profile flag for UX (ADR-0012) |
 | `notification_permission_prompted` | false; the prompt shows once, after the first successful log (ADR-0023) |
@@ -65,7 +65,7 @@ Never store secrets, auth tokens or precise coordinates of other users in DataSt
   1. `SessionRepository.signOut()`; if it fails, nothing is wiped (the user is still signed in);
   2. `AppWriteScope.cancelPending()`, so the old account's writes neither race the wipe nor surface as the next user's rejections;
   3. `LocalDataReset`: `terminate()` → `clearPersistence()` → `FirestoreSetup.configure()` (settings are re-applied even after a failed wipe);
-  4. clears the user-scoped DataStore keys (draft, nudges, offers, last visibility), always, even if the wipe failed. Device-scoped keys (`first_open_done`) are kept.
+  4. clears the user-scoped DataStore keys (draft, nudges, offers, last visibility), always, even if the wipe failed. Device-scoped keys (`first_open_done`, `map_filter_last_selected`) are kept.
 
   **Rule for features:** Firestore listeners are scoped to the active session and stop when it leaves `Active`, so nothing touches Firestore during the reset. A failed wipe is returned as a typed failure for the caller (Settings, EPIC-01-07) to surface; there is no automatic retry yet. Pending unsynced writes from the old account are dropped. On sign-out of an anonymous account, warn the user first (ADR-0018).
 - **Server-side changes:** content that loses visibility (block, unfollow, moderation hide, delete) disappears from listeners automatically. The server is authoritative and no tombstones are needed.
