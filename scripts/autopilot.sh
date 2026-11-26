@@ -133,7 +133,10 @@ while [[ $merged -lt $max ]]; do
   fi
   log "live log: $live_log   raw: $raw"
 
-  claude -p "$prompt" "${resume_args[@]}" \
+  # Git Bash (MSYS) rewrites any argument starting with "/" when it starts a native Windows .exe, so
+  # "/autopilot-story ..." would reach claude.exe as "C:/Program Files/Git/autopilot-story ..." and the skill
+  # would never load. Both variables turn that conversion off for this call; they are ignored elsewhere.
+  MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' claude -p "$prompt" "${resume_args[@]}" \
     --permission-mode acceptEdits \
     --settings .claude/autopilot.settings.json \
     --max-turns "$max_turns" \
