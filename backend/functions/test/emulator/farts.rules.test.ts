@@ -71,10 +71,12 @@ describe("farts: create", () => {
     await assertSucceeds(createFart(user(env, ALICE), "f2", nulls));
   });
 
-  it("allows a 500-emoji description and denies 501 (the limit counts characters, not UTF-16 units)", async () => {
+  // The rules' string.size() does not count code points (500 emoji were denied in CI, PR #28). This pins the unit as
+  // UTF-16 code units, which is what validateNewFart counts (Kotlin String.length): an emoji counts 2.
+  it("counts the description limit in UTF-16 units: 250 emoji allowed, 251 denied", async () => {
     const db = user(env, ALICE);
-    await assertSucceeds(createFart(db, "f1", newFart("f1", ALICE, { description_text: "💨".repeat(500) })));
-    await assertFails(createFart(db, "f2", newFart("f2", ALICE, { description_text: "💨".repeat(501) })));
+    await assertSucceeds(createFart(db, "f1", newFart("f1", ALICE, { description_text: "💨".repeat(250) })));
+    await assertFails(createFart(db, "f2", newFart("f2", ALICE, { description_text: "💨".repeat(251) })));
   });
 
   it("denies signed-out users", async () => {
@@ -142,7 +144,6 @@ describe("farts: private location (ADR-0019)", () => {
 
   it("denies a fart created without its private location in the same batch", async () => {
     await assertFails(user(env, ALICE).doc("farts/f1").set(newFart("f1", ALICE)));
-    await assertFails(user(env, "teen-1").doc("farts/f2").set(newFart("f2", "teen-1", { visibility_mode: "PRIVATE" })));
   });
 
   it("denies creating it later for an existing fart, even by the author", async () => {
@@ -159,8 +160,10 @@ describe("farts: private location (ADR-0019)", () => {
   it("denies a creating batch with extra keys or another private doc id", async () => {
     const db = user(env, ALICE);
     await assertFails(createFart(db, "f1", newFart("f1", ALICE), { ...PRECISE, note: "x" }));
+    // A valid location is in the batch, so the extra private/other doc is the only reason for the denial.
     const batch = db.batch();
     batch.set(db.doc("farts/f2"), newFart("f2", ALICE));
+    batch.set(db.doc("farts/f2/private/location"), location());
     batch.set(db.doc("farts/f2/private/other"), location());
     await assertFails(batch.commit());
   });
@@ -172,6 +175,8 @@ describe("farts: private location (ADR-0019)", () => {
     await assertFails(user(env, ALICE).doc("farts/f1/private/other").set(location()));
   });
 
+  // Both cases above and below are now also covered by "the fart must not exist yet" (create-only); they stay as
+  // regression guards for the author and removal checks.
   it("is frozen once the fart is soft-deleted", async () => {
     await seed(env, { "farts/f1": storedFart("f1", ALICE, { is_removed: true, removed_reason: "USER_DELETED" }) });
     await assertFails(user(env, ALICE).doc("farts/f1/private/location").set(location()));

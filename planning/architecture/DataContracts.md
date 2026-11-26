@@ -353,7 +353,7 @@ Owner read/write only; removed on sign-out.
 8. XP and leaderboard writes are server-authoritative (not client-calculated final source).
 9. A fart using a non-free `avatar_id` or `sound_id` is accepted only if `user_entitlements` grants the item or an unconsumed `rewarded_unlocks` token names it; the token is consumed by the write trigger (ADR-0016, ADR-0017).
 10. `public_lat`/`public_lng` must lie inside the `coarse_location_key` cell; a function re-validates from the private location (ADR-0019).
-11. `description_text` is rejected above 500 characters (`features/` CREATE-03.1 Step 6).
+11. `description_text` is rejected above 500 characters (`features/` CREATE-03.1 Step 6). The rules count UTF-16 code units, so an emoji counts 2. The client validates with the same unit (STORY-01-04-01).
 12. `visibility_mode == PUBLIC` is accepted only when the author's `users/{uid}/private/account.age_band == AGE_18_PLUS` (ADR-0023 amendment); a missing account doc means no PUBLIC.
 
 ---

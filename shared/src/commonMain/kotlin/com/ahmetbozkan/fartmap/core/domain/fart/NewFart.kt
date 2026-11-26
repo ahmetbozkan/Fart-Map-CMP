@@ -26,7 +26,10 @@ data class NewFart(
     companion object {
         val FLAVOR_RANGE = 1..5
 
-        /** The backend limit (DataContracts.md §4.11); the 280 soft limit is a UI concern. */
+        /**
+         * The backend limit (DataContracts.md §4.11) in UTF-16 code units, as the rules count it; the 280 soft limit is
+         * a UI concern.
+         */
         const val DESCRIPTION_MAX = 500
     }
 }
@@ -55,18 +58,7 @@ private fun contentError(fart: NewFart): String? = when {
     !fart.intensityValue.isFinite() || fart.intensityValue !in 0.0..1.0 -> "intensity_value"
     fart.avatarId.isBlank() -> "avatar_id"
     fart.soundId?.isBlank() == true -> "sound_id"
-    (fart.descriptionText?.codePointLength() ?: 0) > NewFart.DESCRIPTION_MAX -> "description_text"
+    // UTF-16 code units, the unit the rules' string.size() counts (proven in farts.rules.test.ts): an emoji counts 2.
+    (fart.descriptionText?.length ?: 0) > NewFart.DESCRIPTION_MAX -> "description_text"
     else -> null
-}
-
-/** Unicode code points: a surrogate pair (most emoji) counts once. */
-internal fun String.codePointLength(): Int {
-    var count = 0
-    var i = 0
-    while (i < length) {
-        val isPair = this[i].isHighSurrogate() && i + 1 < length && this[i + 1].isLowSurrogate()
-        i += if (isPair) 2 else 1
-        count++
-    }
-    return count
 }

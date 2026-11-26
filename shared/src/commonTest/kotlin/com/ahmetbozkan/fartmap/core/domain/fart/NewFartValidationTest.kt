@@ -62,12 +62,12 @@ class NewFartValidationTest {
     }
 
     @Test
-    fun descriptionIsLimitedTo500CodePoints() {
+    fun descriptionIsLimitedTo500Utf16UnitsLikeTheRules() {
         assertNull(validateNewFart(valid.copy(descriptionText = "x".repeat(500))))
         assertEquals("description_text", failedField(valid.copy(descriptionText = "x".repeat(501))))
-        // Emoji are surrogate pairs in UTF-16; each counts once.
-        assertNull(validateNewFart(valid.copy(descriptionText = "💨".repeat(500))))
-        assertEquals("description_text", failedField(valid.copy(descriptionText = "💨".repeat(501))))
+        // An emoji is a surrogate pair (2 units), the same boundary farts.rules.test.ts pins: 250 pass, 251 fail.
+        assertNull(validateNewFart(valid.copy(descriptionText = "💨".repeat(250))))
+        assertEquals("description_text", failedField(valid.copy(descriptionText = "💨".repeat(251))))
         assertNull(validateNewFart(valid.copy(descriptionText = null)))
     }
 
