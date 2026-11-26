@@ -24,6 +24,7 @@
 4. On the Mac: commit the `Package.resolved` Xcode updates (GoogleSignIn + FirebaseFunctions pins).
 
 ## Pending owner decisions
+- ADR-0026 (Proposed): Log Fart location precision. Recommended: Android stays coarse, and an approximate fix shows a "move the pin" hint. The alternative is a fine-location ask on Log Fart. STORY-01-04-02 ships with today's permissions either way.
 - Further minor-safe defaults for the 13–17 band (PUBLIC is already blocked for them) and the other Phase 1 launch items in `planning/product/Scope.md` §7a.
 - Launch catalog prices (RevenueCat Offerings) and the owned domain for App Links / Universal Links (ADR-0023/0024).
 - Minimum iOS version (the template uses 18.2).

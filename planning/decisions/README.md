@@ -31,3 +31,4 @@
 | [0023](ADR-0023-phase-1-growth-kernel.md) | Phase 1 growth kernel: share card + deep links, cold start, PUBLIC default in Phase 1 (18+) | Accepted 2026-11-22 (option A) |
 | [0024](ADR-0024-monetization-v2.md) | Monetization v2: shop, catalog, starter pack, Remote Config, subscription in Phase 2 | Accepted 2026-11-22 (single-use ads, no trims) |
 | [0025](ADR-0025-split-user-profile-and-private-account.md) | User doc split: public profile + owner-only `private/account` (age band, providers, suspension) | Accepted 2026-11-22 |
+| [0026](ADR-0026-log-fart-location-precision.md) | Log Fart: Android stays coarse; an approximate fix shows a "move the pin" hint | Proposed |
