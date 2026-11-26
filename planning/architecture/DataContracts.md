@@ -109,7 +109,7 @@ Readable by the owner only; never readable by other users (it reveals whether a 
 | `lng` | Double | Yes | Precise coordinate |
 | `updated_at` | Timestamp | Yes | Server set |
 
-Readable and writable by the author only (ADR-0019). A Cloud Function recomputes `public_lat`/`public_lng`/`coarse_location_key` from this document and overwrites the public fields on mismatch.
+Readable by the author only (ADR-0019). The author writes it exactly once, in the same batch that creates the fart. Rules require it there, and it can't be created later or updated (STORY-01-04-01; moving a fart is not in Phase 1). The `onFartCreated` trigger recomputes `public_lat`/`public_lng`/`coarse_location_key` from this document and overwrites the public fields on mismatch (`backend/functions/src/triggers/fartCreated.ts`).
 
 **How the public fields are computed (ADR-0019 §3, STORY-01-03-01):**
 - `coarse_location_key` = the geohash-6 cell of the precise point.
@@ -353,7 +353,7 @@ Owner read/write only; removed on sign-out.
 8. XP and leaderboard writes are server-authoritative (not client-calculated final source).
 9. A fart using a non-free `avatar_id` or `sound_id` is accepted only if `user_entitlements` grants the item or an unconsumed `rewarded_unlocks` token names it; the token is consumed by the write trigger (ADR-0016, ADR-0017).
 10. `public_lat`/`public_lng` must lie inside the `coarse_location_key` cell; a function re-validates from the private location (ADR-0019).
-11. `description_text` is rejected above 500 characters (`features/` CREATE-03.1 Step 6).
+11. `description_text` is rejected above 500 characters (`features/` CREATE-03.1 Step 6). The rules count UTF-16 code units, so an emoji counts 2. The client validates with the same unit (STORY-01-04-01).
 12. `visibility_mode == PUBLIC` is accepted only when the author's `users/{uid}/private/account.age_band == AGE_18_PLUS` (ADR-0023 amendment); a missing account doc means no PUBLIC.
 
 ---
@@ -413,7 +413,7 @@ This section defines required behavior; exact rule code lives in implementation.
 
 ### 5.8 Private location
 
-- `farts/{fartId}/private/*` is readable and writable by the fart author only.
+- `farts/{fartId}/private/location` is readable by the fart author only. The author creates it once, in the batch that creates the fart; a fart without it is denied. It has no update and no client delete. This narrows ADR-0019 §2 and doesn't reverse it.
 
 ### 5.9 Devices and hidden content
 
@@ -459,7 +459,7 @@ Minimum required validation suite:
 6. Report isolation tests (reporter cannot read others' reports).
 7. Projection tests ensuring precise location not leaked in public read models.
 8. Entitlement tests: a non-free cosmetic without entitlement or token is rejected; a token is single use.
-9. Private-location tests: non-authors cannot read `farts/{fartId}/private/location`.
+9. Private-location tests: non-authors cannot read `farts/{fartId}/private/location`; a fart without it in the creating batch is denied; it can't be created later or updated.
 10. Anonymous-session tests: anonymous uid can create and react; linking preserves ownership.
 
 ---

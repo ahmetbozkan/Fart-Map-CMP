@@ -14,10 +14,16 @@ export const health = onRequest({ region: REGION }, (_req, res) => {
   res.json({ status: "ok", service: "fartmap-functions" });
 });
 
-/** Trigger skeleton (dev only, see triggers/fartCreated.ts). */
-export const onFartCreated = onDocumentCreated({ document: "farts/{fartId}", region: REGION }, async (event) => {
-  await handleFartCreated(getFirestore(), event.id, event.params.fartId);
-});
+/**
+ * Re-validates a new fart's public projection against its private location (ADR-0019 §4, triggers/fartCreated.ts).
+ * `retry: true` so a transient failure is retried; `runOnce` keeps redeliveries idempotent.
+ */
+export const onFartCreated = onDocumentCreated(
+  { document: "farts/{fartId}", region: REGION, retry: true },
+  async (event) => {
+    await handleFartCreated(getFirestore(), event.id, event.params.fartId);
+  },
+);
 
 /** Re-derives the caller's server-managed account fields after account linking (callables/syncAccountProviders.ts). */
 // maxInstances caps spend until App Check enforcement lands (STORY-01-02-05, Security.md §6).

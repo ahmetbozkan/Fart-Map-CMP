@@ -174,8 +174,10 @@ service cloud.firestore {
           && resource.data.is_hidden == false
           && resource.data.is_removed == false));
 
-      // Public doc only: fuzzed coordinates (ADR-0019); precise ones go to private/location in the same batch.
+      // Public doc only: fuzzed coordinates (ADR-0019). The precise point must land in private/location in the same
+      // batch, so onFartCreated can always re-validate the public fields against it (STORY-01-04-01).
       allow create: if signedIn()
+        && existsAfter(/databases/$(database)/documents/farts/$(fartId)/private/location)
         && hasExactly(
           ['fart_id', 'author_user_id', 'public_lat', 'public_lng', 'coarse_location_key', 'timestamp_epoch_ms',
             'avatar_id', 'flavor_level', 'intensity_value', 'visibility_mode', 'reaction_count',
@@ -218,19 +220,21 @@ service cloud.firestore {
 
       allow delete: if false;
 
-      // Precise coordinates: author only (ADR-0019). getAfter() so the batch that creates the fart can write it.
+      // Precise coordinates: author only (ADR-0019). Written once, only in the batch that creates the fart (the fart
+      // doesn't exist before the request, getAfter() sees it); never moved afterwards (editing is Phase 2, CREATE-09).
       match /private/{docId} {
         allow read: if signedIn() && docId == 'location'
           && get(fartPath(fartId)).data.author_user_id == uid();
-        // Frozen once the fart is removed; purging it on removal is server work (projection function, EPIC-01-04).
-        allow create, update: if signedIn() && docId == 'location'
+        // Purging it when the fart is removed is server work (STORY-01-04-05).
+        allow create: if signedIn() && docId == 'location'
+          && !exists(fartPath(fartId))
           && getAfter(fartPath(fartId)).data.author_user_id == uid()
           && getAfter(fartPath(fartId)).data.is_removed == false
           && hasExactly(['lat', 'lng', 'updated_at'], [])
           && incoming().lat is number && incoming().lat >= -90 && incoming().lat <= 90
           && incoming().lng is number && incoming().lng >= -180 && incoming().lng <= 180
           && isNow('updated_at');
-        allow delete: if false;
+        allow update, delete: if false;
       }
 
       // One reaction per user per fart (doc id = uid). Counters are maintained by a trigger (EPIC-01-05).
