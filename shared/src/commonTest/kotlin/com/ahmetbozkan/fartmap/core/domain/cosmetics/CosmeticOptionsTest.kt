@@ -47,7 +47,11 @@ class CosmeticOptionsTest {
     @Test
     fun inactiveItemsAreHiddenUnlessOwned() {
         val options = cosmeticOptions(
-            catalog = listOf(avatar("free"), avatar("retired", active = false), avatar("kept", free = false, active = false)),
+            catalog = listOf(
+                avatar("free"),
+                avatar("retired", active = false),
+                avatar("kept", free = false, active = false),
+            ),
             owned = setOf("kept"),
             type = CosmeticType.AVATAR,
         )

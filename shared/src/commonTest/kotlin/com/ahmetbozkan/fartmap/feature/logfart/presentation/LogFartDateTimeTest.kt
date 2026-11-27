@@ -19,8 +19,8 @@ class LogFartDateTimeTest {
     private fun utcMidnight(year: Int, month: Int, day: Int) =
         LocalDate(year, month, day).atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
 
-    private fun local(zone: TimeZone, year: Int, month: Int, day: Int, hour: Int, minute: Int) =
-        LocalDateTime(LocalDate(year, month, day), LocalTime(hour, minute)).toInstant(zone).toEpochMilliseconds()
+    private fun local(zone: TimeZone, date: LocalDate, hour: Int, minute: Int) =
+        LocalDateTime(date, LocalTime(hour, minute)).toInstant(zone).toEpochMilliseconds()
 
     @Test
     fun utcIsTheDayPlusTheTime() {
@@ -50,12 +50,15 @@ class LogFartDateTimeTest {
 
     @Test
     fun aFutureDateIsAccepted() {
-        assertEquals(local(istanbul, 2031, 1, 1, 0, 0), combineDateAndTime(utcMidnight(2031, 1, 1), 0, 0, istanbul))
+        assertEquals(
+            local(istanbul, LocalDate(2031, 1, 1), 0, 0),
+            combineDateAndTime(utcMidnight(2031, 1, 1), 0, 0, istanbul),
+        )
     }
 
     @Test
     fun pickerPartsRoundTrip() {
-        val epoch = local(newYork, 2026, 11, 27, 23, 59)
+        val epoch = local(newYork, LocalDate(2026, 11, 27), 23, 59)
         val parts = pickerParts(epoch, newYork)
 
         assertEquals(PickerParts(utcMidnight(2026, 11, 27), 23, 59), parts)
@@ -64,7 +67,7 @@ class LogFartDateTimeTest {
 
     @Test
     fun theShownTimeIsLocal() {
-        assertEquals("27 Nov 2026, 14:05", formatLogTime(local(istanbul, 2026, 11, 27, 14, 5), istanbul))
+        assertEquals("27 Nov 2026, 14:05", formatLogTime(local(istanbul, LocalDate(2026, 11, 27), 14, 5), istanbul))
         assertEquals("01 Jan 2031, 00:00", formatLogTime(utcMidnight(2031, 1, 1), TimeZone.UTC))
     }
 

@@ -1,6 +1,5 @@
 package com.ahmetbozkan.fartmap.feature.logfart.presentation
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -21,7 +19,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
@@ -49,7 +46,6 @@ import com.ahmetbozkan.fartmap.core.design.Spacing
 import com.ahmetbozkan.fartmap.core.domain.cosmetics.CosmeticOption
 import com.ahmetbozkan.fartmap.resources.Res
 import com.ahmetbozkan.fartmap.resources.ic_lock
-import com.ahmetbozkan.fartmap.resources.ic_waveform
 import com.ahmetbozkan.fartmap.resources.log_avatar_title
 import com.ahmetbozkan.fartmap.resources.log_description_counter
 import com.ahmetbozkan.fartmap.resources.log_description_placeholder_1
@@ -70,11 +66,6 @@ import com.ahmetbozkan.fartmap.resources.log_intensity_value
 import com.ahmetbozkan.fartmap.resources.log_locked
 import com.ahmetbozkan.fartmap.resources.log_sound_none
 import com.ahmetbozkan.fartmap.resources.log_sound_title
-import com.ahmetbozkan.fartmap.resources.log_voice_locked
-import com.ahmetbozkan.fartmap.resources.log_voice_sheet_body
-import com.ahmetbozkan.fartmap.resources.log_voice_sheet_ok
-import com.ahmetbozkan.fartmap.resources.log_voice_sheet_title
-import com.ahmetbozkan.fartmap.resources.log_voice_title
 import com.ahmetbozkan.fartmap.resources.log_when_cancel
 import com.ahmetbozkan.fartmap.resources.log_when_change
 import com.ahmetbozkan.fartmap.resources.log_when_change_description
@@ -125,42 +116,44 @@ internal fun WhenCard(timestampEpochMs: Long, enabled: Boolean, onPick: (Long) -
         }
     }
     val parts = pickerParts(timestampEpochMs, zone)
+    val close = { dialog = WhenDialog.NONE }
     when (dialog) {
         WhenDialog.NONE -> Unit
         WhenDialog.DATE -> {
             val dateState = rememberDatePickerState(initialSelectedDateMillis = parts.dateUtcMidnightMs)
             DatePickerDialog(
-                onDismissRequest = { dialog = WhenDialog.NONE },
+                onDismissRequest = close,
                 confirmButton = {
-                    TextButton(onClick = {
+                    DialogButton(Res.string.log_when_confirm) {
                         pickedDate = dateState.selectedDateMillis ?: parts.dateUtcMidnightMs
                         dialog = WhenDialog.TIME
-                    }) { Text(stringResource(Res.string.log_when_confirm)) }
+                    }
                 },
-                dismissButton = {
-                    TextButton(onClick = { dialog = WhenDialog.NONE }) { Text(stringResource(Res.string.log_when_cancel)) }
-                },
+                dismissButton = { DialogButton(Res.string.log_when_cancel, close) },
             ) { DatePicker(state = dateState) }
         }
         WhenDialog.TIME -> {
             val timeState = rememberTimePickerState(initialHour = parts.hour, initialMinute = parts.minute)
             AlertDialog(
-                onDismissRequest = { dialog = WhenDialog.NONE },
+                onDismissRequest = close,
                 title = { Text(stringResource(Res.string.log_when_time_title)) },
                 text = { TimePicker(state = timeState) },
                 confirmButton = {
-                    TextButton(onClick = {
+                    DialogButton(Res.string.log_when_confirm) {
                         val date = pickedDate ?: parts.dateUtcMidnightMs
                         onPick(combineDateAndTime(date, timeState.hour, timeState.minute, zone))
-                        dialog = WhenDialog.NONE
-                    }) { Text(stringResource(Res.string.log_when_confirm)) }
+                        close()
+                    }
                 },
-                dismissButton = {
-                    TextButton(onClick = { dialog = WhenDialog.NONE }) { Text(stringResource(Res.string.log_when_cancel)) }
-                },
+                dismissButton = { DialogButton(Res.string.log_when_cancel, close) },
             )
         }
     }
+}
+
+@Composable
+private fun DialogButton(label: StringResource, onClick: () -> Unit) {
+    TextButton(onClick = onClick) { Text(stringResource(label)) }
 }
 
 /**
@@ -183,7 +176,12 @@ internal fun CosmeticCard(
             horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
         ) {
             if (noneLabel != null) {
-                OptionChip(label = noneLabel, selected = selectedId == null, enabled = enabled, onClick = { onSelect(null) })
+                OptionChip(
+                    label = noneLabel,
+                    selected = selectedId == null,
+                    enabled = enabled,
+                    onClick = { onSelect(null) },
+                )
             }
             options.forEach { option ->
                 OptionChip(
@@ -199,7 +197,13 @@ internal fun CosmeticCard(
 }
 
 @Composable
-private fun OptionChip(label: String, selected: Boolean, enabled: Boolean, onClick: () -> Unit, locked: Boolean = false) {
+private fun OptionChip(
+    label: String,
+    selected: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    locked: Boolean = false,
+) {
     val lockedDescription = stringResource(Res.string.log_locked, label)
     FilterChip(
         selected = selected,
@@ -207,7 +211,13 @@ private fun OptionChip(label: String, selected: Boolean, enabled: Boolean, onCli
         enabled = enabled,
         label = { Text(label) },
         leadingIcon = if (locked) {
-            { Icon(painterResource(Res.drawable.ic_lock), contentDescription = null, modifier = Modifier.size(Spacing.lg)) }
+            {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_lock),
+                    contentDescription = null,
+                    modifier = Modifier.size(Spacing.lg),
+                )
+            }
         } else {
             null
         },
@@ -296,67 +306,21 @@ private val placeholders: List<StringResource> = listOf(
 @Composable
 internal fun DescriptionCard(state: LogFartState, onChange: (String) -> Unit) {
     val title = stringResource(Res.string.log_description_title)
+    val placeholder = placeholders[state.placeholderIndex.mod(placeholders.size)]
     DetailCard(title = title) {
         OutlinedTextField(
             value = state.description,
             onValueChange = onChange,
             enabled = state.isEditable,
-            placeholder = { Text(stringResource(placeholders[state.placeholderIndex.mod(placeholders.size)])) },
+            placeholder = { Text(stringResource(placeholder)) },
             supportingText = {
-                Text(stringResource(Res.string.log_description_counter, state.description.length, DESCRIPTION_SOFT_MAX))
+                Text(
+                    stringResource(Res.string.log_description_counter, state.description.length, DESCRIPTION_SOFT_MAX),
+                )
             },
             minLines = 2,
             modifier = Modifier.fillMaxWidth().semantics { contentDescription = title },
         )
-    }
-}
-
-/** Step 8: always shown, always locked until voice notes ship (CREATE-03.2 rule 2); a tap explains, never sells. */
-@Composable
-internal fun VoiceCard(onTap: () -> Unit) {
-    val title = stringResource(Res.string.log_voice_title)
-    val locked = stringResource(Res.string.log_voice_locked)
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().heightIn(min = Spacing.minTouchTarget)
-                .clickable(role = Role.Button, onClick = onTap)
-                .padding(Spacing.cardPadding)
-                .semantics { contentDescription = "$title, $locked" },
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Spacing.md),
-        ) {
-            Icon(
-                painterResource(Res.drawable.ic_waveform),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.titleMedium)
-                Text(locked, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Icon(painterResource(Res.drawable.ic_lock), contentDescription = null)
-        }
-    }
-}
-
-/** The informational voice sheet: one "Got it", no purchase, no ad (CREATE-03.2 rules 2–3). */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun VoiceInfoSheet(onDismiss: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onDismiss) { VoiceInfoContent(onDismiss) }
-}
-
-@Composable
-internal fun VoiceInfoContent(onDismiss: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(Spacing.sheetPadding),
-        verticalArrangement = Arrangement.spacedBy(Spacing.md),
-    ) {
-        Text(stringResource(Res.string.log_voice_sheet_title), style = MaterialTheme.typography.titleLarge)
-        Text(stringResource(Res.string.log_voice_sheet_body), style = MaterialTheme.typography.bodyMedium)
-        Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().heightIn(min = Spacing.minTouchTarget)) {
-            Text(stringResource(Res.string.log_voice_sheet_ok))
-        }
     }
 }
 

@@ -74,21 +74,11 @@ class LogFartViewModel(
             LogFartAction.ConfirmPin -> onConfirmPin()
             LogFartAction.CancelPicker -> setState { copy(picker = null) }
             is LogFartAction.VisibilitySelected -> onVisibilitySelected(action.visibility)
-            is LogFartAction.DateTimePicked -> edit { copy(timestampEpochMs = action.epochMs) }
-            is LogFartAction.AvatarSelected -> edit { withAvatar(action.id) }
-            is LogFartAction.SoundSelected -> edit { withSound(action.id) }
-            is LogFartAction.FlavorSelected -> edit { withFlavor(action.level) }
-            is LogFartAction.IntensityChanged -> edit { withIntensity(action.value) }
-            is LogFartAction.DescriptionChanged -> edit { withDescription(action.text) }
+            is LogFartAction.FieldEdit -> if (state.value.isEditable) setState { reduce(action) }
             LogFartAction.VoiceRowTapped -> sendEvent(LogFartEvent.ShowVoiceInfo)
             LogFartAction.Submit -> onSubmit()
             LogFartAction.Close -> onClose()
         }
-    }
-
-    /** A detailed-field change; ignored while the hand-off runs. */
-    private fun edit(reduce: LogFartState.() -> LogFartState) {
-        if (state.value.isEditable) setState(reduce)
     }
 
     private suspend fun loadSessionData() {

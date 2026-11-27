@@ -36,6 +36,16 @@ fun limitDescription(text: String): String {
 /** What goes into `description_text`: trimmed, and null when there is nothing but whitespace. */
 fun descriptionOrNull(text: String): String? = text.trim().ifEmpty { null }
 
+/** Applies one field edit; invalid values (locked items, out-of-range levels) leave the state as it is. */
+internal fun LogFartState.reduce(edit: LogFartAction.FieldEdit): LogFartState = when (edit) {
+    is LogFartAction.DateTimePicked -> copy(timestampEpochMs = edit.epochMs)
+    is LogFartAction.AvatarSelected -> withAvatar(edit.id)
+    is LogFartAction.SoundSelected -> withSound(edit.id)
+    is LogFartAction.FlavorSelected -> withFlavor(edit.level)
+    is LogFartAction.IntensityChanged -> withIntensity(edit.value)
+    is LogFartAction.DescriptionChanged -> withDescription(edit.text)
+}
+
 internal fun LogFartState.withAvatar(id: String): LogFartState =
     if (avatars.isUsable(id)) copy(avatarId = id) else this
 

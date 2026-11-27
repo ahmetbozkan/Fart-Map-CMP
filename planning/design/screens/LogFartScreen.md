@@ -42,6 +42,16 @@
 - "Adjust location" (also while locating) opens a full-screen centre-pin picker: the user moves the map under a fixed pin, then "Use this spot" or "Cancel". It opens at the resolved point, else at the map's camera.
 - Back: closes the picker if open; does nothing while uploading; otherwise leaves (keep-or-discard comes with drafts, STORY-01-04-04).
 
+## Detailed fields (STORY-01-04-03)
+- Order: where, when, avatar, flavor, intensity, story, sound, voice, visibility; "Let It Rip" stays pinned at the bottom, so the quick log is still one tap.
+- Defaults: the screen-open time, Bean Bandit, Stinky (3 of 5), middle intensity, no caption, no sound.
+- When: shows the local date and time; "Change" opens the date picker then the time picker. No max date.
+- Avatar and sound: chips of the free and owned items (sound adds "No sound"). Locked items show a lock and can't be picked yet; the tap opens the Cosmetic Unlock Sheet once EPIC-01-06 ships it. Without a reachable catalog the starter items are offered.
+- Flavor: five labelled steps (Fresh, Hmm, Stinky, Toxic, Lethal). Intensity: a slider from Whisper to Thunderclap.
+- Story: one rotating placeholder per open, a counter, stops at 280 characters (UTF-16 units, an emoji counts 2).
+- Voice: always shown locked ("Premium — coming later"); a tap opens an informational sheet with "Got it" only.
+- Sound preview and the "Play sounds on tap" toggle come with marker sound playback (EPIC-01-05).
+
 ## Interactions
 - User actions: set metadata, optional audio, set visibility, submit/cancel.
 - Feedback/animation notes: submit and success feedback follow global motion constraints.
@@ -64,6 +74,6 @@
 - unresolved deltas: premium cosmetic lock treatment and audio control layout variants
 
 ## Implementation Handoff
-- Required components: preview map, selectors/chips/slider, locked-item treatment, voice row shown locked ("Premium — coming later"), text field (280 soft limit), visibility selector, submit CTA.
+- Required components: preview map, date/time pickers, avatar and sound chips, flavor stepper, intensity slider, locked-item treatment (lock on the chip; unlock sheet in EPIC-01-06), voice row shown locked ("Premium — coming later") with its info sheet, text field (stops at 280, counter), visibility selector, submit CTA.
 - State model expectations: `DRAFT`, `UPLOADING`, `SUCCESS`, `FAILED`, `OFFLINE`.
 - Test/validation notes: verify draft durability, offline acceptance, visibility default, and recoverable error behavior.

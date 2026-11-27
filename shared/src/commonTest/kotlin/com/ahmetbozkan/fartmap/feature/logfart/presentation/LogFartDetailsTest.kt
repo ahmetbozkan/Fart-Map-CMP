@@ -48,7 +48,8 @@ class LogFartDetailsTest {
     }
     private val here = DeviceLocation(41.05, 29.02)
 
-    private val sessions = InMemorySessionRepository(SessionState.Active("me", SessionState.Kind.ANONYMOUS, AgeBand.ADULT))
+    private val sessions =
+        InMemorySessionRepository(SessionState.Active("me", SessionState.Kind.ANONYMOUS, AgeBand.ADULT))
     private val location =
         FakeLocationProvider(status = LocationPermission.GRANTED, lookup = LocationLookup.Found(here))
     private val farts = FakeFartRepository()

@@ -99,19 +99,22 @@ sealed interface LogFartAction {
 
     data class VisibilitySelected(val visibility: VisibilityMode) : LogFartAction
 
-    /** The date and time pickers' result, as epoch ms ([combineDateAndTime]). */
-    data class DateTimePicked(val epochMs: Long) : LogFartAction
+    /** A detailed-field change (STORY-01-04-03); all of them are ignored while uploading. */
+    sealed interface FieldEdit : LogFartAction
 
-    data class AvatarSelected(val id: String) : LogFartAction
+    /** The date and time pickers' result, as epoch ms ([combineDateAndTime]). */
+    data class DateTimePicked(val epochMs: Long) : FieldEdit
+
+    data class AvatarSelected(val id: String) : FieldEdit
 
     /** Null is "No sound". */
-    data class SoundSelected(val id: String?) : LogFartAction
+    data class SoundSelected(val id: String?) : FieldEdit
 
-    data class FlavorSelected(val level: Int) : LogFartAction
+    data class FlavorSelected(val level: Int) : FieldEdit
 
-    data class IntensityChanged(val value: Float) : LogFartAction
+    data class IntensityChanged(val value: Float) : FieldEdit
 
-    data class DescriptionChanged(val text: String) : LogFartAction
+    data class DescriptionChanged(val text: String) : FieldEdit
 
     /** The locked voice row (CREATE-03.2 rule 2). */
     data object VoiceRowTapped : LogFartAction
