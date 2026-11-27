@@ -1,6 +1,7 @@
 package com.ahmetbozkan.fartmap.core.observability
 
 import com.ahmetbozkan.fartmap.core.domain.map.MapFilter
+import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsEvent.LocationPermissionResult
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsEvent.MapViewed
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsEvent.MarkerOpened
@@ -46,6 +47,37 @@ class AnalyticsEventTest {
                 mapOf("result" to "blocked"),
             ),
             wires,
+        )
+    }
+
+    @Test
+    fun logStartedCarriesTheEntry() {
+        val event = AnalyticsEvent.LogStarted(AnalyticsEvent.LogEntry.FAB)
+
+        assertEquals("log_started", event.name)
+        assertEquals(mapOf<String, Any>("entry" to "fab"), event.params)
+    }
+
+    @Test
+    fun logSubmittedCarriesCategoriesAndBooleansOnly() {
+        val event = AnalyticsEvent.LogSubmitted(
+            visibility = VisibilityMode.FOLLOWERS,
+            hasDescription = false,
+            hasSound = false,
+            avatarIsFree = true,
+            offline = true,
+        )
+
+        assertEquals("log_submitted", event.name)
+        assertEquals(
+            mapOf<String, Any>(
+                "visibility" to "followers",
+                "has_description" to false,
+                "has_sound" to false,
+                "avatar_is_free" to true,
+                "offline" to true,
+            ),
+            event.params,
         )
     }
 }

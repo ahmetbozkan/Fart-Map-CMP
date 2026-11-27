@@ -45,6 +45,7 @@ internal class MapKitMapHost(private val logger: Logger) : MapHost {
         cameraMoves: Flow<MapCamera>,
         onMarkerTap: (markerId: String) -> Unit,
         onCameraIdle: (viewport: MapViewport, camera: MapCamera) -> Unit,
+        interactive: Boolean,
         modifier: Modifier,
     ) {
         val currentOnMarkerTap by rememberUpdatedState(onMarkerTap)
@@ -66,6 +67,13 @@ internal class MapKitMapHost(private val logger: Logger) : MapHost {
         UIKitView(
             factory = { mapView },
             modifier = modifier,
+            // Applied before the view is first shown (unlike an effect), so a thumbnail is never briefly draggable.
+            update = { view ->
+                view.scrollEnabled = interactive
+                view.zoomEnabled = interactive
+                view.rotateEnabled = interactive
+                view.pitchEnabled = interactive
+            },
             properties = UIKitInteropProperties(
                 interactionMode = UIKitInteropInteractionMode.NonCooperative,
                 isNativeAccessibilityEnabled = true,
@@ -158,6 +166,7 @@ private class MapDelegate(
         view.annotation = annotation
         view.canShowCallout = false
         view.accessibilityLabel = annotation.marker.contentDescription
+        view.alpha = if (annotation.marker.isPending) MapMarker.PENDING_ALPHA.toDouble() else 1.0
         return view
     }
 

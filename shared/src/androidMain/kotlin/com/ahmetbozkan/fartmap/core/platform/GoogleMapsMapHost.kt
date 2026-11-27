@@ -38,6 +38,7 @@ internal class GoogleMapsMapHost(private val logger: Logger) : MapHost {
         cameraMoves: Flow<MapCamera>,
         onMarkerTap: (markerId: String) -> Unit,
         onCameraIdle: (viewport: MapViewport, camera: MapCamera) -> Unit,
+        interactive: Boolean,
         modifier: Modifier,
     ) {
         val currentOnMarkerTap by rememberUpdatedState(onMarkerTap)
@@ -79,7 +80,7 @@ internal class GoogleMapsMapHost(private val logger: Logger) : MapHost {
         GoogleMap(
             modifier = modifier,
             cameraPositionState = cameraPositionState,
-            uiSettings = UI_SETTINGS,
+            uiSettings = if (interactive) UI_SETTINGS else STATIC_UI_SETTINGS,
             onMapLoaded = { mapLoaded = true },
         ) {
             markers.forEach { marker ->
@@ -88,6 +89,7 @@ internal class GoogleMapsMapHost(private val logger: Logger) : MapHost {
                     Marker(
                         state = markerState,
                         contentDescription = marker.contentDescription,
+                        alpha = if (marker.isPending) MapMarker.PENDING_ALPHA else 1f,
                         onClick = {
                             currentOnMarkerTap(marker.id)
                             true // consumed: no info window (it would show text) and no camera jump
@@ -123,6 +125,15 @@ internal class GoogleMapsMapHost(private val logger: Logger) : MapHost {
             zoomControlsEnabled = false,
             mapToolbarEnabled = false,
             myLocationButtonEnabled = false,
+        )
+
+        /** The Log Fart thumbnail: no gestures at all, so it reads as a picture inside a scrolling form. */
+        val STATIC_UI_SETTINGS = UI_SETTINGS.copy(
+            scrollGesturesEnabled = false,
+            zoomGesturesEnabled = false,
+            rotationGesturesEnabled = false,
+            tiltGesturesEnabled = false,
+            scrollGesturesEnabledDuringRotateOrZoom = false,
         )
     }
 }

@@ -18,6 +18,7 @@ object StaticMapHost : MapHost {
         cameraMoves: Flow<MapCamera>,
         onMarkerTap: (markerId: String) -> Unit,
         onCameraIdle: (viewport: MapViewport, camera: MapCamera) -> Unit,
+        interactive: Boolean,
         modifier: Modifier,
     ) {
         Box(modifier.background(MaterialTheme.colorScheme.surfaceVariant))

@@ -5,6 +5,7 @@ import com.ahmetbozkan.fartmap.core.domain.preferences.PreferencesRepository
 import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
 import com.ahmetbozkan.fartmap.core.observability.AppError
 import com.ahmetbozkan.fartmap.core.observability.AppResult
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -14,11 +15,15 @@ class FakePreferencesRepository : PreferencesRepository {
     var userScopedClears = 0
     var clearError: AppError? = null
 
+    /** Set to hold `setLastVisibilityMode` until the test completes it. */
+    var visibilitySaveGate: CompletableDeferred<Unit>? = null
+
     override suspend fun consumeFirstOpen(): Boolean = (!firstOpenDone).also { firstOpenDone = true }
 
     override suspend fun lastVisibilityMode(): VisibilityMode? = lastVisibility
 
     override suspend fun setLastVisibilityMode(mode: VisibilityMode): AppResult<Unit> {
+        visibilitySaveGate?.await()
         lastVisibility = mode
         return AppResult.Success(Unit)
     }

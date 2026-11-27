@@ -5,6 +5,8 @@ import com.ahmetbozkan.fartmap.feature.map.domain.MapFart
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class MapFartDtoTest {
     private val json = Json { ignoreUnknownKeys = true }
@@ -33,6 +35,14 @@ class MapFartDtoTest {
             ),
             doc.toDomain("f1"),
         )
+    }
+
+    @Test
+    fun pendingComesFromSnapshotMetadataNotTheDoc() {
+        val doc = decode("""{"author_user_id": "u1", "is_pending": false}""")
+
+        assertTrue(doc.toDomain("f1", isPending = true).isPending)
+        assertFalse(doc.toDomain("f1").isPending)
     }
 
     @Test

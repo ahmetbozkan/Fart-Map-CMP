@@ -60,6 +60,8 @@
     <string name="map_location_dismiss">Got it</string>
     <string name="map_marker_label">A level-%1$d fart, %2$s</string>
     <string name="map_marker_label_own">Your level-%1$d fart, %2$s</string>
+    <string name="map_marker_posting">posting</string>
+    <string name="map_log_fart">Log a fart</string>
     <string name="map_age_just_now">just now</string>
     <plurals name="map_age_minutes">
         <item quantity="one">%1$d minute ago</item>
@@ -73,6 +75,37 @@
         <item quantity="one">%1$d day ago</item>
         <item quantity="other">%1$d days ago</item>
     </plurals>
+
+    <string name="log_title">Log a fart</string>
+    <string name="log_close">Close</string>
+    <string name="log_where_title">Where did it happen?</string>
+    <string name="log_locating">Sniffing out where you are…</string>
+    <string name="log_location_found">Right about here.</string>
+    <string name="log_location_pinned">Pinned. That's the spot.</string>
+    <string name="log_location_approximate">Roughly here. Move the pin if this isn't right.</string>
+    <string name="log_location_unavailable">Location unavailable. Drop a pin where it happened.</string>
+    <string name="log_location_blocked">Location is switched off for Fart Map. Turn it on in Settings, or drop a pin.</string>
+    <string name="log_location_off">Your phone's location is off. Switch it on, or drop a pin.</string>
+    <string name="log_location_lost">Couldn't sniff you out. Try again, or drop a pin.</string>
+    <string name="log_use_my_location">Use my location</string>
+    <string name="log_adjust_location">Adjust location</string>
+    <string name="log_open_settings">Open settings</string>
+    <string name="log_thumbnail">Map preview of where this fart lands</string>
+    <string name="log_picker_hint">Move the map until the pin sits on the spot.</string>
+    <string name="log_picker_confirm">Use this spot</string>
+    <string name="log_picker_cancel">Cancel</string>
+    <string name="log_visibility_title">Who gets a whiff?</string>
+    <string name="log_visibility_public">Public</string>
+    <string name="log_visibility_followers">Followers</string>
+    <string name="log_visibility_private">Private</string>
+    <string name="log_visibility_note">Your exact spot stays private.</string>
+    <string name="log_defaults_note">Level 3 ("Stinky"), medium intensity, right now. Fancier options are on the way.</string>
+    <string name="log_submit">Let It Rip</string>
+    <string name="log_submitting">Releasing…</string>
+    <string name="log_failed_title">That one didn't make it out.</string>
+    <string name="log_success">Logged. The world felt it.</string>
+    <string name="log_offline">Saved locally — will post when you're back online.</string>
+    <string name="log_rejected">We couldn't post that one. The wind changed.</string>
 
     <string name="state_loading">Loading</string>
     <string name="state_retry">Try again</string>

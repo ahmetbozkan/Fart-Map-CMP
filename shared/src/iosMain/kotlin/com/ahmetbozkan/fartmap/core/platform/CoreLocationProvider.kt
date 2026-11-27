@@ -5,6 +5,7 @@ package com.ahmetbozkan.fartmap.core.platform
 import com.ahmetbozkan.fartmap.core.domain.location.DeviceLocation
 import com.ahmetbozkan.fartmap.core.domain.location.LocationLookup
 import com.ahmetbozkan.fartmap.core.domain.location.LocationPermission
+import com.ahmetbozkan.fartmap.core.domain.location.isApproximateFix
 import com.ahmetbozkan.fartmap.core.observability.Logger
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCSignatureOverride
@@ -13,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import platform.CoreLocation.CLAccuracyAuthorization
 import platform.CoreLocation.CLAuthorizationStatus
 import platform.CoreLocation.CLLocation
 import platform.CoreLocation.CLLocationManager
@@ -86,7 +88,9 @@ internal class CoreLocationProvider(private val logger: Logger) : LocationProvid
         return try {
             suspendCancellableCoroutine { continuation ->
                 delegate = FixDelegate(
-                    onFix = { location -> if (continuation.isActive) continuation.resume(location.toLookup()) },
+                    onFix = { location ->
+                        if (continuation.isActive) continuation.resume(location.toLookup(manager.isReduced()))
+                    },
                     onError = { error -> if (continuation.isActive) continuation.resume(error.toLookup()) },
                 )
                 hold(manager, delegate)
@@ -105,7 +109,7 @@ internal class CoreLocationProvider(private val logger: Logger) : LocationProvid
         if (manager.authorizationStatus.toPermission() != LocationPermission.GRANTED) {
             null
         } else {
-            manager.location?.toDeviceLocation()
+            manager.location?.toDeviceLocation(manager.isReduced())
         }
     }
 
@@ -129,8 +133,9 @@ internal class CoreLocationProvider(private val logger: Logger) : LocationProvid
         inFlight -= delegate
     }
 
-    private fun CLLocation.toLookup(): LocationLookup = toDeviceLocation()?.let { LocationLookup.Found(it) }
-        ?: LocationLookup.Unavailable.also { warn(operation = "current_location", reason = "invalid_fix") }
+    private fun CLLocation.toLookup(reduced: Boolean): LocationLookup =
+        toDeviceLocation(reduced)?.let { LocationLookup.Found(it) }
+            ?: LocationLookup.Unavailable.also { warn(operation = "current_location", reason = "invalid_fix") }
 
     private fun NSError.toLookup(): LocationLookup =
         if (code == kCLErrorDenied.toLong()) {
@@ -156,9 +161,20 @@ private fun CLAuthorizationStatus.toPermission(): LocationPermission = when (thi
     else -> LocationPermission.NOT_DETERMINED
 }
 
-/** Null for Core Location's invalid coordinate (it never reaches [DeviceLocation]'s range check). */
-private fun CLLocation.toDeviceLocation(): DeviceLocation? =
-    coordinate.useContents { DeviceLocation.orNull(lat = latitude, lng = longitude) }
+/** True when the user turned Precise off for this app (iOS 14+ reduced accuracy). */
+private fun CLLocationManager.isReduced(): Boolean = accuracyAuthorization ==
+    CLAccuracyAuthorization.CLAccuracyAuthorizationReducedAccuracy
+
+/**
+ * Null for Core Location's invalid coordinate (it never reaches [DeviceLocation]'s range check). Approximate when
+ * Precise is off or the reported radius is invalid or wider than 200 m (ADR-0026, Proposed).
+ */
+private fun CLLocation.toDeviceLocation(reduced: Boolean): DeviceLocation? {
+    val approximate = isApproximateFix(horizontalAccuracyMeters = horizontalAccuracy, reducedAccuracy = reduced)
+    return coordinate.useContents {
+        DeviceLocation.orNull(lat = latitude, lng = longitude, isApproximate = approximate)
+    }
+}
 
 /** Reports the first decided status; iOS also calls this once with the current (undecided) status at creation. */
 private class AuthorizationDelegate(

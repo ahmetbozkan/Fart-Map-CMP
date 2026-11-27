@@ -1,6 +1,7 @@
 package com.ahmetbozkan.fartmap.core.observability
 
 import com.ahmetbozkan.fartmap.core.domain.map.MapFilter
+import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
 
 /**
  * The analytics event contract (Observability.md §6 and the §11 taxonomy). Names and parameters are stable; values
@@ -46,6 +47,34 @@ sealed interface AnalyticsEvent {
             get() = mapOf("result" to result.wireName)
 
         enum class Result(val wireName: String) { GRANTED("granted"), DENIED("denied"), BLOCKED("blocked") }
+    }
+
+    /** The Log Fart screen opened (L1 funnel start). */
+    data class LogStarted(val entry: LogEntry) : AnalyticsEvent {
+        override val name = "log_started"
+        override val params: Map<String, Any>
+            get() = mapOf("entry" to entry.wireName)
+    }
+
+    enum class LogEntry(val wireName: String) { FAB("fab") }
+
+    /** "Let It Rip" tapped with a resolved location (Observability.md §11: "submit tapped"). */
+    data class LogSubmitted(
+        val visibility: VisibilityMode,
+        val hasDescription: Boolean,
+        val hasSound: Boolean,
+        val avatarIsFree: Boolean,
+        val offline: Boolean,
+    ) : AnalyticsEvent {
+        override val name = "log_submitted"
+        override val params: Map<String, Any>
+            get() = mapOf(
+                "visibility" to visibility.wireName.lowercase(),
+                "has_description" to hasDescription,
+                "has_sound" to hasSound,
+                "avatar_is_free" to avatarIsFree,
+                "offline" to offline,
+            )
     }
 
     companion object {

@@ -3,6 +3,8 @@
 
     <!-- Foreground, approximate location only, asked on the first "center on me" tap (STORY-01-03-04). -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- Connectivity state only: picks the "saved locally" copy after a Log Fart hand-off (STORY-01-04-02). -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:name=".FartMapApplication"

@@ -4,11 +4,13 @@ import android.app.Application
 import com.ahmetbozkan.fartmap.core.data.preferences.DataStorePreferencesRepository
 import com.ahmetbozkan.fartmap.core.platform.AndroidGoogleIdTokenProvider
 import com.ahmetbozkan.fartmap.core.platform.AndroidLocationProvider
+import com.ahmetbozkan.fartmap.core.platform.AndroidNetworkStatus
 import com.ahmetbozkan.fartmap.core.platform.CurrentActivityTracker
 import com.ahmetbozkan.fartmap.core.platform.GoogleIdTokenProvider
 import com.ahmetbozkan.fartmap.core.platform.GoogleMapsMapHost
 import com.ahmetbozkan.fartmap.core.platform.LocationProvider
 import com.ahmetbozkan.fartmap.core.platform.MapHost
+import com.ahmetbozkan.fartmap.core.platform.NetworkStatus
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
@@ -26,4 +28,5 @@ internal actual val platformModule = module {
     single<LocationProvider> {
         AndroidLocationProvider(context = androidContext(), activities = get(), logger = get())
     }
+    single<NetworkStatus> { AndroidNetworkStatus(context = androidContext(), logger = get()) }
 }

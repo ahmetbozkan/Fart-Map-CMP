@@ -54,6 +54,8 @@ kotlin {
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)
             implementation(libs.compose.ui)
+            // BackHandler for Log Fart (picker / uploading); already a transitive runtime dependency of Compose UI.
+            implementation(libs.compose.uiBackhandler)
             implementation(libs.compose.components.resources)
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)

@@ -1,5 +1,6 @@
 package com.ahmetbozkan.fartmap.core.navigation
 
+import com.ahmetbozkan.fartmap.core.domain.location.MapCamera
 import com.ahmetbozkan.fartmap.core.domain.session.SessionState
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
@@ -44,6 +45,19 @@ sealed interface TabRoute {
     companion object {
         val all: List<TabRoute> = listOf(Map, Social, Rank, Profile)
         val default: TabRoute = Map
+    }
+}
+
+/**
+ * The Log Fart screen in the Map tab's stack (STORY-01-04-02). The start camera is the map's camera when the FAB was
+ * tapped (where the pin picker opens without a device fix), not the user's location.
+ */
+@Serializable
+data class LogFartRoute(val startLat: Double, val startLng: Double, val startZoom: Float) {
+    fun startCamera(): MapCamera = MapCamera(startLat, startLng, startZoom)
+
+    companion object {
+        fun from(camera: MapCamera) = LogFartRoute(camera.lat, camera.lng, camera.zoom)
     }
 }
 

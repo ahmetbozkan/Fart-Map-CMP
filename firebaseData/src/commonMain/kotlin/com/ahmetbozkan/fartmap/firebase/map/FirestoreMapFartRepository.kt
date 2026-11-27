@@ -42,8 +42,11 @@ internal data class MapFartDto(
 /** One cell listener's latest snapshot; [isTruncated] when it returned as many docs as its limit. */
 internal data class CellResult(val farts: List<MapFart>, val isFromCache: Boolean, val isTruncated: Boolean)
 
-/** The document id is the fart id; an unknown visibility reads as PRIVATE. */
-internal fun MapFartDto.toDomain(id: String) = MapFart(
+/**
+ * The document id is the fart id; an unknown visibility reads as PRIVATE. [isPending] comes from the snapshot's
+ * `hasPendingWrites` (the doc carries no such field, DataContracts.md).
+ */
+internal fun MapFartDto.toDomain(id: String, isPending: Boolean = false) = MapFart(
     id = id,
     authorUid = authorUserId,
     lat = publicLat,
@@ -51,6 +54,7 @@ internal fun MapFartDto.toDomain(id: String) = MapFart(
     flavorLevel = flavorLevel,
     timestampEpochMs = timestampEpochMs,
     visibility = VisibilityMode.fromWire(visibilityMode),
+    isPending = isPending,
 )
 
 /**
@@ -116,7 +120,7 @@ class FirestoreMapFartRepository(
 
     // A malformed document is skipped, not fatal: one bad doc must not blank the whole map. No content is logged.
     private fun DocumentSnapshot.toMapFart(): MapFart? = try {
-        data(MapFartDto.serializer()).toDomain(id)
+        data(MapFartDto.serializer()).toDomain(id, isPending = metadata.hasPendingWrites)
     } catch (failure: SerializationException) {
         skipped(failure)
     } catch (failure: IllegalArgumentException) {

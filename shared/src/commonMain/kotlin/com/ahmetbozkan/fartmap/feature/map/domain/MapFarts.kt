@@ -6,7 +6,8 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * A fart as the map shows it: the public document's fuzzed coordinates only (ADR-0019), never the precise point.
- * [timestampEpochMs] is the event time; [flavorLevel] is 1..5.
+ * [timestampEpochMs] is the event time; [flavorLevel] is 1..5. [isPending]: the user's own write hasn't reached the
+ * server yet (`hasPendingWrites`, LocalData.md §4); never stored, only read from snapshot metadata.
  */
 data class MapFart(
     val id: String,
@@ -16,6 +17,7 @@ data class MapFart(
     val flavorLevel: Int,
     val timestampEpochMs: Long,
     val visibility: VisibilityMode,
+    val isPending: Boolean = false,
 )
 
 /** Whose farts a map query reads: the public, visible ones, or the caller's own (the two shapes the rules allow). */

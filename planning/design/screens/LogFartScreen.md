@@ -34,6 +34,14 @@
 - Error: recoverable error with retry and draft preservation.
 - Offline: offline post acceptance with deferred sync messaging.
 
+## Location step (quick log, STORY-01-04-02)
+- Granted: a fresh fix at open (12 s bound), the cached fix as a fallback, else "Location unavailable".
+- Not asked yet: "Location unavailable" with "Use my location" (asks on tap) and "Adjust location"; blocked adds "Open settings". Opening the screen never prompts.
+- A resolved point shows as a non-interactive map thumbnail at neighbourhood zoom with a centre pin, never coordinate text.
+- An approximate fix (Android coarse, iOS reduced accuracy, or worse than 200 m) shows "Roughly here. Move the pin if this isn't right." and never blocks submit (ADR-0026, Proposed: the hint ships either way).
+- "Adjust location" (also while locating) opens a full-screen centre-pin picker: the user moves the map under a fixed pin, then "Use this spot" or "Cancel". It opens at the resolved point, else at the map's camera.
+- Back: closes the picker if open; does nothing while uploading; otherwise leaves (keep-or-discard comes with drafts, STORY-01-04-04).
+
 ## Interactions
 - User actions: set metadata, optional audio, set visibility, submit/cancel.
 - Feedback/animation notes: submit and success feedback follow global motion constraints.

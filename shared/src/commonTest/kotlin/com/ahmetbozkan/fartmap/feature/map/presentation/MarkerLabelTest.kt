@@ -1,5 +1,8 @@
 package com.ahmetbozkan.fartmap.feature.map.presentation
 
+import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
+import com.ahmetbozkan.fartmap.core.platform.MapMarker
+import com.ahmetbozkan.fartmap.feature.map.domain.MapFart
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -22,5 +25,25 @@ class MarkerLabelTest {
     @Test
     fun aFutureTimestampReadsAsJustNow() {
         assertEquals(FartAge(AgeUnit.JUST_NOW, 0), fartAge(now, now + hour))
+    }
+
+    private val fart = MapFart("f1", "me", 41.01, 28.97, 3, now, VisibilityMode.PUBLIC)
+
+    @Test
+    fun aPendingFartBecomesAFadedMarkerAnnouncedAsPosting() {
+        val pending = fart.copy(isPending = true)
+        val marker = pending.toMarker(label = "Your level-3 fart, just now", postingSuffix = "posting")
+
+        assertEquals(
+            MapMarker("f1", 41.01, 28.97, "Your level-3 fart, just now, posting", isPending = true),
+            marker,
+        )
+    }
+
+    @Test
+    fun aSyncedFartKeepsItsLabel() {
+        val marker = fart.toMarker(label = "A level-3 fart, just now", postingSuffix = "posting")
+
+        assertEquals(MapMarker("f1", 41.01, 28.97, "A level-3 fart, just now", isPending = false), marker)
     }
 }
