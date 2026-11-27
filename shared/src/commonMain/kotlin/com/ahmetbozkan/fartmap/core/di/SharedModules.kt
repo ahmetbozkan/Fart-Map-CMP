@@ -101,7 +101,7 @@ private val featureModule = module {
     viewModelOf(::AgeGateViewModel)
     viewModelOf(::ProfileViewModel)
     viewModel { MapViewModel(get(), get(), get(), get(), get(), clock = Clock.System) }
-    factory { OwnFartDeleter(get(), get(), get()) }
+    factory { OwnFartDeleter(get(), get(), get(), get()) }
     viewModelOf(::MainShellViewModel)
     viewModel { (startCamera: MapCamera) ->
         LogFartViewModel(
