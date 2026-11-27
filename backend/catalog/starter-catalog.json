@@ -1,5 +1,5 @@
 {
-  "_comment": "Free starter cosmetics (DataContracts.md §3.13, Monetization.md free minimums, ADR-0024). Single source: seeded by `npm run seed:catalog` in backend/functions; the free avatar ids are mirrored in shared StarterAvatars and checked by StarterCatalogParityTest.",
+  "_comment": "Free starter cosmetics (DataContracts.md §3.13, Monetization.md free minimums, ADR-0024). Single source: seeded by `npm run seed:catalog` in backend/functions; every item is mirrored in shared StarterCosmetics (the Log Fart pickers' offline fallback; StarterAvatars derives from it) and checked by StarterCatalogParityTest.",
   "items": [
     {
       "item_id": "avatar_free_bean",

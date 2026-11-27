@@ -106,6 +106,7 @@ private val featureModule = module {
             location = get(),
             network = get(),
             farts = get(),
+            cosmetics = get(),
             analytics = get(),
             logger = get(),
             clock = Clock.System,

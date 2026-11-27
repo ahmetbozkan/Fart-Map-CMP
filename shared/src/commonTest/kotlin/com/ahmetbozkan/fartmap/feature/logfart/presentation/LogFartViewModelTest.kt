@@ -10,6 +10,7 @@ import com.ahmetbozkan.fartmap.core.domain.location.MapCamera
 import com.ahmetbozkan.fartmap.core.domain.session.SessionState
 import com.ahmetbozkan.fartmap.core.domain.visibility.AgeBand
 import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
+import com.ahmetbozkan.fartmap.core.fakes.FakeCosmeticRepository
 import com.ahmetbozkan.fartmap.core.fakes.FakeFartRepository
 import com.ahmetbozkan.fartmap.core.fakes.FakeLocationProvider
 import com.ahmetbozkan.fartmap.core.fakes.FakeNetworkStatus
@@ -81,6 +82,7 @@ class LogFartViewModelTest {
         location = location,
         network = network,
         farts = farts,
+        cosmetics = FakeCosmeticRepository(),
         analytics = AnalyticsTracker { tracked += it },
         logger = Logger(sinks = listOf(LogSink { logs += it })),
         clock = clock,

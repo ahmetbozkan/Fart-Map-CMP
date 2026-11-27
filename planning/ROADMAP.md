@@ -64,7 +64,7 @@
   - [ ] STORY-01-04-04: Drafts: `log_draft` survives process death, restored on reopen, cleared on hand-off, kept on failure; keep-or-discard on back
   - [ ] STORY-01-04-05: Delete own fart (CREATE-09): owner action on the user's own marker, soft delete `USER_DELETED`, server purge of `private/location`
   - [ ] STORY-01-04-06: One-time account-link nudge after a guest's first successful log (ADR-0018 §3)
-- **EPIC-01-05:** Reactions, detail sheet and safety: report, block, auto-hide at 3.
+- **EPIC-01-05:** Reactions, detail sheet and safety: report, block, auto-hide at 3. Also the marker sound on tap, the sound preview in the Log Fart picker and the "Play sounds on tap" toggle (CREATE-03.1 step 7; moved from STORY-01-04-03, which ships the picker without playback).
 - **EPIC-01-06:** Cosmetics monetization: launch catalog, Wardrobe shop, starter pack offer, RevenueCat purchases + Offerings, AdMob rewarded (single-use) with server-side verification and Remote Config cap, entitlements mirror (ADR-0016/0017/0024).
 - **EPIC-01-07:** Social tab, Rank tab, Profile and Settings (Phase 1 variants; all four tabs stay, ADR-0024 accepted with no trims). Keep the guest link card on Profile (STORY-01-02-04) and add it to Rank (`RankTabScreen.md`). Sign-out with the anonymous-loss warning (ADR-0018 §4) is also the way out for a guest whose Google account already has its own Fart Map account (link conflict).
 - **EPIC-01-08:** Reaction push notification and deep link; permission prompt after the first successful log (ADR-0023).

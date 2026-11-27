@@ -1,6 +1,9 @@
 package com.ahmetbozkan.fartmap.feature.logfart.presentation
 
 import androidx.lifecycle.viewModelScope
+import com.ahmetbozkan.fartmap.core.domain.cosmetics.CosmeticRepository
+import com.ahmetbozkan.fartmap.core.domain.cosmetics.CosmeticType
+import com.ahmetbozkan.fartmap.core.domain.cosmetics.cosmeticOptions
 import com.ahmetbozkan.fartmap.core.domain.fart.FartRepository
 import com.ahmetbozkan.fartmap.core.domain.fart.LoggedFart
 import com.ahmetbozkan.fartmap.core.domain.fart.NewFart
@@ -10,7 +13,6 @@ import com.ahmetbozkan.fartmap.core.domain.location.LocationLookup
 import com.ahmetbozkan.fartmap.core.domain.location.LocationPermission
 import com.ahmetbozkan.fartmap.core.domain.location.MapCamera
 import com.ahmetbozkan.fartmap.core.domain.preferences.PreferencesRepository
-import com.ahmetbozkan.fartmap.core.domain.profile.StarterAvatars
 import com.ahmetbozkan.fartmap.core.domain.session.SessionRepository
 import com.ahmetbozkan.fartmap.core.domain.session.SessionState
 import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
@@ -24,8 +26,10 @@ import com.ahmetbozkan.fartmap.core.observability.Logger
 import com.ahmetbozkan.fartmap.core.platform.LocationProvider
 import com.ahmetbozkan.fartmap.core.platform.NetworkStatus
 import com.ahmetbozkan.fartmap.core.presentation.StateViewModel
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Clock
@@ -47,18 +51,17 @@ class LogFartViewModel(
     private val location: LocationProvider,
     private val network: NetworkStatus,
     private val farts: FartRepository,
+    private val cosmetics: CosmeticRepository,
     private val analytics: AnalyticsTracker,
     private val logger: Logger,
     clock: Clock,
-) : StateViewModel<LogFartState, LogFartAction, LogFartEvent>(LogFartState()) {
+) : StateViewModel<LogFartState, LogFartAction, LogFartEvent>(initialState(clock.now().toEpochMilliseconds())) {
 
-    /** CREATE-03.1 step 2: the time defaults to when the screen opened. */
-    private val startedAtMs = clock.now().toEpochMilliseconds()
     private var isLocating = false
 
     init {
         analytics.track(AnalyticsEvent.LogStarted(AnalyticsEvent.LogEntry.FAB))
-        viewModelScope.launch { loadVisibility() }
+        viewModelScope.launch { loadSessionData() }
         locate { locateAtOpen() }
     }
 
@@ -71,12 +74,24 @@ class LogFartViewModel(
             LogFartAction.ConfirmPin -> onConfirmPin()
             LogFartAction.CancelPicker -> setState { copy(picker = null) }
             is LogFartAction.VisibilitySelected -> onVisibilitySelected(action.visibility)
+            is LogFartAction.DateTimePicked -> edit { copy(timestampEpochMs = action.epochMs) }
+            is LogFartAction.AvatarSelected -> edit { withAvatar(action.id) }
+            is LogFartAction.SoundSelected -> edit { withSound(action.id) }
+            is LogFartAction.FlavorSelected -> edit { withFlavor(action.level) }
+            is LogFartAction.IntensityChanged -> edit { withIntensity(action.value) }
+            is LogFartAction.DescriptionChanged -> edit { withDescription(action.text) }
+            LogFartAction.VoiceRowTapped -> sendEvent(LogFartEvent.ShowVoiceInfo)
             LogFartAction.Submit -> onSubmit()
             LogFartAction.Close -> onClose()
         }
     }
 
-    private suspend fun loadVisibility() {
+    /** A detailed-field change; ignored while the hand-off runs. */
+    private fun edit(reduce: LogFartState.() -> LogFartState) {
+        if (state.value.isEditable) setState(reduce)
+    }
+
+    private suspend fun loadSessionData() {
         val active = sessions.session.filterIsInstance<SessionState.Active>().first()
         val lastUsed = preferences.lastVisibilityMode()
         setState {
@@ -85,6 +100,12 @@ class LogFartViewModel(
                 visibility = defaultVisibility(lastUsed, active.ageBand),
             )
         }
+        combine(
+            cosmetics.observeCatalog().onStart { emit(emptyList()) },
+            cosmetics.observeOwnedItemIds(active.uid).onStart { emit(emptySet()) },
+        ) { catalog, owned ->
+            cosmeticOptions(catalog, owned, CosmeticType.AVATAR) to cosmeticOptions(catalog, owned, CosmeticType.SOUND)
+        }.collect { (avatars, sounds) -> setState { withOptions(avatars, sounds) } }
     }
 
     private suspend fun locateAtOpen() {
@@ -195,14 +216,15 @@ class LogFartViewModel(
         if (!current.canSubmit) return
         val point = (current.location as LocationStep.Resolved).point
         val visibility = checkNotNull(current.visibility)
+        val fart = newFart(current, point, visibility)
         setState { copy(status = LogStatus.UPLOADING, error = null) }
         val offline = !network.isOnline()
         analytics.track(
             AnalyticsEvent.LogSubmitted(
                 visibility = visibility,
-                hasDescription = false,
-                hasSound = false,
-                avatarIsFree = true,
+                hasDescription = fart.descriptionText != null,
+                hasSound = fart.soundId != null,
+                avatarIsFree = current.avatarIsFree,
                 offline = offline,
             ),
         )
@@ -210,7 +232,7 @@ class LogFartViewModel(
         val result = if (uid == null) {
             AppResult.Failure(AppError.AuthExpired)
         } else {
-            farts.createFart(uid, newFart(point, visibility))
+            farts.createFart(uid, fart)
         }
         when (result) {
             is AppResult.Success -> onHandedOff(result.value, point, visibility, offline)
@@ -218,15 +240,16 @@ class LogFartViewModel(
         }
     }
 
-    private fun newFart(point: DeviceLocation, visibility: VisibilityMode) = NewFart(
+    /** Every field exactly as chosen (CREATE-03.3); the caption is trimmed and blank becomes null. */
+    private fun newFart(state: LogFartState, point: DeviceLocation, visibility: VisibilityMode) = NewFart(
         lat = point.lat,
         lng = point.lng,
-        timestampEpochMs = startedAtMs,
-        avatarId = DEFAULT_AVATAR,
-        flavorLevel = DEFAULT_FLAVOR,
-        intensityValue = DEFAULT_INTENSITY,
-        descriptionText = null,
-        soundId = null,
+        timestampEpochMs = state.timestampEpochMs,
+        avatarId = state.avatarId,
+        flavorLevel = state.flavor,
+        intensityValue = state.intensity,
+        descriptionText = descriptionOrNull(state.description),
+        soundId = state.soundId,
         visibility = visibility,
     )
 
@@ -254,11 +277,16 @@ class LogFartViewModel(
     }
 
     companion object {
-        const val DEFAULT_FLAVOR = 3
-        const val DEFAULT_INTENSITY = 0.5
+        /**
+         * CREATE-03.1 step 2: the time defaults to when the screen opened; the placeholder prompt is picked from it too
+         * (one per screen open, deterministic in tests).
+         */
+        private fun initialState(openedAtMs: Long) = LogFartState(
+            timestampEpochMs = openedAtMs,
+            placeholderIndex = ((openedAtMs / MS_PER_SECOND) % PLACEHOLDER_COUNT).toInt(),
+        )
 
-        /** Always free (CREATE-03.1 step 3), so the rules accept it; -03 adds the picker. */
-        val DEFAULT_AVATAR: String = StarterAvatars.ids.first()
+        private const val MS_PER_SECOND = 1_000L
 
         /** Street level, where a pin can be placed precisely. */
         const val PIN_ZOOM = 16f

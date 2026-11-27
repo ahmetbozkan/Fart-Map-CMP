@@ -1,5 +1,7 @@
 package com.ahmetbozkan.fartmap.core.domain.profile
 
+import com.ahmetbozkan.fartmap.core.domain.cosmetics.CosmeticType
+import com.ahmetbozkan.fartmap.core.domain.cosmetics.StarterCosmetics
 import com.ahmetbozkan.fartmap.core.observability.AppResult
 import kotlinx.coroutines.flow.Flow
 import kotlin.random.Random
@@ -20,12 +22,12 @@ interface ProfileRepository {
 }
 
 /**
- * The free starter avatars every new profile picks from. Mirrors the free AVATAR items of
- * `backend/catalog/starter-catalog.json` (checked by StarterCatalogParityTest); the rules reject any other id
+ * The free starter avatars every new profile picks from: the AVATAR items of [StarterCosmetics] (which mirrors
+ * `backend/catalog/starter-catalog.json`, checked by StarterCatalogParityTest); the rules reject any other id
  * unless the user is entitled to it.
  */
 object StarterAvatars {
-    val ids: List<String> = listOf("avatar_free_bean", "avatar_free_cloud")
+    val ids: List<String> = StarterCosmetics.items.filter { it.type == CosmeticType.AVATAR }.map { it.id }
 
     fun pick(random: Random): String = ids[random.nextInt(ids.size)]
 }

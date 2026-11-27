@@ -1,6 +1,7 @@
 package com.ahmetbozkan.fartmap.firebase.di
 
 import com.ahmetbozkan.fartmap.core.data.write.WriteErrorMapper
+import com.ahmetbozkan.fartmap.core.domain.cosmetics.CosmeticRepository
 import com.ahmetbozkan.fartmap.core.domain.fart.FartRepository
 import com.ahmetbozkan.fartmap.core.domain.profile.ProfileRepository
 import com.ahmetbozkan.fartmap.core.domain.session.AccountRepository
@@ -9,6 +10,7 @@ import com.ahmetbozkan.fartmap.core.domain.session.LocalDataReset
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsTracker
 import com.ahmetbozkan.fartmap.core.observability.LogSink
 import com.ahmetbozkan.fartmap.feature.map.domain.MapFartRepository
+import com.ahmetbozkan.fartmap.firebase.cosmetics.FirestoreCosmeticRepository
 import com.ahmetbozkan.fartmap.firebase.fart.FirestoreFartRepository
 import com.ahmetbozkan.fartmap.firebase.firestore.FirestoreLocalDataReset
 import com.ahmetbozkan.fartmap.firebase.firestore.FirestoreProvider
@@ -47,4 +49,5 @@ private val firestoreModule = module {
     single<LocalDataReset> { FirestoreLocalDataReset(get(), get()) }
     single<MapFartRepository> { FirestoreMapFartRepository(get(), get()) }
     single<FartRepository> { FirestoreFartRepository(get(), get()) }
+    single<CosmeticRepository> { FirestoreCosmeticRepository(get(), get()) }
 }
