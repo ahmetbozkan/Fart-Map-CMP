@@ -365,11 +365,12 @@ describe("farts: update and delete", () => {
     await assertSucceeds(anonymous(env, "anon-1").doc("farts/anon").update(removal()));
   });
 
-  it("denies deleting someone else's fart, signed out, or removal plus another field", async () => {
+  it("denies deleting someone else's fart, signed out, or removal plus a server-owned field", async () => {
     await assertFails(user(env, BOB).doc("farts/f1").update(removal()));
     await assertFails(signedOut(env).doc("farts/f1").update(removal()));
-    await assertFails(user(env, ALICE).doc("farts/f1").update({ ...removal(), description_text: "x" }));
     await assertFails(user(env, ALICE).doc("farts/f1").update({ ...removal(), reaction_count: 5 }));
+    await assertFails(user(env, ALICE).doc("farts/f1").update({ ...removal(), public_lat: 10 }));
+    await assertFails(user(env, ALICE).doc("farts/f1").update({ ...removal(), is_hidden: true }));
   });
 
   it("denies un-removing a deleted fart", async () => {
