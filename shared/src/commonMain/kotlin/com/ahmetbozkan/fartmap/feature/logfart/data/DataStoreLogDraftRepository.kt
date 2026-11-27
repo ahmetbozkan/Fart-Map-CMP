@@ -28,20 +28,21 @@ class DataStoreLogDraftRepository(
     private val logger: Logger,
 ) : LogDraftRepository {
 
-    override suspend fun load(): LogDraft? {
-        val raw = try {
-            store.data.first()[DataStorePreferencesRepository.LOG_DRAFT]
-        } catch (failure: IOException) {
-            logFailure("read_draft", failure)
-            return null
-        } ?: return null
-        return try {
+    override suspend fun load(): LogDraft? = readRaw()?.let { raw ->
+        try {
             json.decodeFromString<LogDraftDto>(raw).toDomain()
         } catch (failure: SerializationException) {
             dropCorrupt(failure)
         } catch (failure: IllegalArgumentException) {
             dropCorrupt(failure)
         }
+    }
+
+    private suspend fun readRaw(): String? = try {
+        store.data.first()[DataStorePreferencesRepository.LOG_DRAFT]
+    } catch (failure: IOException) {
+        logFailure("read_draft", failure)
+        null
     }
 
     override suspend fun save(draft: LogDraft): AppResult<Unit> = write("write_draft") {

@@ -128,7 +128,9 @@ class LogFartDraftMappingTest {
 
     @Test
     fun aNanIntensityIsIgnored() {
-        assertEquals(DEFAULT_INTENSITY, base.restore(draft.copy(intensity = Double.NaN), VisibilityMode.PUBLIC).intensity)
+        val restored = base.restore(draft.copy(intensity = Double.NaN), VisibilityMode.PUBLIC)
+
+        assertEquals(DEFAULT_INTENSITY, restored.intensity)
     }
 
     @Test

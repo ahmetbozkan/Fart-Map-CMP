@@ -40,7 +40,7 @@
 - A resolved point shows as a non-interactive map thumbnail at neighbourhood zoom with a centre pin, never coordinate text.
 - An approximate fix (Android coarse, iOS reduced accuracy, or worse than 200 m) shows "Roughly here. Move the pin if this isn't right." and never blocks submit (ADR-0026, Proposed: the hint ships either way).
 - "Adjust location" (also while locating) opens a full-screen centre-pin picker: the user moves the map under a fixed pin, then "Use this spot" or "Cancel". It opens at the resolved point, else at the map's camera.
-- Back: closes the picker if open; does nothing while uploading; otherwise leaves (keep-or-discard comes with drafts, STORY-01-04-04).
+- Back: closes the picker if open; does nothing while uploading; on a form the user changed it asks keep or discard (Drafts below); otherwise it leaves.
 
 ## Detailed fields (STORY-01-04-03)
 - Order: where, when, avatar, flavor, intensity, story, sound, voice, visibility; "Let It Rip" stays pinned at the bottom, so the quick log is still one tap.
@@ -51,6 +51,13 @@
 - Story: one rotating placeholder per open, a counter, stops at 280 characters (UTF-16 units, an emoji counts 2).
 - Voice: always shown locked ("Premium — coming later"); a tap opens an informational sheet with "Got it" only.
 - Sound preview and the "Play sounds on tap" toggle come with marker sound playback (EPIC-01-05).
+
+## Drafts (STORY-01-04-04)
+- Once the user changes anything (a field, the visibility, a placed pin), the form saves itself half a second after the last change, while editing or after a failed submit. A failed submit saves at once and keeps every field.
+- The draft never holds a location (neither the fix nor a pin) and keeps the time only if the user picked it. On the next open the location step runs as usual.
+- Next open (same account): the fields come back with a note at the top, "Picked up where you left off." The note has no dismiss; back → Discard starts over. A locked or not-yet-owned item is not selected until it's usable. A visibility not allowed for the age band falls back to the default.
+- Back on a changed form: a dialog with "Keep draft" and "Discard". Tapping outside or back stays on the form. An untouched form closes without asking.
+- A successful or queued (offline) log clears the draft. Sign-out wipes it.
 
 ## Interactions
 - User actions: set metadata, optional audio, set visibility, submit/cancel.
@@ -74,6 +81,6 @@
 - unresolved deltas: premium cosmetic lock treatment and audio control layout variants
 
 ## Implementation Handoff
-- Required components: preview map, date/time pickers, avatar and sound chips, flavor stepper, intensity slider, locked-item treatment (lock on the chip; unlock sheet in EPIC-01-06), voice row shown locked ("Premium — coming later") with its info sheet, text field (stops at 280, counter), visibility selector, submit CTA.
+- Required components: preview map, date/time pickers, avatar and sound chips, flavor stepper, intensity slider, locked-item treatment (lock on the chip; unlock sheet in EPIC-01-06), voice row shown locked ("Premium — coming later") with its info sheet, text field (stops at 280, counter), visibility selector, submit CTA, restored-draft note, keep-or-discard dialog.
 - State model expectations: `DRAFT`, `UPLOADING`, `SUCCESS`, `FAILED`, `OFFLINE`.
 - Test/validation notes: verify draft durability, offline acceptance, visibility default, and recoverable error behavior.

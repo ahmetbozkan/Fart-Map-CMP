@@ -90,8 +90,7 @@ class LogFartViewModel(
             LogFartAction.VoiceRowTapped -> sendEvent(LogFartEvent.ShowVoiceInfo)
             LogFartAction.Submit -> onSubmit()
             LogFartAction.Close -> onClose()
-            LogFartAction.KeepDraftAndLeave -> onKeepDraft()
-            LogFartAction.DiscardDraftAndLeave -> onDiscardDraft()
+            is LogFartAction.LeaveChoice -> onLeaveChoice(action)
         }
     }
 
@@ -234,24 +233,20 @@ class LogFartViewModel(
         }
     }
 
-    /** "Keep draft": saved now, not after the autosave delay; a failed save is logged and the screen still closes. */
-    private fun onKeepDraft() {
+    /**
+     * "Keep draft" saves now, not after the autosave delay; "Discard" removes it. The store write is awaited before
+     * `Closed` (which cancels this scope); a failed write is logged by the repository and the screen still closes.
+     */
+    private fun onLeaveChoice(choice: LogFartAction.LeaveChoice) {
         val current = state.value
         if (!current.isLeavable || isLeaving) return
         isLeaving = true
-        val uid = activeUid()
+        val draft = activeUid()?.let { current.toDraftOrNull(it) }
         viewModelScope.launch {
-            val draft = uid?.let { current.toDraftOrNull(it) }
-            if (draft != null) autosave.saveNow(draft)
-            leave()
-        }
-    }
-
-    private fun onDiscardDraft() {
-        if (!state.value.isLeavable || isLeaving) return
-        isLeaving = true
-        viewModelScope.launch {
-            autosave.clear()
+            when (choice) {
+                LogFartAction.KeepDraftAndLeave -> if (draft != null) autosave.saveNow(draft)
+                LogFartAction.DiscardDraftAndLeave -> autosave.clear()
+            }
             leave()
         }
     }

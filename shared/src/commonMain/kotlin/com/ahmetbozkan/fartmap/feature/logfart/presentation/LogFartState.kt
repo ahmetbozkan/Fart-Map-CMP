@@ -135,11 +135,14 @@ sealed interface LogFartAction {
     /** The close button, system back or the iOS swipe. */
     data object Close : LogFartAction
 
-    /** "Keep draft" in the leave dialog. */
-    data object KeepDraftAndLeave : LogFartAction
+    /** An answer in the keep-or-discard dialog (STORY-01-04-04); ignored unless the form is editable or failed. */
+    sealed interface LeaveChoice : LogFartAction
 
-    /** "Discard" in the leave dialog. */
-    data object DiscardDraftAndLeave : LogFartAction
+    /** "Keep draft". */
+    data object KeepDraftAndLeave : LeaveChoice
+
+    /** "Discard". */
+    data object DiscardDraftAndLeave : LeaveChoice
 }
 
 sealed interface LogFartEvent {
