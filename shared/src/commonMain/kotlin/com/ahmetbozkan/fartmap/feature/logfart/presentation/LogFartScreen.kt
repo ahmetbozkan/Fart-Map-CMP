@@ -88,26 +88,26 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 /**
- * Log Fart, quick-log version (STORY-01-04-02). [onFinished] receives the handed-off fart (the shell closes the screen
+ * Log Fart, quick-log version (STORY-01-04-02). [onFinish] receives the handed-off fart (the shell closes the screen
  * and shows its marker); [onClose] leaves without logging. System back and the iOS swipe go through [LogFartAction.Close].
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun LogFartEntry(
     startCamera: MapCamera,
-    onFinished: (LoggedFart) -> Unit,
+    onFinish: (LoggedFart) -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: LogFartViewModel = koinViewModel { parametersOf(startCamera) },
     mapHost: MapHost = koinInject(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val currentOnFinished by rememberUpdatedState(onFinished)
+    val currentOnFinish by rememberUpdatedState(onFinish)
     val currentOnClose by rememberUpdatedState(onClose)
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
-                is LogFartEvent.Finished -> currentOnFinished(event.logged)
+                is LogFartEvent.Finished -> currentOnFinish(event.logged)
                 LogFartEvent.Closed -> currentOnClose()
             }
         }
@@ -434,5 +434,5 @@ private fun LogFartFailedPreview() = Preview(
 @Preview
 @Composable
 private fun LogFartPickerPreview() = Preview(
-    previewVisibility.copy(picker = PinPicker(MapCamera(41.0082, 28.9784, 16f))),
+    previewVisibility.copy(picker = PinPicker(MapCamera(previewPoint.lat, previewPoint.lng, THUMBNAIL_ZOOM))),
 )

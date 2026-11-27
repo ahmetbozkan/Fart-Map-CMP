@@ -16,9 +16,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -75,7 +77,7 @@ fun MainShell(modifier: Modifier = Modifier, viewModel: MainShellViewModel = koi
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var lastLogged by remember { mutableStateOf<LoggedFart?>(null) }
-    val showLogBar = destination?.hasRoute(LogFartRoute::class) != true
+    val showTabBar = destination?.hasRoute(LogFartRoute::class) != true
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
@@ -88,27 +90,7 @@ fun MainShell(modifier: Modifier = Modifier, viewModel: MainShellViewModel = koi
     Scaffold(
         modifier = modifier,
         snackbarHost = { SnackbarHost(snackbar) },
-        bottomBar = {
-            if (showLogBar) {
-                NavigationBar {
-                    tabItems.forEach { item ->
-                        val label = stringResource(item.label)
-                        NavigationBarItem(
-                            selected = destination?.hierarchy?.any { it.hasRoute(item.route::class) } == true,
-                            onClick = {
-                                navController.navigate(item.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            icon = { Icon(painterResource(item.icon), contentDescription = label) },
-                            label = { Text(label) },
-                        )
-                    }
-                }
-            }
-        },
+        bottomBar = { if (showTabBar) TabBar(destination = destination, navController = navController) },
     ) { padding ->
         NavHost(
             navController = navController,
@@ -119,7 +101,7 @@ fun MainShell(modifier: Modifier = Modifier, viewModel: MainShellViewModel = koi
                 MapRoute(
                     onOpenLogFart = { camera -> navController.navigate(LogFartRoute.from(camera)) },
                     logged = lastLogged,
-                    onLoggedHandled = { lastLogged = null },
+                    onLoggedConsume = { lastLogged = null },
                 )
             }
             composable<TabRoute.Social> { SocialScreen() }
@@ -128,7 +110,7 @@ fun MainShell(modifier: Modifier = Modifier, viewModel: MainShellViewModel = koi
             composable<LogFartRoute> { entry ->
                 LogFartEntry(
                     startCamera = entry.toRoute<LogFartRoute>().startCamera(),
-                    onFinished = { logged ->
+                    onFinish = { logged ->
                         lastLogged = logged
                         navController.popBackStack()
                         scope.launch {
@@ -139,6 +121,27 @@ fun MainShell(modifier: Modifier = Modifier, viewModel: MainShellViewModel = koi
                     onClose = { navController.popBackStack() },
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun TabBar(destination: NavDestination?, navController: NavHostController) {
+    NavigationBar {
+        tabItems.forEach { item ->
+            val label = stringResource(item.label)
+            NavigationBarItem(
+                selected = destination?.hierarchy?.any { it.hasRoute(item.route::class) } == true,
+                onClick = {
+                    navController.navigate(item.route) {
+                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                icon = { Icon(painterResource(item.icon), contentDescription = label) },
+                label = { Text(label) },
+            )
         }
     }
 }

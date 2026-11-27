@@ -59,8 +59,6 @@ import com.ahmetbozkan.fartmap.resources.map_followers_body
 import com.ahmetbozkan.fartmap.resources.map_followers_title
 import com.ahmetbozkan.fartmap.resources.map_locate_me
 import com.ahmetbozkan.fartmap.resources.map_locating
-import com.ahmetbozkan.fartmap.resources.map_log_fart
-import com.ahmetbozkan.fartmap.resources.map_marker_posting
 import com.ahmetbozkan.fartmap.resources.map_location_blocked_body
 import com.ahmetbozkan.fartmap.resources.map_location_blocked_title
 import com.ahmetbozkan.fartmap.resources.map_location_denied_body
@@ -71,6 +69,8 @@ import com.ahmetbozkan.fartmap.resources.map_location_off_title
 import com.ahmetbozkan.fartmap.resources.map_location_open_settings
 import com.ahmetbozkan.fartmap.resources.map_location_unavailable_body
 import com.ahmetbozkan.fartmap.resources.map_location_unavailable_title
+import com.ahmetbozkan.fartmap.resources.map_log_fart
+import com.ahmetbozkan.fartmap.resources.map_marker_posting
 import com.ahmetbozkan.fartmap.resources.map_offline
 import com.ahmetbozkan.fartmap.resources.map_truncated_body
 import com.ahmetbozkan.fartmap.resources.map_truncated_title
@@ -89,19 +89,20 @@ import org.koin.compose.viewmodel.koinViewModel
 /**
  * The Map tab, the launch screen (MAP-01): the native map via [MapHost], the filter row and the data states.
  * [onOpenLogFart] navigates to Log Fart; [logged] is a fart Log Fart just handed off (the shell passes it back once),
- * and [onLoggedHandled] tells the shell it was taken.
+ * and [onLoggedConsume] tells the shell it was taken.
  */
 @Composable
 fun MapRoute(
     onOpenLogFart: (MapCamera) -> Unit,
     modifier: Modifier = Modifier,
     logged: LoggedFart? = null,
-    onLoggedHandled: () -> Unit = {},
+    onLoggedConsume: () -> Unit = {},
     viewModel: MapViewModel = koinViewModel(),
     mapHost: MapHost = koinInject(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val currentOnOpenLogFart by rememberUpdatedState(onOpenLogFart)
+    val currentOnLoggedConsume by rememberUpdatedState(onLoggedConsume)
     // NavHost composes only the current tab, so this runs each time the Map tab is shown (map_viewed).
     LaunchedEffect(Unit) { viewModel.onAction(MapAction.Shown) }
     // Buffered: a move that arrives before the host collects (the map has no size yet) is applied when it does.
@@ -118,7 +119,7 @@ fun MapRoute(
     LaunchedEffect(logged) {
         if (logged != null) {
             viewModel.onAction(MapAction.FocusLogged(logged))
-            onLoggedHandled()
+            currentOnLoggedConsume()
         }
     }
     MapScreen(

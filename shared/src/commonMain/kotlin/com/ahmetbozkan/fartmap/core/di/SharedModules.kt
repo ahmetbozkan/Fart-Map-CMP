@@ -5,12 +5,12 @@ import com.ahmetbozkan.fartmap.core.data.profile.ProfileBootstrap
 import com.ahmetbozkan.fartmap.core.data.session.AccountProviderSync
 import com.ahmetbozkan.fartmap.core.data.session.DefaultSessionRepository
 import com.ahmetbozkan.fartmap.core.data.write.DefaultAppWriteScope
+import com.ahmetbozkan.fartmap.core.domain.location.MapCamera
 import com.ahmetbozkan.fartmap.core.domain.preferences.PreferencesRepository
 import com.ahmetbozkan.fartmap.core.domain.session.SessionRepository
 import com.ahmetbozkan.fartmap.core.domain.session.SignOut
 import com.ahmetbozkan.fartmap.core.domain.write.AppWriteScope
 import com.ahmetbozkan.fartmap.core.domain.write.PendingWriteMonitor
-import com.ahmetbozkan.fartmap.core.domain.location.MapCamera
 import com.ahmetbozkan.fartmap.core.navigation.MainShellViewModel
 import com.ahmetbozkan.fartmap.core.navigation.RootViewModel
 import com.ahmetbozkan.fartmap.core.observability.ConsoleLogSink

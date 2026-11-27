@@ -135,7 +135,7 @@ internal class CoreLocationProvider(private val logger: Logger) : LocationProvid
 
     private fun CLLocation.toLookup(reduced: Boolean): LocationLookup =
         toDeviceLocation(reduced)?.let { LocationLookup.Found(it) }
-        ?: LocationLookup.Unavailable.also { warn(operation = "current_location", reason = "invalid_fix") }
+            ?: LocationLookup.Unavailable.also { warn(operation = "current_location", reason = "invalid_fix") }
 
     private fun NSError.toLookup(): LocationLookup =
         if (code == kCLErrorDenied.toLong()) {
@@ -170,7 +170,9 @@ private fun CLLocationManager.isReduced(): Boolean = accuracyAuthorization == CL
  */
 private fun CLLocation.toDeviceLocation(reduced: Boolean): DeviceLocation? {
     val approximate = isApproximateFix(horizontalAccuracyMeters = horizontalAccuracy, reducedAccuracy = reduced)
-    return coordinate.useContents { DeviceLocation.orNull(lat = latitude, lng = longitude, isApproximate = approximate) }
+    return coordinate.useContents {
+        DeviceLocation.orNull(lat = latitude, lng = longitude, isApproximate = approximate)
+    }
 }
 
 /** Reports the first decided status; iOS also calls this once with the current (undecided) status at creation. */

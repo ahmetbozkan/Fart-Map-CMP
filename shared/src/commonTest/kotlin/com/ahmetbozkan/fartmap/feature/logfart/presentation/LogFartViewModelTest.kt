@@ -59,7 +59,8 @@ class LogFartViewModelTest {
 
     private val sessions = InMemorySessionRepository(adult())
     private val preferences = FakePreferencesRepository()
-    private val location = FakeLocationProvider(status = LocationPermission.GRANTED, lookup = LocationLookup.Found(here))
+    private val location =
+        FakeLocationProvider(status = LocationPermission.GRANTED, lookup = LocationLookup.Found(here))
     private val network = FakeNetworkStatus()
     private val farts = FakeFartRepository()
     private val tracked = mutableListOf<AnalyticsEvent>()

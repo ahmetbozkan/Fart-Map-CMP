@@ -31,7 +31,8 @@ class MarkerLabelTest {
 
     @Test
     fun aPendingFartBecomesAFadedMarkerAnnouncedAsPosting() {
-        val marker = fart.copy(isPending = true).toMarker(label = "Your level-3 fart, just now", postingSuffix = "posting")
+        val pending = fart.copy(isPending = true)
+        val marker = pending.toMarker(label = "Your level-3 fart, just now", postingSuffix = "posting")
 
         assertEquals(
             MapMarker("f1", 41.01, 28.97, "Your level-3 fart, just now, posting", isPending = true),
