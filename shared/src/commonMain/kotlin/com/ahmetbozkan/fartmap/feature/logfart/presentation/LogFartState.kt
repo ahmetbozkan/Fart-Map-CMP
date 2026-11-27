@@ -1,5 +1,8 @@
 package com.ahmetbozkan.fartmap.feature.logfart.presentation
 
+import com.ahmetbozkan.fartmap.core.domain.cosmetics.CosmeticOption
+import com.ahmetbozkan.fartmap.core.domain.cosmetics.CosmeticType
+import com.ahmetbozkan.fartmap.core.domain.cosmetics.cosmeticOptions
 import com.ahmetbozkan.fartmap.core.domain.fart.LoggedFart
 import com.ahmetbozkan.fartmap.core.domain.location.DeviceLocation
 import com.ahmetbozkan.fartmap.core.domain.location.MapCamera
@@ -7,9 +10,13 @@ import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
 import com.ahmetbozkan.fartmap.core.observability.AppError
 
 /**
- * The Log Fart screen, quick-log version (CREATE-02, CREATE-03.1 steps 1, 9, 10). [location] is the user's own point
- * (owner-only, ADR-0019): it is shown only as a map thumbnail, never as text. [visibility] is null until the session's
- * age band and the last choice are loaded. [picker] is non-null while the full-screen pin picker is open.
+ * The Log Fart screen (CREATE-02 quick log, CREATE-03.1 steps 1–10). [location] is the user's own point (owner-only,
+ * ADR-0019): it is shown only as a map thumbnail, never as text. [visibility] is null until the session's age band
+ * and the last choice are loaded. [picker] is non-null while the full-screen pin picker is open.
+ *
+ * Detailed fields (STORY-01-04-03) all have defaults, so "Let It Rip" works without touching them: [timestampEpochMs]
+ * (screen-open time), [avatarId], [soundId] (none), [flavor], [intensity], [description]. [avatars] and [sounds] are
+ * the picker options; locked ones are shown but can't be selected yet (EPIC-01-06).
  */
 data class LogFartState(
     val location: LocationStep = LocationStep.Locating,
@@ -18,10 +25,23 @@ data class LogFartState(
     val status: LogStatus = LogStatus.DRAFT,
     val error: AppError? = null,
     val picker: PinPicker? = null,
+    val timestampEpochMs: Long = 0,
+    val avatars: List<CosmeticOption> = cosmeticOptions(emptyList(), emptySet(), CosmeticType.AVATAR),
+    val sounds: List<CosmeticOption> = cosmeticOptions(emptyList(), emptySet(), CosmeticType.SOUND),
+    val avatarId: String = DEFAULT_AVATAR,
+    val soundId: String? = null,
+    val flavor: Int = DEFAULT_FLAVOR,
+    val intensity: Double = DEFAULT_INTENSITY,
+    val description: String = "",
+    val placeholderIndex: Int = 0,
 ) {
     val canSubmit: Boolean
         get() = location is LocationStep.Resolved && visibility != null &&
             (status == LogStatus.DRAFT || status == LogStatus.FAILED)
+
+    /** Every field is frozen while the hand-off runs. */
+    val isEditable: Boolean
+        get() = status != LogStatus.UPLOADING
 
     /** ADR-0026 (Proposed; built either way): an approximate device fix suggests moving the pin. */
     val showApproximateHint: Boolean
@@ -79,6 +99,26 @@ sealed interface LogFartAction {
 
     data class VisibilitySelected(val visibility: VisibilityMode) : LogFartAction
 
+    /** A detailed-field change (STORY-01-04-03); all of them are ignored while uploading. */
+    sealed interface FieldEdit : LogFartAction
+
+    /** The date and time pickers' result, as epoch ms ([combineDateAndTime]). */
+    data class DateTimePicked(val epochMs: Long) : FieldEdit
+
+    data class AvatarSelected(val id: String) : FieldEdit
+
+    /** Null is "No sound". */
+    data class SoundSelected(val id: String?) : FieldEdit
+
+    data class FlavorSelected(val level: Int) : FieldEdit
+
+    data class IntensityChanged(val value: Float) : FieldEdit
+
+    data class DescriptionChanged(val text: String) : FieldEdit
+
+    /** The locked voice row (CREATE-03.2 rule 2). */
+    data object VoiceRowTapped : LogFartAction
+
     /** "Let It Rip", also "Try again" after a failure. */
     data object Submit : LogFartAction
 
@@ -91,4 +131,7 @@ sealed interface LogFartEvent {
     data class Finished(val logged: LoggedFart) : LogFartEvent
 
     data object Closed : LogFartEvent
+
+    /** Opens the informational "Premium — coming later" sheet; no purchase or ad option. */
+    data object ShowVoiceInfo : LogFartEvent
 }

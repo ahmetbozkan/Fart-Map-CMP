@@ -44,7 +44,7 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.serialization.json) // decodes DTOs from JSON in tests
-
+            implementation(libs.kotlinx.coroutines.test) // virtual time for listener retry tests
         }
         getByName("androidHostTest").dependencies {
             implementation(libs.kotlin.testJunit)

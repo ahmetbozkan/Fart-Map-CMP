@@ -1,8 +1,12 @@
 package com.ahmetbozkan.fartmap.catalog
 
+import com.ahmetbozkan.fartmap.core.domain.cosmetics.CosmeticItem
+import com.ahmetbozkan.fartmap.core.domain.cosmetics.CosmeticType
+import com.ahmetbozkan.fartmap.core.domain.cosmetics.StarterCosmetics
 import com.ahmetbozkan.fartmap.core.domain.profile.StarterAvatars
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -38,5 +42,25 @@ class StarterCatalogParityTest {
             .map { it.getValue("item_id").jsonPrimitive.content }
 
         assertEquals(freeAvatars.sorted(), StarterAvatars.ids.sorted())
+    }
+
+    /** The Log Fart pickers' offline fallback (STORY-01-04-03) must be exactly the seeded free items. */
+    @Test
+    fun starterCosmeticsMatchTheFreeActiveItemsOfTheCatalog() {
+        val items = Json.parseToJsonElement(catalogFile().readText()).jsonObject.getValue("items").jsonArray
+        val seeded = items.map { it.jsonObject }
+            .filter { it.getValue("is_free").jsonPrimitive.boolean && it.getValue("is_active").jsonPrimitive.boolean }
+            .map { item ->
+                CosmeticItem(
+                    id = item.getValue("item_id").jsonPrimitive.content,
+                    type = checkNotNull(CosmeticType.fromWire(item.getValue("type").jsonPrimitive.content)),
+                    name = item.getValue("name").jsonPrimitive.content,
+                    isFree = true,
+                    isActive = true,
+                    sortOrder = item.getValue("sort_order").jsonPrimitive.int,
+                )
+            }
+
+        assertEquals(seeded.sortedBy { it.id }, StarterCosmetics.items.sortedBy { it.id })
     }
 }

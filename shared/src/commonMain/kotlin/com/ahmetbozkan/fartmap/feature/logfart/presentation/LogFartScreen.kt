@@ -28,7 +28,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -44,6 +47,7 @@ import com.ahmetbozkan.fartmap.core.design.FartMapTheme
 import com.ahmetbozkan.fartmap.core.design.PillShape
 import com.ahmetbozkan.fartmap.core.design.Spacing
 import com.ahmetbozkan.fartmap.core.design.components.messageResource
+import com.ahmetbozkan.fartmap.core.domain.cosmetics.CosmeticOption
 import com.ahmetbozkan.fartmap.core.domain.fart.LoggedFart
 import com.ahmetbozkan.fartmap.core.domain.location.DeviceLocation
 import com.ahmetbozkan.fartmap.core.domain.location.MapCamera
@@ -56,7 +60,6 @@ import com.ahmetbozkan.fartmap.resources.ic_close
 import com.ahmetbozkan.fartmap.resources.ic_pin
 import com.ahmetbozkan.fartmap.resources.log_adjust_location
 import com.ahmetbozkan.fartmap.resources.log_close
-import com.ahmetbozkan.fartmap.resources.log_defaults_note
 import com.ahmetbozkan.fartmap.resources.log_failed_title
 import com.ahmetbozkan.fartmap.resources.log_locating
 import com.ahmetbozkan.fartmap.resources.log_location_approximate
@@ -106,16 +109,19 @@ fun LogFartEntry(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val currentOnFinish by rememberUpdatedState(onFinish)
     val currentOnClose by rememberUpdatedState(onClose)
+    var showVoiceInfo by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
                 is LogFartEvent.Finished -> currentOnFinish(event.logged)
                 LogFartEvent.Closed -> currentOnClose()
+                LogFartEvent.ShowVoiceInfo -> showVoiceInfo = true
             }
         }
     }
     BackHandler { viewModel.onAction(LogFartAction.Close) }
     LogFartScreen(state = state, mapHost = mapHost, onAction = viewModel::onAction, modifier = modifier)
+    if (showVoiceInfo) VoiceInfoSheet(onDismiss = { showVoiceInfo = false })
 }
 
 @Composable
@@ -144,12 +150,26 @@ private fun LogForm(state: LogFartState, mapHost: MapHost, onAction: (LogFartAct
             verticalArrangement = Arrangement.spacedBy(Spacing.lg),
         ) {
             LocationCard(state = state, mapHost = mapHost, onAction = onAction)
-            VisibilityCard(state = state, onSelect = { onAction(LogFartAction.VisibilitySelected(it)) })
-            Text(
-                text = stringResource(Res.string.log_defaults_note),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            WhenCard(
+                timestampEpochMs = state.timestampEpochMs,
+                enabled = state.isEditable,
+                onPick = { onAction(LogFartAction.DateTimePicked(it)) },
             )
+            AvatarCard(state = state, onAction = onAction)
+            FlavorCard(
+                flavor = state.flavor,
+                enabled = state.isEditable,
+                onSelect = { onAction(LogFartAction.FlavorSelected(it)) },
+            )
+            IntensityCard(
+                intensity = state.intensity,
+                enabled = state.isEditable,
+                onChange = { onAction(LogFartAction.IntensityChanged(it)) },
+            )
+            DescriptionCard(state = state, onChange = { onAction(LogFartAction.DescriptionChanged(it)) })
+            SoundCard(state = state, onAction = onAction)
+            VoiceCard(onTap = { onAction(LogFartAction.VoiceRowTapped) })
+            VisibilityCard(state = state, onSelect = { onAction(LogFartAction.VisibilitySelected(it)) })
             state.error?.takeIf { state.status == LogStatus.FAILED }?.let { error ->
                 FailedCard(error = error, onRetry = { onAction(LogFartAction.Submit) })
             }
@@ -435,6 +455,25 @@ private fun LogFartFailedPreview() = Preview(
         error = AppError.ValidationFailed("lat"),
     ),
 )
+
+@Preview
+@Composable
+private fun LogFartAllFieldsSetPreview() = Preview(
+    previewVisibility.copy(
+        location = LocationStep.Resolved(previewPoint, LocationSource.PIN),
+        timestampEpochMs = 1_764_250_000_000L,
+        avatars = previewVisibility.avatars + CosmeticOption("avatar_paid_king", "Gas King", isFree = false, isLocked = true),
+        avatarId = "avatar_free_cloud",
+        soundId = "sound_free_thunder",
+        flavor = 5,
+        intensity = 0.9,
+        description = "Silent but deadly. The elevator will never be the same 💨",
+    ),
+)
+
+@Preview
+@Composable
+private fun LogFartVoiceInfoPreview() = FartMapTheme { Surface { VoiceInfoContent(onDismiss = {}) } }
 
 @Preview
 @Composable
