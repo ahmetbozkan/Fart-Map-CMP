@@ -62,6 +62,10 @@
     <string name="map_marker_label_own">Your level-%1$d fart, %2$s</string>
     <string name="map_marker_posting">posting</string>
     <string name="map_log_fart">Log a fart</string>
+    <string name="map_delete_title">Take this one back?</string>
+    <string name="map_delete_body">It vanishes from the map for everyone. Some things can't be unsmelled, but this one can be unlogged.</string>
+    <string name="map_delete_confirm">Delete</string>
+    <string name="map_delete_keep">Keep it</string>
     <string name="map_age_just_now">just now</string>
     <plurals name="map_age_minutes">
         <item quantity="one">%1$d minute ago</item>

@@ -225,7 +225,7 @@ service cloud.firestore {
       match /private/{docId} {
         allow read: if signedIn() && docId == 'location'
           && get(fartPath(fartId)).data.author_user_id == uid();
-        // Purging it when the fart is removed is server work (STORY-01-04-05).
+        // Purged by the onFartRemoved function when the fart is removed (STORY-01-04-05); clients never delete it.
         allow create: if signedIn() && docId == 'location'
           && !exists(fartPath(fartId))
           && getAfter(fartPath(fartId)).data.author_user_id == uid()

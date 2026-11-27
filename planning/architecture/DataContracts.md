@@ -109,7 +109,7 @@ Readable by the owner only; never readable by other users (it reveals whether a 
 | `lng` | Double | Yes | Precise coordinate |
 | `updated_at` | Timestamp | Yes | Server set |
 
-Readable by the author only (ADR-0019). The author writes it exactly once, in the same batch that creates the fart. Rules require it there, and it can't be created later or updated (STORY-01-04-01; moving a fart is not in Phase 1). The `onFartCreated` trigger recomputes `public_lat`/`public_lng`/`coarse_location_key` from this document and overwrites the public fields on mismatch (`backend/functions/src/triggers/fartCreated.ts`).
+Readable by the author only (ADR-0019). The author writes it exactly once, in the same batch that creates the fart. Rules require it there, and it can't be created later or updated (STORY-01-04-01; moving a fart is not in Phase 1). The `onFartCreated` trigger recomputes `public_lat`/`public_lng`/`coarse_location_key` from this document and overwrites the public fields on mismatch (`backend/functions/src/triggers/fartCreated.ts`; a fart that is already removed is skipped quietly). When the author soft-deletes the fart (`is_removed = true`, `removed_reason = USER_DELETED`), the `onFartRemoved` trigger deletes this document through the Admin SDK (`triggers/fartRemoved.ts`, STORY-01-04-05); clients never delete it.
 
 **How the public fields are computed (ADR-0019 §3, STORY-01-03-01):**
 - `coarse_location_key` = the geohash-6 cell of the precise point.

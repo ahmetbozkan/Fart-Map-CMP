@@ -112,7 +112,19 @@ class MapViewModel(
             }
             MapAction.LogFartTapped -> sendEvent(MapEvent.OpenLogFart(state.value.camera))
             is MapAction.FocusLogged -> onFocusLogged(action.logged)
+            MapAction.ConfirmDelete -> onConfirmDelete()
+            MapAction.DismissDelete -> setState { copy(pendingDeleteId = null) }
         }
+    }
+
+    /**
+     * Closes the dialog and hands the delete to the route (`MapEvent.DeleteFart` → [OwnFartDeleter]), which keeps the
+     * write out of this ViewModel's dependencies. Nothing is sent when no dialog is open.
+     */
+    private fun onConfirmDelete() {
+        val id = state.value.pendingDeleteId ?: return
+        setState { copy(pendingDeleteId = null) }
+        sendEvent(MapEvent.DeleteFart(id))
     }
 
     /**
@@ -203,6 +215,7 @@ class MapViewModel(
                 copy(
                     farts = emptyList(),
                     selectedMarkerId = null,
+                    pendingDeleteId = null,
                     status = MapDataStatus.Loading,
                     uid = subscription.uid
                 )
@@ -232,6 +245,7 @@ class MapViewModel(
                 setState {
                     copy(
                         farts = visible(loaded, viewport),
+                        pendingDeleteId = pendingDeleteId?.takeIf { id -> loaded.any { it.id == id } },
                         status = MapDataStatus.Ready(update.isFromCache, update.isTruncated),
                         nowEpochMs = clock.now().toEpochMilliseconds(),
                     )
@@ -271,10 +285,12 @@ class MapViewModel(
     private fun onMarkerTapped(markerId: String) {
         val current = state.value
         val fart = current.farts.firstOrNull { it.id == markerId } ?: return
-        setState { copy(selectedMarkerId = markerId) }
+        val isOwn = fart.authorUid == current.uid
+        // An own marker opens the delete confirmation; the detail sheet replaces it in EPIC-01-05.
+        setState { copy(selectedMarkerId = markerId, pendingDeleteId = markerId.takeIf { isOwn }) }
         analytics.track(
             AnalyticsEvent.MarkerOpened(
-                isOwn = fart.authorUid == current.uid,
+                isOwn = isOwn,
                 source = AnalyticsEvent.MarkerSource.MAP
             ),
         )

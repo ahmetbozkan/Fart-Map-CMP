@@ -11,6 +11,15 @@ class FakeFartRepository(var result: AppResult<String> = AppResult.Success("fart
     /** Runs inside `createFart`, i.e. while the caller is in its uploading state. */
     var onCreate: () -> Unit = {}
 
+    /** Every `deleteFart` hand-off as (uid, fartId); [deleteResult] is what the next one returns. */
+    val deleted = mutableListOf<Pair<String, String>>()
+    var deleteResult: AppResult<Unit> = AppResult.Success(Unit)
+
+    override fun deleteFart(uid: String, fartId: String): AppResult<Unit> {
+        deleted += uid to fartId
+        return deleteResult
+    }
+
     override fun createFart(uid: String, fart: NewFart): AppResult<String> {
         created += uid to fart
         onCreate()

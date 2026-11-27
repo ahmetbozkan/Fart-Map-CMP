@@ -351,6 +351,32 @@ describe("farts: update and delete", () => {
     await assertFails(db.doc("farts/f1").update({ description_text: "back", updated_at: serverNow() }));
   });
 
+  const removal = () => ({ is_removed: true, removed_reason: "USER_DELETED", updated_at: serverNow() });
+
+  it("lets the author soft-delete a fart of any visibility, anonymous included (STORY-01-04-05)", async () => {
+    await seed(env, {
+      "farts/fol": storedFart("fol", ALICE, { visibility_mode: "FOLLOWERS" }),
+      "farts/pri": storedFart("pri", ALICE, { visibility_mode: "PRIVATE" }),
+      "farts/anon": storedFart("anon", "anon-1"),
+    });
+    await assertSucceeds(user(env, ALICE).doc("farts/f1").update(removal()));
+    await assertSucceeds(user(env, ALICE).doc("farts/fol").update(removal()));
+    await assertSucceeds(user(env, ALICE).doc("farts/pri").update(removal()));
+    await assertSucceeds(anonymous(env, "anon-1").doc("farts/anon").update(removal()));
+  });
+
+  it("denies deleting someone else's fart, signed out, or removal plus another field", async () => {
+    await assertFails(user(env, BOB).doc("farts/f1").update(removal()));
+    await assertFails(signedOut(env).doc("farts/f1").update(removal()));
+    await assertFails(user(env, ALICE).doc("farts/f1").update({ ...removal(), description_text: "x" }));
+    await assertFails(user(env, ALICE).doc("farts/f1").update({ ...removal(), reaction_count: 5 }));
+  });
+
+  it("denies un-removing a deleted fart", async () => {
+    await seed(env, { "farts/gone": storedFart("gone", ALICE, { is_removed: true, removed_reason: "USER_DELETED" }) });
+    await assertFails(user(env, ALICE).doc("farts/gone").update({ is_removed: false, removed_reason: null, updated_at: serverNow() }));
+  });
+
   it("denies hard deletes", async () => {
     await assertFails(user(env, ALICE).doc("farts/f1").delete());
   });

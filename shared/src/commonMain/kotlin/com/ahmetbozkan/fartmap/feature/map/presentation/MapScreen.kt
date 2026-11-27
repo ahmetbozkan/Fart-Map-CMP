@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -48,6 +49,10 @@ import com.ahmetbozkan.fartmap.feature.map.domain.MapFart
 import com.ahmetbozkan.fartmap.resources.Res
 import com.ahmetbozkan.fartmap.resources.ic_add
 import com.ahmetbozkan.fartmap.resources.ic_my_location
+import com.ahmetbozkan.fartmap.resources.map_delete_body
+import com.ahmetbozkan.fartmap.resources.map_delete_confirm
+import com.ahmetbozkan.fartmap.resources.map_delete_keep
+import com.ahmetbozkan.fartmap.resources.map_delete_title
 import com.ahmetbozkan.fartmap.resources.map_empty_body
 import com.ahmetbozkan.fartmap.resources.map_empty_mine_body
 import com.ahmetbozkan.fartmap.resources.map_empty_title
@@ -99,8 +104,10 @@ fun MapRoute(
     onLoggedConsume: () -> Unit = {},
     viewModel: MapViewModel = koinViewModel(),
     mapHost: MapHost = koinInject(),
+    deleter: OwnFartDeleter = koinInject(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val currentDeleter by rememberUpdatedState(deleter)
     val currentOnOpenLogFart by rememberUpdatedState(onOpenLogFart)
     val currentOnLoggedConsume by rememberUpdatedState(onLoggedConsume)
     // NavHost composes only the current tab, so this runs each time the Map tab is shown (map_viewed).
@@ -113,6 +120,8 @@ fun MapRoute(
             when (event) {
                 is MapEvent.MoveCamera -> cameraMoves.send(event.camera)
                 is MapEvent.OpenLogFart -> currentOnOpenLogFart(event.camera)
+                // Never awaited; a rejection arrives through the shell's snackbar (OwnFartDeleter).
+                is MapEvent.DeleteFart -> currentDeleter.delete(event.fartId)
             }
         }
     }
@@ -177,7 +186,33 @@ fun MapScreen(
             }
             DataCard(state = state, onRetry = { onAction(MapAction.Retry) })
         }
+        if (state.pendingDeleteId != null) {
+            DeleteFartDialog(
+                onConfirm = { onAction(MapAction.ConfirmDelete) },
+                onDismiss = { onAction(MapAction.DismissDelete) },
+            )
+        }
     }
+}
+
+/** The own-marker action (CREATE-09): delete behind a confirmation. Replaced by the detail sheet in EPIC-01-05. */
+@Composable
+private fun DeleteFartDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.map_delete_title)) },
+        text = { Text(stringResource(Res.string.map_delete_body)) },
+        confirmButton = {
+            TextButton(onClick = onConfirm, modifier = Modifier.heightIn(min = Spacing.minTouchTarget)) {
+                Text(stringResource(Res.string.map_delete_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, modifier = Modifier.heightIn(min = Spacing.minTouchTarget)) {
+                Text(stringResource(Res.string.map_delete_keep))
+            }
+        },
+    )
 }
 
 /** "Center on me" (STORY-01-03-04): asks for location on the first tap, then centers the map. */
@@ -374,6 +409,19 @@ private fun MapScreenLoadingPreview() = Preview(MapState())
 @Composable
 private fun MapScreenSuccessPreview() = Preview(
     MapState(farts = previewFarts, status = MapDataStatus.Ready(false), uid = "me", nowEpochMs = PREVIEW_NOW),
+)
+
+@Preview
+@Composable
+private fun MapScreenDeleteDialogPreview() = Preview(
+    MapState(
+        farts = previewFarts,
+        status = MapDataStatus.Ready(false),
+        uid = "me",
+        nowEpochMs = PREVIEW_NOW,
+        selectedMarkerId = "a",
+        pendingDeleteId = "a",
+    ),
 )
 
 @Preview

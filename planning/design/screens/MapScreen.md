@@ -34,6 +34,7 @@
 - Error: recoverable data-load failure with retry action.
 - Offline: local/cached markers shown with sync-later indication where applicable.
 - Log FAB ("Log a fart", STORY-01-04-02): opens Log Fart with the map's current camera as the pin picker's start. After a log the map moves to the new marker's public point; if the current filter can't show it (Everyone with a non-public fart, or Followers), the filter switches to Mine for the session without saving the preference.
+- Own marker tap (STORY-01-04-05, until the detail sheet of EPIC-01-05): a confirmation dialog, "Take this one back?" with Delete / Keep it. Delete soft-deletes the fart (`USER_DELETED`); the marker leaves at once, also offline, and the server purges the precise location. Someone else's marker only selects until the sheet exists.
 - Pending marker (the user's own write the server hasn't confirmed, `hasPendingWrites`): drawn at half opacity, and its screen-reader label ends in ", posting", so the state isn't carried by opacity alone. It turns solid when the server has it.
 - Location notices ("center on me", STORY-01-03-04): locating (spinner on the button), denied, blocked (with "Open settings"), location services off, no fix. Each is a dismissible card; the map stays fully usable. No permission prompt at launch.
 

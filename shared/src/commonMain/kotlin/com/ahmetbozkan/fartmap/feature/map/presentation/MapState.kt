@@ -13,6 +13,7 @@ import com.ahmetbozkan.fartmap.feature.map.domain.MapFart
  * recreated map (after a tab switch) opens where it was left. [selectedMarkerId] is what the detail sheet (EPIC-01-05)
  * opens. [uid] marks the user's own farts; [nowEpochMs] anchors "2 hours ago" in marker labels. [isLocating] is true
  * while "center on me" looks up the device location; [locationNotice] explains why it couldn't (STORY-01-03-04).
+ * [pendingDeleteId] is the own fart whose delete confirmation is open (STORY-01-04-05).
  */
 data class MapState(
     val camera: MapCamera = DEFAULT_CAMERA,
@@ -25,6 +26,7 @@ data class MapState(
     val nowEpochMs: Long = 0L,
     val isLocating: Boolean = false,
     val locationNotice: LocationNotice? = null,
+    val pendingDeleteId: String? = null,
 ) {
     companion object {
         /**
@@ -85,6 +87,11 @@ sealed interface MapAction {
 
     data object OpenLocationSettings : MapAction
 
+    /** "Delete" confirmed in the own-marker dialog (STORY-01-04-05). */
+    data object ConfirmDelete : MapAction
+
+    data object DismissDelete : MapAction
+
     /** The "Log a fart" FAB. */
     data object LogFartTapped : MapAction
 
@@ -99,4 +106,7 @@ sealed interface MapEvent {
 
     /** Open Log Fart; [camera] is where its pin picker starts when there is no device fix. */
     data class OpenLogFart(val camera: MapCamera) : MapEvent
+
+    /** Delete the user's own fart [fartId] (confirmed in the dialog); the route calls `OwnFartDeleter`. */
+    data class DeleteFart(val fartId: String) : MapEvent
 }
