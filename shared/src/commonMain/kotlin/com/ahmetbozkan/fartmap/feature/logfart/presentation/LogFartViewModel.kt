@@ -1,6 +1,8 @@
 package com.ahmetbozkan.fartmap.feature.logfart.presentation
 
 import androidx.lifecycle.viewModelScope
+import com.ahmetbozkan.fartmap.core.domain.cosmetics.CosmeticItem
+import com.ahmetbozkan.fartmap.core.domain.cosmetics.CosmeticOption
 import com.ahmetbozkan.fartmap.core.domain.cosmetics.CosmeticRepository
 import com.ahmetbozkan.fartmap.core.domain.cosmetics.CosmeticType
 import com.ahmetbozkan.fartmap.core.domain.cosmetics.cosmeticOptions
@@ -26,9 +28,11 @@ import com.ahmetbozkan.fartmap.core.observability.Logger
 import com.ahmetbozkan.fartmap.core.platform.LocationProvider
 import com.ahmetbozkan.fartmap.core.platform.NetworkStatus
 import com.ahmetbozkan.fartmap.core.presentation.StateViewModel
+import com.ahmetbozkan.fartmap.feature.logfart.domain.LogDraftRepository
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -41,6 +45,9 @@ import kotlin.time.ExperimentalTime
  * without it the user taps "Use my location" (the same in-context ask as "center on me", Growth.md §2) or places a
  * pin. The precise point stays here and in the owner-only write; the map only gets the public projection.
  * [startCamera] is the map's camera, where the picker opens when nothing is resolved yet.
+ *
+ * Drafts (STORY-01-04-04): a dirty form is autosaved through [drafts], restored on the next open of the same account,
+ * cleared on hand-off and kept on failure; back on a dirty form asks keep or discard.
  */
 @OptIn(ExperimentalTime::class)
 @Suppress("LongParameterList") // one dependency per collaborator the screen really has
@@ -52,12 +59,17 @@ class LogFartViewModel(
     private val network: NetworkStatus,
     private val farts: FartRepository,
     private val cosmetics: CosmeticRepository,
+    private val drafts: LogDraftRepository,
     private val analytics: AnalyticsTracker,
     private val logger: Logger,
     clock: Clock,
 ) : StateViewModel<LogFartState, LogFartAction, LogFartEvent>(initialState(clock.now().toEpochMilliseconds())) {
 
     private var isLocating = false
+
+    /** Keep or Discard is running: a second tap must not close the screen twice. */
+    private var isLeaving = false
+    private val autosave = DraftAutosave(viewModelScope, drafts)
 
     init {
         analytics.track(AnalyticsEvent.LogStarted(AnalyticsEvent.LogEntry.FAB))
@@ -78,24 +90,41 @@ class LogFartViewModel(
             LogFartAction.VoiceRowTapped -> sendEvent(LogFartEvent.ShowVoiceInfo)
             LogFartAction.Submit -> onSubmit()
             LogFartAction.Close -> onClose()
+            LogFartAction.KeepDraftAndLeave -> onKeepDraft()
+            LogFartAction.DiscardDraftAndLeave -> onDiscardDraft()
         }
     }
 
     private suspend fun loadSessionData() {
         val active = sessions.session.filterIsInstance<SessionState.Active>().first()
         val lastUsed = preferences.lastVisibilityMode()
-        setState {
-            copy(
-                allowedVisibilities = allowedVisibilities(active.ageBand),
-                visibility = defaultVisibility(lastUsed, active.ageBand),
-            )
-        }
+        val fallback = defaultVisibility(lastUsed, active.ageBand)
+        setState { copy(allowedVisibilities = allowedVisibilities(active.ageBand), visibility = fallback) }
+        restoreDraft(active.uid, fallback)
+        // Its own job: the options collect below never completes.
+        autosave.start(state.map { it.toDraftOrNull(active.uid) })
         combine(
-            cosmetics.observeCatalog().onStart { emit(emptyList()) },
-            cosmetics.observeOwnedItemIds(active.uid).onStart { emit(emptySet()) },
-        ) { catalog, owned ->
-            cosmeticOptions(catalog, owned, CosmeticType.AVATAR) to cosmeticOptions(catalog, owned, CosmeticType.SOUND)
-        }.collect { (avatars, sounds) -> setState { withOptions(avatars, sounds) } }
+            cosmetics.observeCatalog().map { it to true }.onStart { emit(emptyList<CosmeticItem>() to false) },
+            cosmetics.observeOwnedItemIds(active.uid).map { it to true }.onStart { emit(emptySet<String>() to false) },
+        ) { (catalog, catalogLoaded), (owned, ownedLoaded) ->
+            OptionsUpdate(
+                avatars = cosmeticOptions(catalog, owned, CosmeticType.AVATAR),
+                sounds = cosmeticOptions(catalog, owned, CosmeticType.SOUND),
+                loaded = catalogLoaded && ownedLoaded,
+            )
+        }.collect { options ->
+            setState { withOptions(options.avatars, options.sounds).applyPending(options.loaded) }
+        }
+    }
+
+    /** A draft of this account fills the form unless the user already started typing; another account's is removed. */
+    private suspend fun restoreDraft(uid: String, fallback: VisibilityMode) {
+        val draft = drafts.load() ?: return
+        if (draft.ownerUid != uid) {
+            drafts.clear()
+            return
+        }
+        setState { if (isDirty) this else restore(draft, fallback) }
     }
 
     private suspend fun locateAtOpen() {
@@ -183,13 +212,16 @@ class LogFartViewModel(
     private fun onConfirmPin() {
         val picker = state.value.picker ?: return
         val point = DeviceLocation(picker.center.lat, picker.center.lng, isApproximate = false)
-        setState { copy(location = LocationStep.Resolved(point, LocationSource.PIN), picker = null) }
+        // A placed pin is user work (back asks before dropping it), though the draft never stores coordinates.
+        setState {
+            copy(location = LocationStep.Resolved(point, LocationSource.PIN), picker = null, isDirty = true)
+        }
     }
 
     private fun onVisibilitySelected(visibility: VisibilityMode) {
         val current = state.value
         if (visibility !in current.allowedVisibilities || current.status == LogStatus.UPLOADING) return
-        setState { copy(visibility = visibility) }
+        if (visibility != current.visibility) setState { copy(visibility = visibility, isDirty = true) }
     }
 
     private fun onClose() {
@@ -197,9 +229,43 @@ class LogFartViewModel(
         when {
             current.status == LogStatus.UPLOADING -> Unit
             current.picker != null -> setState { copy(picker = null) }
-            else -> sendEvent(LogFartEvent.Closed)
+            current.isDirty && current.isLeavable -> sendEvent(LogFartEvent.ConfirmLeave)
+            else -> leave()
         }
     }
+
+    /** "Keep draft": saved now, not after the autosave delay; a failed save is logged and the screen still closes. */
+    private fun onKeepDraft() {
+        val current = state.value
+        if (!current.isLeavable || isLeaving) return
+        isLeaving = true
+        val uid = activeUid()
+        viewModelScope.launch {
+            val draft = uid?.let { current.toDraftOrNull(it) }
+            if (draft != null) autosave.saveNow(draft)
+            leave()
+        }
+    }
+
+    private fun onDiscardDraft() {
+        if (!state.value.isLeavable || isLeaving) return
+        isLeaving = true
+        viewModelScope.launch {
+            autosave.clear()
+            leave()
+        }
+    }
+
+    /** Leaves without a hand-off; `log_abandoned` unless the fart already went out. */
+    private fun leave() {
+        val current = state.value
+        if (current.status != LogStatus.SUCCESS && current.status != LogStatus.OFFLINE) {
+            analytics.track(AnalyticsEvent.LogAbandoned(current.abandonStep()))
+        }
+        sendEvent(LogFartEvent.Closed)
+    }
+
+    private fun activeUid(): String? = (sessions.session.value as? SessionState.Active)?.uid
 
     private fun onSubmit() {
         val current = state.value
@@ -218,7 +284,7 @@ class LogFartViewModel(
                 offline = offline,
             ),
         )
-        val uid = (sessions.session.value as? SessionState.Active)?.uid
+        val uid = activeUid()
         val result = if (uid == null) {
             AppResult.Failure(AppError.AuthExpired)
         } else {
@@ -254,16 +320,20 @@ class LogFartViewModel(
             queuedOffline = offline,
         )
         viewModelScope.launch {
-            // A local DataStore write, awaited before Finished: the shell pops this screen on Finished, which cancels
-            // viewModelScope. A failed save is logged by the repository; the log still went out with this visibility.
+            // Local DataStore writes, awaited before Finished: the shell pops this screen on Finished, which cancels
+            // viewModelScope. A failed write is logged by the repository; the log still went out with this visibility.
+            autosave.clear()
             preferences.setLastVisibilityMode(visibility)
             sendEvent(LogFartEvent.Finished(logged))
         }
     }
 
+    /** Every field stays, and the draft is saved at once so a process death doesn't lose them (CREATE-03 step 10). */
     private fun onFailed(error: AppError) {
         logger.warn(feature = FEATURE, operation = "submit", event = "log_submit_failed", error = error)
         setState { copy(status = LogStatus.FAILED, error = error) }
+        val draft = activeUid()?.let { state.value.toDraftOrNull(it) }
+        if (draft != null) autosave.saveSoon(draft)
     }
 
     companion object {
@@ -284,3 +354,10 @@ class LogFartViewModel(
         private const val FEATURE = "log_fart"
     }
 }
+
+/** New picker options; [loaded] once the catalog and the owned set have both delivered real values. */
+private data class OptionsUpdate(
+    val avatars: List<CosmeticOption>,
+    val sounds: List<CosmeticOption>,
+    val loaded: Boolean,
+)

@@ -21,6 +21,8 @@ import com.ahmetbozkan.fartmap.core.platform.AppEnvironment
 import com.ahmetbozkan.fartmap.core.platform.DefaultsRemoteConfig
 import com.ahmetbozkan.fartmap.core.platform.RemoteConfig
 import com.ahmetbozkan.fartmap.feature.auth.presentation.AuthViewModel
+import com.ahmetbozkan.fartmap.feature.logfart.data.DataStoreLogDraftRepository
+import com.ahmetbozkan.fartmap.feature.logfart.domain.LogDraftRepository
 import com.ahmetbozkan.fartmap.feature.logfart.presentation.LogFartViewModel
 import com.ahmetbozkan.fartmap.feature.map.presentation.MapViewModel
 import com.ahmetbozkan.fartmap.feature.onboarding.presentation.AgeGateViewModel
@@ -85,6 +87,7 @@ private val dataModule = module {
         }
     }
     single<PreferencesRepository> { DataStorePreferencesRepository(store = get(), logger = get()) }
+    single<LogDraftRepository> { DataStoreLogDraftRepository(store = get(), logger = get()) }
     single { DefaultAppWriteScope(logger = get(), errorMapper = get()) } binds
         arrayOf(AppWriteScope::class, PendingWriteMonitor::class)
     factoryOf(::SignOut)
@@ -107,6 +110,7 @@ private val featureModule = module {
             network = get(),
             farts = get(),
             cosmetics = get(),
+            drafts = get(),
             analytics = get(),
             logger = get(),
             clock = Clock.System,

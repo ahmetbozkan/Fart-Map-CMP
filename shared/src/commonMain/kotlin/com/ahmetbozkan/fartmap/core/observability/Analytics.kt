@@ -58,6 +58,16 @@ sealed interface AnalyticsEvent {
 
     enum class LogEntry(val wireName: String) { FAB("fab") }
 
+    /** Log Fart left without a hand-off (L1 leak rate); [step] is how far the user got, never what they typed. */
+    data class LogAbandoned(val step: LogStep) : AnalyticsEvent {
+        override val name = "log_abandoned"
+        override val params: Map<String, Any>
+            get() = mapOf("step_reached" to step.wireName)
+    }
+
+    /** `location`: no point yet; `details`: a point is resolved; `failed`: the last submit failed. */
+    enum class LogStep(val wireName: String) { LOCATION("location"), DETAILS("details"), FAILED("failed") }
+
     /** "Let It Rip" tapped with a resolved location (Observability.md §11: "submit tapped"). */
     data class LogSubmitted(
         val visibility: VisibilityMode,

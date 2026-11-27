@@ -80,4 +80,14 @@ class AnalyticsEventTest {
             event.params,
         )
     }
+
+    @Test
+    fun logAbandonedCarriesOnlyTheStepReached() {
+        assertEquals("log_abandoned", AnalyticsEvent.LogAbandoned(AnalyticsEvent.LogStep.LOCATION).name)
+        assertEquals(
+            listOf("location", "details", "failed"),
+            AnalyticsEvent.LogStep.entries.map { AnalyticsEvent.LogAbandoned(it).params["step_reached"] },
+        )
+        assertEquals(setOf("step_reached"), AnalyticsEvent.LogAbandoned(AnalyticsEvent.LogStep.FAILED).params.keys)
+    }
 }

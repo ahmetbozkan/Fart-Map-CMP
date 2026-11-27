@@ -136,6 +136,11 @@
     <string name="log_success">Logged. The world felt it.</string>
     <string name="log_offline">Saved locally — will post when you're back online.</string>
     <string name="log_rejected">We couldn't post that one. The wind changed.</string>
+    <string name="log_draft_restored">Picked up where you left off. We kept it warm.</string>
+    <string name="log_leave_title">Save this masterpiece for later?</string>
+    <string name="log_leave_body">Keep the draft and finish it next time, or let it drift away forever.</string>
+    <string name="log_leave_keep">Keep draft</string>
+    <string name="log_leave_discard">Discard</string>
 
     <string name="state_loading">Loading</string>
     <string name="state_retry">Try again</string>
