@@ -55,15 +55,6 @@ internal fun LogFartState.reduce(edit: LogFartAction.FieldEdit): LogFartState {
     return if (next == this) this else next.copy(isDirty = true)
 }
 
-internal fun LogFartState.withAvatar(id: String): LogFartState =
-    if (avatars.isUsable(id)) copy(avatarId = id) else this
-
-internal fun LogFartState.withSound(id: String?): LogFartState = when {
-    id == null -> copy(soundId = null)
-    sounds.isUsable(id) -> copy(soundId = id)
-    else -> this
-}
-
 internal fun LogFartState.withFlavor(level: Int): LogFartState =
     if (level in FLAVOR_RANGE) copy(flavor = level) else this
 

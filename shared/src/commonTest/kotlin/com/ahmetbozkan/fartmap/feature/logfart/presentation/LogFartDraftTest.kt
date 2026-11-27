@@ -337,6 +337,21 @@ class LogFartDraftTest {
         assertEquals(1, drafts.clears)
     }
 
+    @Test
+    fun aPinOnlyDraftIsNotRestoredButCleared() = runTest {
+        val first = viewModel()
+        first.onAction(LogFartAction.OpenPicker)
+        first.onAction(LogFartAction.ConfirmPin)
+        settle()
+        assertEquals("me", drafts.stored?.ownerUid, "a pinned form is dirty, so it autosaves")
+
+        val reopened = viewModel().state.value
+
+        assertFalse(reopened.restoredDraft)
+        assertFalse(reopened.isDirty)
+        assertNull(drafts.stored)
+    }
+
     // Acceptance 7: hand-off clears before Finished
 
     @Test

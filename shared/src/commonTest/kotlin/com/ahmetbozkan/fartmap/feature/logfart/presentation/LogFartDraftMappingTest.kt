@@ -191,6 +191,25 @@ class LogFartDraftMappingTest {
         assertEquals(DEFAULT_AVATAR, dropped.avatarId)
     }
 
+    // hasContent
+
+    @Test
+    fun aDraftOfDefaultsHasNoContentAndAnyChangeGivesIt() {
+        val defaults = LogDraft("me", null, DEFAULT_AVATAR, null, DEFAULT_FLAVOR, DEFAULT_INTENSITY, " ", null)
+
+        assertFalse(defaults.hasContent(VisibilityMode.PUBLIC))
+        assertFalse(defaults.copy(visibility = VisibilityMode.PUBLIC).hasContent(VisibilityMode.PUBLIC))
+        listOf(
+            defaults.copy(timestampEpochMs = 1L),
+            defaults.copy(avatarId = "avatar_free_cloud"),
+            defaults.copy(soundId = "sound_free_thunder"),
+            defaults.copy(flavor = 4),
+            defaults.copy(intensity = 0.7),
+            defaults.copy(description = "x"),
+            defaults.copy(visibility = VisibilityMode.PRIVATE),
+        ).forEach { assertTrue(it.hasContent(VisibilityMode.PUBLIC), "$it") }
+    }
+
     // abandonStep
 
     @Test

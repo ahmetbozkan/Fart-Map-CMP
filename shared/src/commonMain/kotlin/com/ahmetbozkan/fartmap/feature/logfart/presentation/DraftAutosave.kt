@@ -44,6 +44,7 @@ internal class DraftAutosave(
 
     /** Saves without the delay, in the background (after a failed submit). */
     fun saveSoon(draft: LogDraft) {
+        soonJob?.cancel()
         soonJob = scope.launch { write { save(draft) } }
     }
 

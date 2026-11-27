@@ -116,11 +116,14 @@ class LogFartViewModel(
         }
     }
 
-    /** A draft of this account fills the form unless the user already started typing; another account's is removed. */
+    /**
+     * A draft of this account fills the form unless the user already started typing. Another account's draft, or one
+     * holding nothing but defaults (a pin-only form: the pin isn't stored), is removed instead.
+     */
     private suspend fun restoreDraft(uid: String, fallback: VisibilityMode) {
         val draft = drafts.load() ?: return
-        if (draft.ownerUid != uid) {
-            drafts.clear()
+        if (draft.ownerUid != uid || !draft.hasContent(fallback)) {
+            autosave.clear()
             return
         }
         setState { if (isDirty) this else restore(draft, fallback) }

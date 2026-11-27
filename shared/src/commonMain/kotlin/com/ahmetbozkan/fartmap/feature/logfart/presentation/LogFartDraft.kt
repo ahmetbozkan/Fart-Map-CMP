@@ -79,6 +79,16 @@ internal fun LogFartState.applyPending(optionsLoaded: Boolean): LogFartState {
     return next
 }
 
+/**
+ * True when the draft holds something a fresh form wouldn't: a picked time, another avatar or a sound, another flavor
+ * or intensity, a caption, or a visibility other than [defaultVisibility]. A pin-only form saves a draft of defaults,
+ * which isn't worth a "picked up where you left off".
+ */
+internal fun LogDraft.hasContent(defaultVisibility: VisibilityMode): Boolean =
+    timestampEpochMs != null || avatarId != DEFAULT_AVATAR || soundId != null || flavor != DEFAULT_FLAVOR ||
+        intensity != DEFAULT_INTENSITY || description.isNotBlank() ||
+        (visibility != null && visibility != defaultVisibility)
+
 /** How far the user got, for `log_abandoned`. */
 internal fun LogFartState.abandonStep(): AnalyticsEvent.LogStep = when {
     status == LogStatus.FAILED -> AnalyticsEvent.LogStep.FAILED
