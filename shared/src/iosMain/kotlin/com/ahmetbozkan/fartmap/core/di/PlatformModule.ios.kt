@@ -5,6 +5,8 @@ import com.ahmetbozkan.fartmap.core.platform.CoreLocationProvider
 import com.ahmetbozkan.fartmap.core.platform.LocationProvider
 import com.ahmetbozkan.fartmap.core.platform.MapHost
 import com.ahmetbozkan.fartmap.core.platform.MapKitMapHost
+import com.ahmetbozkan.fartmap.core.platform.NetworkStatus
+import com.ahmetbozkan.fartmap.core.platform.NwPathNetworkStatus
 import kotlinx.cinterop.ExperimentalForeignApi
 import org.koin.dsl.module
 import platform.Foundation.NSApplicationSupportDirectory
@@ -17,6 +19,7 @@ internal actual val platformModule = module {
     single { DataStorePreferencesRepository.createStore(appSupportPath(DataStorePreferencesRepository.FILE_NAME)) }
     single<MapHost> { MapKitMapHost(logger = get()) }
     single<LocationProvider> { CoreLocationProvider(logger = get()) }
+    single<NetworkStatus> { NwPathNetworkStatus() }
 }
 
 @OptIn(ExperimentalForeignApi::class)

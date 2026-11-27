@@ -1,5 +1,6 @@
 package com.ahmetbozkan.fartmap.feature.map.presentation
 
+import com.ahmetbozkan.fartmap.core.domain.fart.LoggedFart
 import com.ahmetbozkan.fartmap.core.domain.location.MapCamera
 import com.ahmetbozkan.fartmap.core.domain.location.MapViewport
 import com.ahmetbozkan.fartmap.core.domain.map.MapFilter
@@ -83,10 +84,19 @@ sealed interface MapAction {
     data object DismissLocationNotice : MapAction
 
     data object OpenLocationSettings : MapAction
+
+    /** The "Log a fart" FAB. */
+    data object LogFartTapped : MapAction
+
+    /** Log Fart just handed [logged] off: show where its marker lands (STORY-01-04-02). */
+    data class FocusLogged(val logged: LoggedFart) : MapAction
 }
 
 /** One-time effects. `MapRoute` is the events' only consumer and maps them exhaustively. */
 sealed interface MapEvent {
     /** Animate the map to [camera] (the user's location). The host reports the result through `CameraIdle`. */
     data class MoveCamera(val camera: MapCamera) : MapEvent
+
+    /** Open Log Fart; [camera] is where its pin picker starts when there is no device fix. */
+    data class OpenLogFart(val camera: MapCamera) : MapEvent
 }

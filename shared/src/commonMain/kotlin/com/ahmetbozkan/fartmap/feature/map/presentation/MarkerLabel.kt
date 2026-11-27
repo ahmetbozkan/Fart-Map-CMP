@@ -1,6 +1,7 @@
 package com.ahmetbozkan.fartmap.feature.map.presentation
 
 import androidx.compose.runtime.Composable
+import com.ahmetbozkan.fartmap.core.platform.MapMarker
 import com.ahmetbozkan.fartmap.feature.map.domain.MapFart
 import com.ahmetbozkan.fartmap.resources.Res
 import com.ahmetbozkan.fartmap.resources.map_age_days
@@ -30,6 +31,18 @@ fun fartAge(nowEpochMs: Long, thenEpochMs: Long): FartAge {
         else -> FartAge(AgeUnit.DAYS, (elapsed / DAY_MS).coerceAtMost(Int.MAX_VALUE.toLong()).toInt())
     }
 }
+
+/**
+ * The marker the host draws for [this] fart: same id and (public) point, the pending flag (`MapScreen.md` pending
+ * style), and [label] with [postingSuffix] appended while pending, so the state isn't carried by opacity alone.
+ */
+fun MapFart.toMarker(label: String, postingSuffix: String): MapMarker = MapMarker(
+    id = id,
+    lat = lat,
+    lng = lng,
+    contentDescription = if (isPending) "$label, $postingSuffix" else label,
+    isPending = isPending,
+)
 
 /**
  * The marker's screen-reader label (`DesignSpecification.md` a11y): flavor and age, "Your …" for the user's own.

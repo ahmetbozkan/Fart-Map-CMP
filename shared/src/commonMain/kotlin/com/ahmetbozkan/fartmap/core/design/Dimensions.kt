@@ -27,6 +27,9 @@ object Spacing {
     val sheetPadding: Dp = xxl
     val minTouchTarget: Dp = 48.dp
     val topBarHeight: Dp = 56.dp
+
+    /** The coarse location preview on Log Fart (CREATE-03.1 step 1). */
+    val mapThumbnailHeight: Dp = 160.dp
 }
 
 /** Elevation levels (DesignSpecification.md §7). */

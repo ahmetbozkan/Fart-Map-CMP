@@ -20,6 +20,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import com.ahmetbozkan.fartmap.core.domain.location.DeviceLocation
 import com.ahmetbozkan.fartmap.core.domain.location.LocationLookup
 import com.ahmetbozkan.fartmap.core.domain.location.LocationPermission
+import com.ahmetbozkan.fartmap.core.domain.location.isApproximateFix
 import com.ahmetbozkan.fartmap.core.observability.Logger
 import com.google.android.gms.location.CurrentLocationRequest
 import com.google.android.gms.location.LocationServices
@@ -179,7 +180,16 @@ internal class AndroidLocationProvider(
             continuation.invokeOnCancellation { onCancel() }
         }
 
-    private fun Location.toDeviceLocation(): DeviceLocation? = DeviceLocation.orNull(lat = latitude, lng = longitude)
+    // Only ACCESS_COARSE_LOCATION is held, so every fix is approximate (ADR-0026, Proposed: option A would add fine
+    // location and pass reducedAccuracy = !fineGranted here).
+    private fun Location.toDeviceLocation(): DeviceLocation? = DeviceLocation.orNull(
+        lat = latitude,
+        lng = longitude,
+        isApproximate = isApproximateFix(
+            horizontalAccuracyMeters = if (hasAccuracy()) accuracy.toDouble() else null,
+            reducedAccuracy = true,
+        ),
+    )
 
     private fun warn(operation: String, reason: String) = logger.warn(
         feature = "location",

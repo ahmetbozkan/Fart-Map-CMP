@@ -13,6 +13,7 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -24,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -35,15 +37,16 @@ import com.ahmetbozkan.fartmap.core.design.FartMapTheme
 import com.ahmetbozkan.fartmap.core.design.PillShape
 import com.ahmetbozkan.fartmap.core.design.Spacing
 import com.ahmetbozkan.fartmap.core.design.components.messageResource
+import com.ahmetbozkan.fartmap.core.domain.fart.LoggedFart
 import com.ahmetbozkan.fartmap.core.domain.location.MapCamera
 import com.ahmetbozkan.fartmap.core.domain.map.MapFilter
 import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
 import com.ahmetbozkan.fartmap.core.observability.AppError
 import com.ahmetbozkan.fartmap.core.platform.MapHost
-import com.ahmetbozkan.fartmap.core.platform.MapMarker
 import com.ahmetbozkan.fartmap.core.platform.StaticMapHost
 import com.ahmetbozkan.fartmap.feature.map.domain.MapFart
 import com.ahmetbozkan.fartmap.resources.Res
+import com.ahmetbozkan.fartmap.resources.ic_add
 import com.ahmetbozkan.fartmap.resources.ic_my_location
 import com.ahmetbozkan.fartmap.resources.map_empty_body
 import com.ahmetbozkan.fartmap.resources.map_empty_mine_body
@@ -56,6 +59,8 @@ import com.ahmetbozkan.fartmap.resources.map_followers_body
 import com.ahmetbozkan.fartmap.resources.map_followers_title
 import com.ahmetbozkan.fartmap.resources.map_locate_me
 import com.ahmetbozkan.fartmap.resources.map_locating
+import com.ahmetbozkan.fartmap.resources.map_log_fart
+import com.ahmetbozkan.fartmap.resources.map_marker_posting
 import com.ahmetbozkan.fartmap.resources.map_location_blocked_body
 import com.ahmetbozkan.fartmap.resources.map_location_blocked_title
 import com.ahmetbozkan.fartmap.resources.map_location_denied_body
@@ -71,31 +76,49 @@ import com.ahmetbozkan.fartmap.resources.map_truncated_body
 import com.ahmetbozkan.fartmap.resources.map_truncated_title
 import com.ahmetbozkan.fartmap.resources.state_loading
 import com.ahmetbozkan.fartmap.resources.state_retry
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
-/** The Map tab, the launch screen (MAP-01): the native map via [MapHost], the filter row and the data states. */
+/**
+ * The Map tab, the launch screen (MAP-01): the native map via [MapHost], the filter row and the data states.
+ * [onOpenLogFart] navigates to Log Fart; [logged] is a fart Log Fart just handed off (the shell passes it back once),
+ * and [onLoggedHandled] tells the shell it was taken.
+ */
 @Composable
 fun MapRoute(
+    onOpenLogFart: (MapCamera) -> Unit,
     modifier: Modifier = Modifier,
+    logged: LoggedFart? = null,
+    onLoggedHandled: () -> Unit = {},
     viewModel: MapViewModel = koinViewModel(),
     mapHost: MapHost = koinInject(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val currentOnOpenLogFart by rememberUpdatedState(onOpenLogFart)
     // NavHost composes only the current tab, so this runs each time the Map tab is shown (map_viewed).
     LaunchedEffect(Unit) { viewModel.onAction(MapAction.Shown) }
-    // The host is the only consumer of the VM's events; the exhaustive `when` makes a new event a compile error here.
-    val cameraMoves = remember(viewModel) {
-        viewModel.events.map { event ->
+    // Buffered: a move that arrives before the host collects (the map has no size yet) is applied when it does.
+    val cameraMoves = remember(viewModel) { Channel<MapCamera>(Channel.BUFFERED) }
+    // The only consumer of the VM's events; the exhaustive `when` makes a new event a compile error here.
+    LaunchedEffect(viewModel) {
+        viewModel.events.collect { event ->
             when (event) {
-                is MapEvent.MoveCamera -> event.camera
+                is MapEvent.MoveCamera -> cameraMoves.send(event.camera)
+                is MapEvent.OpenLogFart -> currentOnOpenLogFart(event.camera)
             }
+        }
+    }
+    LaunchedEffect(logged) {
+        if (logged != null) {
+            viewModel.onAction(MapAction.FocusLogged(logged))
+            onLoggedHandled()
         }
     }
     MapScreen(
@@ -103,7 +126,7 @@ fun MapRoute(
         mapHost = mapHost,
         onAction = viewModel::onAction,
         modifier = modifier,
-        cameraMoves = cameraMoves,
+        cameraMoves = remember(cameraMoves) { cameraMoves.receiveAsFlow() },
     )
 }
 
@@ -115,13 +138,9 @@ fun MapScreen(
     modifier: Modifier = Modifier,
     cameraMoves: Flow<MapCamera> = emptyFlow(),
 ) {
+    val posting = stringResource(Res.string.map_marker_posting)
     val markers = state.farts.map { fart ->
-        MapMarker(
-            id = fart.id,
-            lat = fart.lat,
-            lng = fart.lng,
-            contentDescription = fart.markerLabel(state.uid, state.nowEpochMs)
-        )
+        fart.toMarker(label = fart.markerLabel(state.uid, state.nowEpochMs), postingSuffix = posting)
     }
     Box(modifier = modifier.fillMaxSize()) {
         mapHost.Content(
@@ -130,6 +149,7 @@ fun MapScreen(
             cameraMoves = cameraMoves,
             onMarkerTap = { onAction(MapAction.MarkerTapped(it)) },
             onCameraIdle = { viewport, camera -> onAction(MapAction.CameraIdle(viewport, camera)) },
+            interactive = true,
             modifier = Modifier.fillMaxSize(),
         )
         Column(
@@ -146,6 +166,7 @@ fun MapScreen(
             verticalArrangement = Arrangement.spacedBy(Spacing.sm),
         ) {
             LocateButton(isLocating = state.isLocating, onClick = { onAction(MapAction.LocateMe) })
+            LogFartButton(onClick = { onAction(MapAction.LogFartTapped) })
             state.locationNotice?.let { notice ->
                 LocationNoticeCard(
                     notice = notice,
@@ -173,6 +194,18 @@ private fun LocateButton(isLocating: Boolean, onClick: () -> Unit) {
             Icon(painter = painterResource(Res.drawable.ic_my_location), contentDescription = null)
         }
     }
+}
+
+/** The primary CTA (`MapScreen.md`): opens Log Fart. */
+@Composable
+private fun LogFartButton(onClick: () -> Unit) {
+    val label = stringResource(Res.string.map_log_fart)
+    ExtendedFloatingActionButton(
+        onClick = onClick,
+        icon = { Icon(painter = painterResource(Res.drawable.ic_add), contentDescription = null) },
+        text = { Text(label) },
+        modifier = Modifier.heightIn(min = Spacing.minTouchTarget),
+    )
 }
 
 private val noticeTexts: Map<LocationNotice, Pair<StringResource, StringResource>> = mapOf(

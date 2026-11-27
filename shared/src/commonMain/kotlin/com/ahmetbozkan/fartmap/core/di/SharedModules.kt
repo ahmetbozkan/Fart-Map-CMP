@@ -10,6 +10,8 @@ import com.ahmetbozkan.fartmap.core.domain.session.SessionRepository
 import com.ahmetbozkan.fartmap.core.domain.session.SignOut
 import com.ahmetbozkan.fartmap.core.domain.write.AppWriteScope
 import com.ahmetbozkan.fartmap.core.domain.write.PendingWriteMonitor
+import com.ahmetbozkan.fartmap.core.domain.location.MapCamera
+import com.ahmetbozkan.fartmap.core.navigation.MainShellViewModel
 import com.ahmetbozkan.fartmap.core.navigation.RootViewModel
 import com.ahmetbozkan.fartmap.core.observability.ConsoleLogSink
 import com.ahmetbozkan.fartmap.core.observability.LogSink
@@ -19,6 +21,7 @@ import com.ahmetbozkan.fartmap.core.platform.AppEnvironment
 import com.ahmetbozkan.fartmap.core.platform.DefaultsRemoteConfig
 import com.ahmetbozkan.fartmap.core.platform.RemoteConfig
 import com.ahmetbozkan.fartmap.feature.auth.presentation.AuthViewModel
+import com.ahmetbozkan.fartmap.feature.logfart.presentation.LogFartViewModel
 import com.ahmetbozkan.fartmap.feature.map.presentation.MapViewModel
 import com.ahmetbozkan.fartmap.feature.onboarding.presentation.AgeGateViewModel
 import com.ahmetbozkan.fartmap.feature.profile.presentation.ProfileViewModel
@@ -94,6 +97,20 @@ private val featureModule = module {
     viewModelOf(::AgeGateViewModel)
     viewModelOf(::ProfileViewModel)
     viewModel { MapViewModel(get(), get(), get(), get(), get(), clock = Clock.System) }
+    viewModelOf(::MainShellViewModel)
+    viewModel { (startCamera: MapCamera) ->
+        LogFartViewModel(
+            startCamera = startCamera,
+            sessions = get(),
+            preferences = get(),
+            location = get(),
+            network = get(),
+            farts = get(),
+            analytics = get(),
+            logger = get(),
+            clock = Clock.System,
+        )
+    }
 }
 
 @OptIn(ExperimentalTime::class)

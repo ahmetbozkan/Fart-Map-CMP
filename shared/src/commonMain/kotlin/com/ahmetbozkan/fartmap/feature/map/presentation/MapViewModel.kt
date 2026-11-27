@@ -1,6 +1,7 @@
 package com.ahmetbozkan.fartmap.feature.map.presentation
 
 import androidx.lifecycle.viewModelScope
+import com.ahmetbozkan.fartmap.core.domain.fart.LoggedFart
 import com.ahmetbozkan.fartmap.core.domain.location.DeviceLocation
 import com.ahmetbozkan.fartmap.core.domain.location.GeohashCover
 import com.ahmetbozkan.fartmap.core.domain.location.LocationLookup
@@ -11,6 +12,7 @@ import com.ahmetbozkan.fartmap.core.domain.map.MapFilter
 import com.ahmetbozkan.fartmap.core.domain.preferences.PreferencesRepository
 import com.ahmetbozkan.fartmap.core.domain.session.SessionRepository
 import com.ahmetbozkan.fartmap.core.domain.session.SessionState
+import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsEvent
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsTracker
 import com.ahmetbozkan.fartmap.core.platform.LocationProvider
@@ -108,7 +110,25 @@ class MapViewModel(
                 location.openAppSettings()
                 setState { copy(locationNotice = null) }
             }
+            MapAction.LogFartTapped -> sendEvent(MapEvent.OpenLogFart(state.value.camera))
+            is MapAction.FocusLogged -> onFocusLogged(action.logged)
         }
+    }
+
+    /**
+     * Moves to the new marker's public point. When the filter can't show it (Everyone lists PUBLIC only; Followers
+     * runs no query until SOCIAL-03), switches to Mine for this session without saving the preference.
+     */
+    private fun onFocusLogged(logged: LoggedFart) {
+        userMovedCamera = true
+        val filter = restoredFilter.value ?: state.value.filter
+        val hidden = filter == MapFilter.FOLLOWERS ||
+            (filter == MapFilter.EVERYONE && logged.visibility != VisibilityMode.PUBLIC)
+        if (hidden) {
+            setState { copy(filter = MapFilter.MINE) }
+            restoredFilter.value = MapFilter.MINE
+        }
+        sendEvent(MapEvent.MoveCamera(MapCamera(logged.publicLat, logged.publicLng, MapState.CENTER_ZOOM)))
     }
 
     private suspend fun moveToStartLocation() {

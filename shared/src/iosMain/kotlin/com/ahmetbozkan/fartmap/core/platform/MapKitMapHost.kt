@@ -45,6 +45,7 @@ internal class MapKitMapHost(private val logger: Logger) : MapHost {
         cameraMoves: Flow<MapCamera>,
         onMarkerTap: (markerId: String) -> Unit,
         onCameraIdle: (viewport: MapViewport, camera: MapCamera) -> Unit,
+        interactive: Boolean,
         modifier: Modifier,
     ) {
         val currentOnMarkerTap by rememberUpdatedState(onMarkerTap)
@@ -60,6 +61,12 @@ internal class MapKitMapHost(private val logger: Logger) : MapHost {
         val mapView = remember { FartMapView(initialCamera).apply { this.delegate = delegate } }
         val annotations = remember { mutableMapOf<String, FartAnnotation>() }
 
+        LaunchedEffect(interactive) {
+            mapView.scrollEnabled = interactive
+            mapView.zoomEnabled = interactive
+            mapView.rotateEnabled = interactive
+            mapView.pitchEnabled = interactive
+        }
         LaunchedEffect(markers) { mapView.sync(annotations, markers) }
         LaunchedEffect(cameraMoves) { cameraMoves.collect { mapView.moveTo(it) } }
 
@@ -158,6 +165,7 @@ private class MapDelegate(
         view.annotation = annotation
         view.canShowCallout = false
         view.accessibilityLabel = annotation.marker.contentDescription
+        view.alpha = if (annotation.marker.isPending) MapMarker.PENDING_ALPHA.toDouble() else 1.0
         return view
     }
 
