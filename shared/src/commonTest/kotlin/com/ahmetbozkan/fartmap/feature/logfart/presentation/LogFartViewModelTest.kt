@@ -13,6 +13,7 @@ import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
 import com.ahmetbozkan.fartmap.core.fakes.FakeCosmeticRepository
 import com.ahmetbozkan.fartmap.core.fakes.FakeFartRepository
 import com.ahmetbozkan.fartmap.core.fakes.FakeLocationProvider
+import com.ahmetbozkan.fartmap.core.fakes.FakeLogDraftRepository
 import com.ahmetbozkan.fartmap.core.fakes.FakeNetworkStatus
 import com.ahmetbozkan.fartmap.core.fakes.FakePreferencesRepository
 import com.ahmetbozkan.fartmap.core.fakes.InMemorySessionRepository
@@ -83,6 +84,7 @@ class LogFartViewModelTest {
         network = network,
         farts = farts,
         cosmetics = FakeCosmeticRepository(),
+        drafts = FakeLogDraftRepository(),
         analytics = AnalyticsTracker { tracked += it },
         logger = Logger(sinks = listOf(LogSink { logs += it })),
         clock = clock,

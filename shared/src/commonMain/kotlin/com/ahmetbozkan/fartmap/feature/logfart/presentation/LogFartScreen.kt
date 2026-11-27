@@ -93,8 +93,9 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 /**
- * Log Fart, quick-log version (STORY-01-04-02). [onFinish] receives the handed-off fart (the shell closes the screen
- * and shows its marker); [onClose] leaves without logging. System back and the iOS swipe go through [LogFartAction.Close].
+ * Log Fart (STORY-01-04-02..04). [onFinish] receives the handed-off fart (the shell closes the screen and shows its
+ * marker); [onClose] leaves without logging. System back and the iOS swipe go through [LogFartAction.Close], which asks
+ * keep-or-discard on a dirty form.
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -110,18 +111,33 @@ fun LogFartEntry(
     val currentOnFinish by rememberUpdatedState(onFinish)
     val currentOnClose by rememberUpdatedState(onClose)
     var showVoiceInfo by rememberSaveable { mutableStateOf(false) }
+    var showLeaveDialog by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
                 is LogFartEvent.Finished -> currentOnFinish(event.logged)
                 LogFartEvent.Closed -> currentOnClose()
                 LogFartEvent.ShowVoiceInfo -> showVoiceInfo = true
+                LogFartEvent.ConfirmLeave -> showLeaveDialog = true
             }
         }
     }
     BackHandler { viewModel.onAction(LogFartAction.Close) }
     LogFartScreen(state = state, mapHost = mapHost, onAction = viewModel::onAction, modifier = modifier)
     if (showVoiceInfo) VoiceInfoSheet(onDismiss = { showVoiceInfo = false })
+    if (showLeaveDialog) {
+        LeaveDraftDialog(
+            onKeep = {
+                showLeaveDialog = false
+                viewModel.onAction(LogFartAction.KeepDraftAndLeave)
+            },
+            onDiscard = {
+                showLeaveDialog = false
+                viewModel.onAction(LogFartAction.DiscardDraftAndLeave)
+            },
+            onDismiss = { showLeaveDialog = false },
+        )
+    }
 }
 
 @Composable
@@ -149,6 +165,7 @@ private fun LogForm(state: LogFartState, mapHost: MapHost, onAction: (LogFartAct
             modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(Spacing.screenEdge),
             verticalArrangement = Arrangement.spacedBy(Spacing.lg),
         ) {
+            if (state.restoredDraft) RestoredNote()
             LocationCard(state = state, mapHost = mapHost, onAction = onAction)
             WhenCard(
                 timestampEpochMs = state.timestampEpochMs,
@@ -470,6 +487,24 @@ private fun LogFartAllFieldsSetPreview() = Preview(
         description = "Silent but deadly. The elevator will never be the same 💨",
     ),
 )
+
+@Preview
+@Composable
+private fun LogFartRestoredDraftPreview() = Preview(
+    previewVisibility.copy(
+        location = LocationStep.Resolved(previewPoint, LocationSource.DEVICE),
+        flavor = 4,
+        description = "Back for round two",
+        isDirty = true,
+        restoredDraft = true,
+    ),
+)
+
+@Preview
+@Composable
+private fun LogFartLeaveDialogPreview() = FartMapTheme {
+    LeaveDraftDialog(onKeep = {}, onDiscard = {}, onDismiss = {})
+}
 
 @Preview
 @Composable

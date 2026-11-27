@@ -17,6 +17,11 @@ import com.ahmetbozkan.fartmap.core.observability.AppError
  * Detailed fields (STORY-01-04-03) all have defaults, so "Let It Rip" works without touching them: [timestampEpochMs]
  * (screen-open time), [avatarId], [soundId] (none), [flavor], [intensity], [description]. [avatars] and [sounds] are
  * the picker options; locked ones are shown but can't be selected yet (EPIC-01-06).
+ *
+ * Drafts (STORY-01-04-04): [isDirty] is true once the user changed something (or the form came from a draft), which
+ * turns on autosave and the keep-or-discard question on back. [timePicked] says the time was chosen, so the draft keeps
+ * it. [restoredDraft] shows the "picked up where you left off" note. [pendingAvatarId] / [pendingSoundId] hold a
+ * restored pick that isn't usable yet (an owned item whose entitlement hasn't loaded).
  */
 data class LogFartState(
     val location: LocationStep = LocationStep.Locating,
@@ -34,6 +39,11 @@ data class LogFartState(
     val intensity: Double = DEFAULT_INTENSITY,
     val description: String = "",
     val placeholderIndex: Int = 0,
+    val isDirty: Boolean = false,
+    val timePicked: Boolean = false,
+    val restoredDraft: Boolean = false,
+    val pendingAvatarId: String? = null,
+    val pendingSoundId: String? = null,
 ) {
     val canSubmit: Boolean
         get() = location is LocationStep.Resolved && visibility != null &&
@@ -78,7 +88,7 @@ enum class MissingReason {
 /** The pin picker: the pin stays in the middle and [center] follows the map. */
 data class PinPicker(val center: MapCamera)
 
-/** CREATE-03.3 submission states; DRAFT is "editing" (persisted drafts are STORY-01-04-04). */
+/** CREATE-03.3 submission states; DRAFT is "editing" (autosaved once dirty, STORY-01-04-04). */
 enum class LogStatus { DRAFT, UPLOADING, SUCCESS, FAILED, OFFLINE }
 
 sealed interface LogFartAction {
@@ -124,6 +134,15 @@ sealed interface LogFartAction {
 
     /** The close button, system back or the iOS swipe. */
     data object Close : LogFartAction
+
+    /** An answer in the keep-or-discard dialog (STORY-01-04-04); ignored unless the form is editable or failed. */
+    sealed interface LeaveChoice : LogFartAction
+
+    /** "Keep draft". */
+    data object KeepDraftAndLeave : LeaveChoice
+
+    /** "Discard". */
+    data object DiscardDraftAndLeave : LeaveChoice
 }
 
 sealed interface LogFartEvent {
@@ -134,4 +153,7 @@ sealed interface LogFartEvent {
 
     /** Opens the informational "Premium — coming later" sheet; no purchase or ad option. */
     data object ShowVoiceInfo : LogFartEvent
+
+    /** Back on a dirty form: ask "keep the draft or discard it?". */
+    data object ConfirmLeave : LogFartEvent
 }

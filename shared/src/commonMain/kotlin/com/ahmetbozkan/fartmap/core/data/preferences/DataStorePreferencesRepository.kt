@@ -112,7 +112,10 @@ class DataStorePreferencesRepository(
 
         // User-scoped: wiped on sign-out. Every new user key must be added to USER_SCOPED_KEYS.
         private val LAST_VISIBILITY_MODE = stringPreferencesKey("last_visibility_mode")
-        private val USER_SCOPED_KEYS: List<Preferences.Key<*>> = listOf(LAST_VISIBILITY_MODE)
+
+        /** The Log Fart draft, read and written by `DataStoreLogDraftRepository` (STORY-01-04-04). */
+        internal val LOG_DRAFT = stringPreferencesKey("log_draft")
+        private val USER_SCOPED_KEYS: List<Preferences.Key<*>> = listOf(LAST_VISIBILITY_MODE, LOG_DRAFT)
 
         /**
          * Creates the store at [path] (an absolute file path from the platform module). Create once per process.

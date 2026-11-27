@@ -1,7 +1,7 @@
 # STATE
 
 > Live operating state. Keep it under about 40 lines; history belongs in git and PRs, decisions in `planning/decisions/`. The SessionStart hook prints the "Now" block. Update it with every story status change.
-> Last updated: 2026-11-27.
+> Last updated: 2026-11-28.
 
 ## Now
 - Phase 1, EPIC-01-01. STORY-01-01-01 Done. Planning consolidation, `.claude/` setup, static analysis and ADR-0022/0023/0024 acceptance merged (PRs #2–#5).
@@ -19,11 +19,12 @@
 - EPIC-01-04 (Log Fart) started and split into -01..-06 (ROADMAP). STORY-01-04-01 Done: `FartRepository.createFart` (one never-awaited batch: public doc with the fuzzed point + owner-only `private/location`). Rules now require the private location in the creating batch and make it create-only. `onFartCreated` re-validates the public projection and is now in `PROD_FUNCTIONS`.
 - STORY-01-04-02 Done (PR #29): quick log from the map FAB: location step (fix / "Use my location" / centre-pin picker, approximate hint), ADR-0023 visibility default, "Let It Rip" with success / offline / failed, pending markers at half opacity, `NetworkStatus` capability, fart rejections in a shell snackbar, `log_started` / `log_submitted`.
 - STORY-01-04-03 Done: detailed fields on Log Fart (date/time pickers, avatar and sound chips from `cosmetic_items` + `user_entitlements` with a bundled starter fallback, flavor stepper, intensity slider, caption with a 280 stop, locked voice row + info sheet). Locked items are drawn but inert until EPIC-01-06; sound playback, preview and the sound toggle moved to EPIC-01-05.
+- STORY-01-04-04 Done: Log Fart drafts. A changed form autosaves to `log_draft` (user-scoped; never coordinates; the time only if picked), is restored on the next open with a note, is cleared on hand-off and saved at once on failure. Back on a changed form asks Keep / Discard. `log_abandoned` with `step_reached`.
 
 ## Next
 1. Owner: run the EPIC-01-03 test plan (`planning/testing/EPIC-01-03.md`, Android + iOS) and file failures as `bug` issues. Seed the dev catalog and dev test farts first (`OwnerTodo.md` A, D).
 2. Owner: run the EPIC-01-02 test plan (`planning/testing/EPIC-01-02.md`) if not done yet.
-3. STORY-01-04-04 (drafts) is next. Owner: decide ADR-0026 (location precision; -02 shipped with today's permissions and the hint). Owner: `.claude/rules/ios-shell.md` wording update suggested in `stories/STORY-01-03-02.md` Evidence (autopilot can't edit `.claude/`).
+3. STORY-01-04-05 (delete own fart) is next. Owner: decide ADR-0026 (location precision; -02 shipped with today's permissions and the hint). Owner: `.claude/rules/ios-shell.md` wording update suggested in `stories/STORY-01-03-02.md` Evidence (autopilot can't edit `.claude/`).
 4. On the Mac: commit the `Package.resolved` Xcode updates (GoogleSignIn + FirebaseFunctions pins).
 
 ## Pending owner decisions

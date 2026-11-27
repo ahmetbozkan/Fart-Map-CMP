@@ -40,7 +40,7 @@
 |---|---|
 | `first_open_done` | Device-scoped; gives `is_first_open` on `app_open` (Observability.md §11) |
 | `last_visibility_mode` | Unset → the Phase 1 default **PUBLIC** for the 18+ age band (ADR-0023); the 13–17 band and an unknown band get FOLLOWERS and are never offered PUBLIC (enforced by rules, ADR-0023 amendment). Once the user picks a value, the last-used value wins if it is still allowed |
-| `log_draft` | Serialized Log Fart draft; survives process death; cleared on successful hand-off (CREATE-03 `DRAFT`) |
+| `log_draft` | Serialized Log Fart draft (JSON); survives process death; cleared on successful hand-off (CREATE-03 `DRAFT`). User-scoped. Holds the owner uid, the cosmetic picks, flavor, intensity, caption and visibility, and the time only if the user picked it. **Never coordinates.** The caption can reach the user's own device backup (STORY-01-04-04) |
 | `play_marker_sounds_enabled` | true |
 | `map_filter_last_selected` | EVERYONE (MINE / FOLLOWERS / EVERYONE; unknown → EVERYONE). Device-scoped: kept by sign-out |
 | `onboarding_completed` | false |

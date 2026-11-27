@@ -165,7 +165,7 @@ The minimum event set that makes `Metrics.md` §4–§8 measurable in Phase 1. N
 | `onboarding_completed` | first-launch flow finished | `duration_bucket` | Activation |
 | `map_viewed` | Map tab shown, after its first result | `marker_count_bucket` (`0`/`1_9`/`10_49`/`50_plus`, markers in view), `filter` (mine/followers/everyone) | L1/L3 health |
 | `log_started` | Log Fart opened | `entry` (fab/quick) | L1 |
-| `log_abandoned` | Log Fart dismissed without submit | `step_reached` | L1 leak rate |
+| `log_abandoned` | Log Fart dismissed without a hand-off (a clean close, Keep draft, Discard) | `step_reached` (`location`: no point yet / `details`: a point is resolved / `failed`: the last submit failed) | L1 leak rate |
 | `log_submitted` | submit tapped | `visibility`, `has_description`, `has_sound`, `avatar_is_free`, `offline` | Activation, L1 |
 | `marker_appeared` | own marker rendered after submit | `time_to_marker_bucket` | Time-to-first-log |
 | `marker_opened` | marker tapped / detail sheet opened (the same tap once the sheet exists, EPIC-01-05; tracked once) | `is_own`, `source` (map/social_tab/push) | L2/L3 |

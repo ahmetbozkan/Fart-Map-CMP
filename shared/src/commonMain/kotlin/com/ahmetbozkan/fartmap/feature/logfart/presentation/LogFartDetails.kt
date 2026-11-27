@@ -37,23 +37,22 @@ fun limitDescription(text: String): String {
 /** What goes into `description_text`: trimmed, and null when there is nothing but whitespace. */
 fun descriptionOrNull(text: String): String? = text.trim().ifEmpty { null }
 
-/** Applies one field edit; invalid values (locked items, out-of-range levels) leave the state as it is. */
-internal fun LogFartState.reduce(edit: LogFartAction.FieldEdit): LogFartState = when (edit) {
-    is LogFartAction.DateTimePicked -> copy(timestampEpochMs = edit.epochMs)
-    is LogFartAction.AvatarSelected -> withAvatar(edit.id)
-    is LogFartAction.SoundSelected -> withSound(edit.id)
-    is LogFartAction.FlavorSelected -> withFlavor(edit.level)
-    is LogFartAction.IntensityChanged -> withIntensity(edit.value)
-    is LogFartAction.DescriptionChanged -> withDescription(edit.text)
-}
-
-internal fun LogFartState.withAvatar(id: String): LogFartState =
-    if (avatars.isUsable(id)) copy(avatarId = id) else this
-
-internal fun LogFartState.withSound(id: String?): LogFartState = when {
-    id == null -> copy(soundId = null)
-    sounds.isUsable(id) -> copy(soundId = id)
-    else -> this
+/**
+ * Applies one field edit; invalid values (locked items, out-of-range levels) leave the state as it is. An accepted
+ * edit marks the form dirty (STORY-01-04-04); a pick in the avatar or sound row replaces a pending restored one.
+ */
+internal fun LogFartState.reduce(edit: LogFartAction.FieldEdit): LogFartState {
+    val next = when (edit) {
+        is LogFartAction.DateTimePicked -> copy(timestampEpochMs = edit.epochMs, timePicked = true)
+        is LogFartAction.AvatarSelected ->
+            if (avatars.isUsable(edit.id)) copy(avatarId = edit.id, pendingAvatarId = null) else this
+        is LogFartAction.SoundSelected ->
+            if (edit.id == null || sounds.isUsable(edit.id)) copy(soundId = edit.id, pendingSoundId = null) else this
+        is LogFartAction.FlavorSelected -> withFlavor(edit.level)
+        is LogFartAction.IntensityChanged -> withIntensity(edit.value)
+        is LogFartAction.DescriptionChanged -> withDescription(edit.text)
+    }
+    return if (next == this) this else next.copy(isDirty = true)
 }
 
 internal fun LogFartState.withFlavor(level: Int): LogFartState =
@@ -89,4 +88,4 @@ internal fun LogFartState.withOptions(avatars: List<CosmeticOption>, sounds: Lis
 internal val LogFartState.avatarIsFree: Boolean
     get() = avatars.firstOrNull { it.id == avatarId }?.isFree ?: true
 
-private fun List<CosmeticOption>.isUsable(id: String) = any { it.id == id && !it.isLocked }
+internal fun List<CosmeticOption>.isUsable(id: String) = any { it.id == id && !it.isLocked }
