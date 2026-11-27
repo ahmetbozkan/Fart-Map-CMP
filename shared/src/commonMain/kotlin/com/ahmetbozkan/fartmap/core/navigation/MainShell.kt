@@ -82,7 +82,8 @@ fun MainShell(modifier: Modifier = Modifier, viewModel: MainShellViewModel = koi
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
-                MainShellEvent.FartRejected -> snackbar.showSnackbar(getString(Res.string.log_rejected))
+                // Launched, so a showing snackbar never holds back the collector (the host queues the messages).
+                MainShellEvent.FartRejected -> launch { snackbar.showSnackbar(getString(Res.string.log_rejected)) }
             }
         }
     }

@@ -59,7 +59,7 @@ class LogFartViewModel(
     init {
         analytics.track(AnalyticsEvent.LogStarted(AnalyticsEvent.LogEntry.FAB))
         viewModelScope.launch { loadVisibility() }
-        viewModelScope.launch { locateAtOpen() }
+        locate { locateAtOpen() }
     }
 
     override fun onAction(action: LogFartAction) {
@@ -95,14 +95,25 @@ class LogFartViewModel(
         }
     }
 
-    private fun onUseMyLocation() {
+    /** One location flow at a time (open, "Use my location"), from the permission check to the fix, so a tap never
+     *  starts a second permission prompt or lookup while one is running. */
+    private fun locate(block: suspend () -> Unit) {
         if (isLocating) return
+        isLocating = true
         viewModelScope.launch {
-            when (location.permission()) {
-                LocationPermission.GRANTED -> lookUp()
-                LocationPermission.BLOCKED -> missing(MissingReason.BLOCKED)
-                LocationPermission.NOT_DETERMINED, LocationPermission.DENIED -> askThenLookUp()
+            try {
+                block()
+            } finally {
+                isLocating = false
             }
+        }
+    }
+
+    private fun onUseMyLocation() = locate {
+        when (location.permission()) {
+            LocationPermission.GRANTED -> lookUp()
+            LocationPermission.BLOCKED -> missing(MissingReason.BLOCKED)
+            LocationPermission.NOT_DETERMINED, LocationPermission.DENIED -> askThenLookUp()
         }
     }
 
@@ -118,19 +129,14 @@ class LogFartViewModel(
 
     /** A fresh fix within [FIX_TIMEOUT], else the cached fix, else Missing. A placed pin is never overwritten. */
     private suspend fun lookUp() {
-        isLocating = true
         if (state.value.location !is LocationStep.Resolved) setState { copy(location = LocationStep.Locating) }
-        try {
-            val lookup = withTimeoutOrNull(FIX_TIMEOUT) { location.currentLocation() }
-            val found = (lookup as? LocationLookup.Found)?.location ?: location.lastKnownLocation()
-            when {
-                found != null -> resolveFromDevice(found)
-                lookup == LocationLookup.ServicesOff -> missing(MissingReason.SERVICES_OFF)
-                lookup == LocationLookup.NotAllowed -> missing(MissingReason.NEEDS_PERMISSION)
-                else -> missing(MissingReason.UNAVAILABLE)
-            }
-        } finally {
-            isLocating = false
+        val lookup = withTimeoutOrNull(FIX_TIMEOUT) { location.currentLocation() }
+        val found = (lookup as? LocationLookup.Found)?.location ?: location.lastKnownLocation()
+        when {
+            found != null -> resolveFromDevice(found)
+            lookup == LocationLookup.ServicesOff -> missing(MissingReason.SERVICES_OFF)
+            lookup == LocationLookup.NotAllowed -> missing(MissingReason.NEEDS_PERMISSION)
+            else -> missing(MissingReason.UNAVAILABLE)
         }
     }
 
@@ -225,21 +231,21 @@ class LogFartViewModel(
     )
 
     private fun onHandedOff(fartId: String, point: DeviceLocation, visibility: VisibilityMode, offline: Boolean) {
-        // A failed save is logged by the repository; this log still went out with the chosen visibility.
-        viewModelScope.launch { preferences.setLastVisibilityMode(visibility) }
         val public = LocationFuzzer.project(fartId, point.lat, point.lng)
         setState { copy(status = if (offline) LogStatus.OFFLINE else LogStatus.SUCCESS) }
-        sendEvent(
-            LogFartEvent.Finished(
-                LoggedFart(
-                    fartId = fartId,
-                    publicLat = public.publicLat,
-                    publicLng = public.publicLng,
-                    visibility = visibility,
-                    queuedOffline = offline,
-                ),
-            ),
+        val logged = LoggedFart(
+            fartId = fartId,
+            publicLat = public.publicLat,
+            publicLng = public.publicLng,
+            visibility = visibility,
+            queuedOffline = offline,
         )
+        viewModelScope.launch {
+            // A local DataStore write, awaited before Finished: the shell pops this screen on Finished, which cancels
+            // viewModelScope. A failed save is logged by the repository; the log still went out with this visibility.
+            preferences.setLastVisibilityMode(visibility)
+            sendEvent(LogFartEvent.Finished(logged))
+        }
     }
 
     private fun onFailed(error: AppError) {

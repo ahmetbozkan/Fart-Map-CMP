@@ -14,7 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import platform.CoreLocation.CLAccuracyAuthorizationReducedAccuracy
+import platform.CoreLocation.CLAccuracyAuthorization
 import platform.CoreLocation.CLAuthorizationStatus
 import platform.CoreLocation.CLLocation
 import platform.CoreLocation.CLLocationManager
@@ -162,7 +162,8 @@ private fun CLAuthorizationStatus.toPermission(): LocationPermission = when (thi
 }
 
 /** True when the user turned Precise off for this app (iOS 14+ reduced accuracy). */
-private fun CLLocationManager.isReduced(): Boolean = accuracyAuthorization == CLAccuracyAuthorizationReducedAccuracy
+private fun CLLocationManager.isReduced(): Boolean = accuracyAuthorization ==
+    CLAccuracyAuthorization.CLAccuracyAuthorizationReducedAccuracy
 
 /**
  * Null for Core Location's invalid coordinate (it never reaches [DeviceLocation]'s range check). Approximate when

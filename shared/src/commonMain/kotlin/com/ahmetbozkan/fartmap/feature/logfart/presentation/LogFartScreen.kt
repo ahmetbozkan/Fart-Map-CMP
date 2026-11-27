@@ -33,7 +33,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -224,13 +226,14 @@ private fun Thumbnail(point: DeviceLocation, mapHost: MapHost) {
     }
 }
 
+/** Centred in its parent and lifted by its own height, so the pin's tip (the icon's bottom) marks the centre. */
 @Composable
 private fun CenterPin() {
     Icon(
         painter = painterResource(Res.drawable.ic_pin),
         contentDescription = null,
         tint = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.size(Spacing.huge),
+        modifier = Modifier.padding(bottom = Spacing.huge).size(Spacing.huge),
     )
 }
 
@@ -280,7 +283,9 @@ private fun VisibilityCard(state: LogFartState, onSelect: (VisibilityMode) -> Un
                         selected = mode == state.visibility,
                         onClick = { onSelect(mode) },
                         label = { Text(stringResource(visibilityLabels.getValue(mode))) },
-                        modifier = Modifier.heightIn(min = Spacing.minTouchTarget),
+                        // One choice of several: announced as a radio button, not a toggle.
+                        modifier = Modifier.heightIn(min = Spacing.minTouchTarget)
+                            .semantics { role = Role.RadioButton },
                     )
                 }
             }
@@ -346,7 +351,7 @@ private fun PinPickerOverlay(picker: PinPicker, mapHost: MapHost, onAction: (Log
             interactive = true,
             modifier = Modifier.fillMaxSize(),
         )
-        Box(modifier = Modifier.align(Alignment.Center).padding(bottom = Spacing.huge)) { CenterPin() }
+        Box(modifier = Modifier.align(Alignment.Center)) { CenterPin() }
         Card(modifier = Modifier.align(Alignment.TopCenter).padding(Spacing.screenEdge)) {
             Text(
                 text = stringResource(Res.string.log_picker_hint),

@@ -221,6 +221,22 @@ class LogFartViewModelTest {
     }
 
     @Test
+    fun aSecondTapWhileThePromptIsShowingNeverAsksTwice() = runTest {
+        location.status = LocationPermission.NOT_DETERMINED
+        val prompt = CompletableDeferred<Unit>()
+        location.requestGate = prompt
+        val vm = viewModel()
+
+        vm.onAction(LogFartAction.UseMyLocation)
+        vm.onAction(LogFartAction.UseMyLocation)
+        prompt.complete(Unit)
+
+        assertEquals(1, location.requests)
+        assertEquals(1, location.lookups)
+        assertEquals(LocationStep.Resolved(here, LocationSource.DEVICE), vm.state.value.location)
+    }
+
+    @Test
     fun aDeniedAskKeepsThePinRoute() = runTest {
         location.status = LocationPermission.NOT_DETERMINED
         location.requestResult = LocationPermission.DENIED
@@ -415,6 +431,22 @@ class LogFartViewModelTest {
         assertNotEquals(here.lat, logged.publicLat)
         assertEquals(LogStatus.SUCCESS, vm.state.value.status)
         assertEquals(VisibilityMode.PUBLIC, preferences.lastVisibility)
+    }
+
+    @Test
+    fun finishedWaitsForTheVisibilityToBeSaved() = runTest {
+        val save = CompletableDeferred<Unit>()
+        preferences.visibilitySaveGate = save
+        val vm = viewModel()
+        val events = events(vm)
+
+        vm.onAction(LogFartAction.Submit)
+        assertTrue(events.isEmpty())
+        assertNull(preferences.lastVisibility)
+
+        save.complete(Unit)
+        assertEquals(VisibilityMode.PUBLIC, preferences.lastVisibility)
+        assertTrue(events.single() is LogFartEvent.Finished)
     }
 
     @Test

@@ -24,10 +24,14 @@ class FakeLocationProvider(
         private set
     var lookupGate: CompletableDeferred<Unit>? = null
 
+    /** Set to hold `requestPermission()` (the system prompt is showing) until the test completes it. */
+    var requestGate: CompletableDeferred<Unit>? = null
+
     override suspend fun permission(): LocationPermission = status
 
     override suspend fun requestPermission(): LocationPermission {
         requests++
+        requestGate?.await()
         if (requestResult != LocationPermission.NOT_DETERMINED) status = requestResult
         return requestResult
     }

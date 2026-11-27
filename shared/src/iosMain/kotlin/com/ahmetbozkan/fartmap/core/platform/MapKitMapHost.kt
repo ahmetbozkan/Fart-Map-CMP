@@ -61,18 +61,19 @@ internal class MapKitMapHost(private val logger: Logger) : MapHost {
         val mapView = remember { FartMapView(initialCamera).apply { this.delegate = delegate } }
         val annotations = remember { mutableMapOf<String, FartAnnotation>() }
 
-        LaunchedEffect(interactive) {
-            mapView.scrollEnabled = interactive
-            mapView.zoomEnabled = interactive
-            mapView.rotateEnabled = interactive
-            mapView.pitchEnabled = interactive
-        }
         LaunchedEffect(markers) { mapView.sync(annotations, markers) }
         LaunchedEffect(cameraMoves) { cameraMoves.collect { mapView.moveTo(it) } }
 
         UIKitView(
             factory = { mapView },
             modifier = modifier,
+            // Applied before the view is first shown (unlike an effect), so a thumbnail is never briefly draggable.
+            update = { view ->
+                view.scrollEnabled = interactive
+                view.zoomEnabled = interactive
+                view.rotateEnabled = interactive
+                view.pitchEnabled = interactive
+            },
             properties = UIKitInteropProperties(
                 interactionMode = UIKitInteropInteractionMode.NonCooperative,
                 isNativeAccessibilityEnabled = true,
