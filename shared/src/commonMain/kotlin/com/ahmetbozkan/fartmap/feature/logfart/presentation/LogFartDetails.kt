@@ -3,6 +3,7 @@ package com.ahmetbozkan.fartmap.feature.logfart.presentation
 import com.ahmetbozkan.fartmap.core.domain.cosmetics.CosmeticOption
 import com.ahmetbozkan.fartmap.core.domain.fart.NewFart
 import com.ahmetbozkan.fartmap.core.domain.profile.StarterAvatars
+import kotlin.math.roundToInt
 
 // The detailed fields of Log Fart (STORY-01-04-03, CREATE-03.1 steps 2–7) as pure reducers on the state.
 
@@ -58,8 +59,15 @@ internal fun LogFartState.withSound(id: String?): LogFartState = when {
 internal fun LogFartState.withFlavor(level: Int): LogFartState =
     if (level in FLAVOR_RANGE) copy(flavor = level) else this
 
+/** Clamped to 0..1 and rounded to hundredths, so 0.9 is stored as 0.9, not as the Float's 0.8999999761581421. */
 internal fun LogFartState.withIntensity(value: Float): LogFartState =
-    if (value.isNaN()) this else copy(intensity = value.toDouble().coerceIn(0.0, 1.0))
+    if (value.isNaN()) {
+        this
+    } else {
+        copy(intensity = (value.toDouble().coerceIn(0.0, 1.0) * INTENSITY_STEPS).roundToInt() / INTENSITY_STEPS)
+    }
+
+private const val INTENSITY_STEPS = 100.0
 
 internal fun LogFartState.withDescription(text: String): LogFartState = copy(description = limitDescription(text))
 

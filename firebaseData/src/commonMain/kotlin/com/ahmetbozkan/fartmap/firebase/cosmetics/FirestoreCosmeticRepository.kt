@@ -11,7 +11,10 @@ import dev.gitlive.firebase.firestore.DocumentSnapshot
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.retryWhen
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -60,6 +63,28 @@ internal data class EntitlementGrantDto(
 internal fun EntitlementsDto.ownedIds(): Set<String> = items.keys
 
 /**
+ * The owned-items listener's error handling: a failure is reported and retried with backoff (a cancellation is not).
+ * Before the first value it emits the empty set (fail closed: paid items show locked; the rules decide anyway). After
+ * a value, the last known set stands while retrying, so a transient error never resets what the user picked.
+ */
+internal fun Flow<Set<String>>.ownedWithRetry(
+    onFailure: (Throwable) -> Unit,
+    retryDelayMs: (attempt: Long) -> Long,
+): Flow<Set<String>> = flow {
+    var hasValue = false // per collection
+    emitAll(
+        onEach { hasValue = true }
+            .retryWhen { failure, attempt ->
+                if (failure is CancellationException) return@retryWhen false
+                onFailure(failure)
+                if (!hasValue) emit(emptySet())
+                delay(retryDelayMs(attempt))
+                true
+            },
+    )
+}.distinctUntilChanged()
+
+/**
  * Catalog and owned items from Firestore (STORY-01-04-03). Reads only: both are server-written (ADR-0016). The catalog
  * is a handful of docs, read as a whole collection and filtered on the client, so it needs no index.
  */
@@ -80,15 +105,10 @@ class FirestoreCosmeticRepository(
     override fun observeOwnedItemIds(uid: String): Flow<Set<String>> =
         firestore.get().document("$ENTITLEMENTS/$uid").snapshots
             .map { snap -> if (snap.exists) snap.data(EntitlementsDto.serializer()).ownedIds() else emptySet() }
-            .retryWhen { failure, attempt ->
-                if (failure is CancellationException) return@retryWhen false
-                logFailure("observe_entitlements", "entitlements_listen_failed", failure)
-                // Fail closed while retrying: paid items show locked; the rules decide anyway.
-                emit(emptySet())
-                delay(retryDelay(attempt))
-                true
-            }
-            .distinctUntilChanged()
+            .ownedWithRetry(
+                onFailure = { logFailure("observe_entitlements", "entitlements_listen_failed", it) },
+                retryDelayMs = ::retryDelay,
+            )
 
     // A malformed catalog doc is skipped, not fatal: one bad item must not empty the pickers. No content is logged.
     private fun DocumentSnapshot.toItem(): CosmeticItem? = try {

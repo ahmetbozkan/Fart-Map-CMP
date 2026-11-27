@@ -165,7 +165,7 @@ class LogFartDetailsTest {
         vm.onAction(LogFartAction.AvatarSelected("avatar_paid_king"))
         vm.onAction(LogFartAction.SoundSelected("sound_paid_tuba"))
 
-        // What a failing entitlements read emits (fail closed).
+        // A grant revoked server-side (or a first read that failed before any value: fail closed).
         cosmetics.owned.value = emptySet()
 
         assertEquals("avatar_free_bean", vm.state.value.avatarId)
@@ -224,6 +224,8 @@ class LogFartDetailsTest {
         assertEquals(1.0, vm.state.value.intensity)
         vm.onAction(LogFartAction.IntensityChanged(-0.5f))
         assertEquals(0.0, vm.state.value.intensity)
+        vm.onAction(LogFartAction.IntensityChanged(0.333f))
+        assertEquals(0.33, vm.state.value.intensity)
     }
 
     // Acceptance 5: description
@@ -279,7 +281,7 @@ class LogFartDetailsTest {
                     timestampEpochMs = picked,
                     avatarId = "avatar_paid_king",
                     flavorLevel = 5,
-                    intensityValue = 0.9f.toDouble(),
+                    intensityValue = 0.9,
                     descriptionText = "Silent but deadly 💨",
                     soundId = "sound_free_thunder",
                     visibility = VisibilityMode.FOLLOWERS,

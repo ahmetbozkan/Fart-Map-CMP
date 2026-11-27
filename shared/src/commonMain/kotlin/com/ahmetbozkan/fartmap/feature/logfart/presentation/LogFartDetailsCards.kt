@@ -33,7 +33,7 @@ import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -101,8 +101,9 @@ private enum class WhenDialog { NONE, DATE, TIME }
 internal fun WhenCard(timestampEpochMs: Long, enabled: Boolean, onPick: (Long) -> Unit) {
     val zone = TimeZone.currentSystemDefault()
     val shown = formatLogTime(timestampEpochMs, zone)
-    var dialog by rememberSaveable { mutableStateOf(WhenDialog.NONE) }
-    var pickedDate by rememberSaveable { mutableStateOf<Long?>(null) }
+    // Plain remember: an open picker may close on a configuration change, which is harmless.
+    var dialog by remember { mutableStateOf(WhenDialog.NONE) }
+    var pickedDate by remember { mutableStateOf<Long?>(null) }
     val changeDescription = stringResource(Res.string.log_when_change_description, shown)
     DetailCard(title = stringResource(Res.string.log_when_title)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
@@ -208,7 +209,9 @@ private fun OptionChip(
     FilterChip(
         selected = selected,
         onClick = onClick,
-        enabled = enabled,
+        // A locked chip stays visible but disabled until the unlock sheet exists (EPIC-01-06), so it never looks or
+        // announces as a choice that does nothing.
+        enabled = enabled && !locked,
         label = { Text(label) },
         leadingIcon = if (locked) {
             {
