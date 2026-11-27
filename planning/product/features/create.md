@@ -71,10 +71,11 @@ The Log Fart screen is a **10-step sequential creation flow**. Each step is defi
 
 **Step 1 — Location Header**
 
-- Auto-detects GPS at screen open; displays result as a small map thumbnail (coarse only — exact lat/lng is never shown to user, PRIV-02 compliance).
+- Auto-detects GPS at screen open when location permission is already granted (opening the screen never prompts); displays result as a small map thumbnail (coarse only — exact lat/lng is never shown to user, PRIV-02 compliance).
 - "Adjust Location" CTA opens a full-screen map picker modal where user can drag a pin.
 - Location must resolve (GPS fix obtained or manual pin placed) before the Submit button is enabled.
 - If GPS is denied: show a text fallback ("Location unavailable") and require the user to place a pin manually before submitting.
+- If permission was never asked: the same fallback plus "Use my location", which asks in context on tap (Growth.md §2: first ask on an explicit tap, never at launch). If blocked: also "Open settings".
 
 **Step 2 — Date & Time**
 

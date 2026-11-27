@@ -17,15 +17,16 @@
 - STORY-01-03-03 Done (PR #24): live markers from geohash-range listeners (`GeohashCover`, composite indexes), Mine / Followers (humorous card) / Everyone persisted in `map_filter_last_selected`, loading / empty / error+retry / offline states, `map_viewed` and `marker_opened`.
 - STORY-01-03-04 Done: `core/platform/LocationProvider` (Play Services Location, coarse only / Core Location, in Kotlin), "center on me" asks on the first tap, denied / blocked / location-off notices, later starts open on the user, `location_permission_result`. **EPIC-01-03 complete.**
 - EPIC-01-04 (Log Fart) started and split into -01..-06 (ROADMAP). STORY-01-04-01 Done: `FartRepository.createFart` (one never-awaited batch: public doc with the fuzzed point + owner-only `private/location`). Rules now require the private location in the creating batch and make it create-only. `onFartCreated` re-validates the public projection and is now in `PROD_FUNCTIONS`.
+- STORY-01-04-02 Done (PR #29): quick log from the map FAB: location step (fix / "Use my location" / centre-pin picker, approximate hint), ADR-0023 visibility default, "Let It Rip" with success / offline / failed, pending markers at half opacity, `NetworkStatus` capability, fart rejections in a shell snackbar, `log_started` / `log_submitted`.
 
 ## Next
 1. Owner: run the EPIC-01-03 test plan (`planning/testing/EPIC-01-03.md`, Android + iOS) and file failures as `bug` issues. Seed the dev catalog and dev test farts first (`OwnerTodo.md` A, D).
 2. Owner: run the EPIC-01-02 test plan (`planning/testing/EPIC-01-02.md`) if not done yet.
-3. STORY-01-04-02 (quick log) is next. Owner: decide ADR-0026 (location precision; -02 ships with today's permissions either way). Owner: `.claude/rules/ios-shell.md` wording update suggested in `stories/STORY-01-03-02.md` Evidence (autopilot can't edit `.claude/`).
+3. STORY-01-04-03 (detailed fields) is next. Owner: decide ADR-0026 (location precision; -02 shipped with today's permissions and the hint). Owner: `.claude/rules/ios-shell.md` wording update suggested in `stories/STORY-01-03-02.md` Evidence (autopilot can't edit `.claude/`).
 4. On the Mac: commit the `Package.resolved` Xcode updates (GoogleSignIn + FirebaseFunctions pins).
 
 ## Pending owner decisions
-- ADR-0026 (Proposed): Log Fart location precision. Recommended: Android stays coarse, and an approximate fix shows a "move the pin" hint. The alternative is a fine-location ask on Log Fart. STORY-01-04-02 ships with today's permissions either way.
+- ADR-0026 (Proposed): Log Fart location precision. Recommended: Android stays coarse, and an approximate fix shows a "move the pin" hint. The alternative is a fine-location ask on Log Fart. STORY-01-04-02 shipped with today's permissions and the hint.
 - Further minor-safe defaults for the 13–17 band (PUBLIC is already blocked for them) and the other Phase 1 launch items in `planning/product/Scope.md` §7a.
 - Launch catalog prices (RevenueCat Offerings) and the owned domain for App Links / Universal Links (ADR-0023/0024).
 - Minimum iOS version (the template uses 18.2).
