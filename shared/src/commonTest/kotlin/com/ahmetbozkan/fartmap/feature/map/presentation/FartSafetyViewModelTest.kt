@@ -6,7 +6,6 @@ import com.ahmetbozkan.fartmap.core.domain.visibility.AgeBand
 import com.ahmetbozkan.fartmap.core.fakes.FakeSafetyRepository
 import com.ahmetbozkan.fartmap.core.fakes.InMemorySessionRepository
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsEvent
-import com.ahmetbozkan.fartmap.core.observability.AnalyticsTracker
 import com.ahmetbozkan.fartmap.core.observability.AppError
 import com.ahmetbozkan.fartmap.core.observability.AppResult
 import com.ahmetbozkan.fartmap.core.observability.LogRecord

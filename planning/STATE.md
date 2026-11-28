@@ -24,13 +24,14 @@
 
 - STORY-01-04-06 Done: one-time account-link nudge. After a guest's first online log the shell shows "Keep this one forever?" (Link Google / Not now), once per user (`account_link_nudge_shown_at`, user-scoped); an offline log defers it. `account_link_prompted` / `account_linked`. **EPIC-01-04 complete**; test plan `planning/testing/EPIC-01-04.md`.
 
-- EPIC-01-05 (reactions, detail sheet, safety) split into -01..-04 (ROADMAP). STORY-01-05-01 Done (PR #34): marker tap opens the fart detail sheet (flavor, intensity, words, hour-granular age for others, coarse-area line, own-fart Delete). STORY-01-05-02 in review (PR open): five reactions on the sheet, one per user, toggle and replace, optimistic chip; `onReactionWritten` keeps the parent counts. Report and Block (-03) must land before EPIC-01-05 is released; the sheet has no safety actions until then.
+- EPIC-01-05 (reactions, detail sheet, safety) split into -01..-04 (ROADMAP), plus -05 waiting on the owner. STORY-01-05-01 Done (PR #34): marker tap opens the fart detail sheet. STORY-01-05-02 Done (PR #35): five reactions, one per user, toggle and replace; `onReactionWritten` keeps the parent counts.
+- STORY-01-05-03 Done: Report (seven reasons, thank-you in the sheet, `moderation_reports`) and Block (confirmation; the blocker's map drops the blocked user's farts at once) on others' farts; `onReportCreated` hides a fart at 3 distinct reporters (in `PROD_FUNCTIONS`); `report_submitted` / `block_applied`. The blocked user still sees the blocker's PUBLIC farts until issue #37 is answered (-05). Reports are reviewed by the owner in the console (`OwnerTodo.md` A).
 
 ## Next
 1. Owner: run the EPIC-01-04 test plan (`planning/testing/EPIC-01-04.md`, Android + iOS) and file failures as `bug` issues.
 2. Owner: run the EPIC-01-03 test plan (`planning/testing/EPIC-01-03.md`, Android + iOS) and file failures as `bug` issues. Seed the dev catalog and dev test farts first (`OwnerTodo.md` A, D).
 3. Owner: run the EPIC-01-02 test plan (`planning/testing/EPIC-01-02.md`) if not done yet.
-4. EPIC-01-05 is next (-02 reactions, -03 report/block/auto-hide, -04 marker sound). Owner: decide ADR-0026 (location precision; -02 shipped with today's permissions and the hint). Owner: `.claude/rules/ios-shell.md` wording update suggested in `stories/STORY-01-03-02.md` Evidence (autopilot can't edit `.claude/`).
+4. EPIC-01-05 continues with -04 (marker sound). Owner: answer issue #37 (mutual block hiding; recommended A, blocker-side only for Phase 1). Owner: decide ADR-0026 (location precision; -02 shipped with today's permissions and the hint). Owner: `.claude/rules/ios-shell.md` wording update suggested in `stories/STORY-01-03-02.md` Evidence (autopilot can't edit `.claude/`).
 5. On the Mac: commit the `Package.resolved` Xcode updates (GoogleSignIn + FirebaseFunctions pins).
 
 ## Pending owner decisions
@@ -39,6 +40,8 @@
 - Launch catalog prices (RevenueCat Offerings) and the owned domain for App Links / Universal Links (ADR-0023/0024).
 - Minimum iOS version (the template uses 18.2).
 - Open items in `planning/product/Scope.md` §7a marked "Phase 1 launch": push preferences, sensitive zones.
+- Block "both ways" on the map (issue #37): may a blocked user's client learn who blocked them? A blocker-side only (shipped), B readable block docs, C server-filtered map.
+- Auto-hide abuse: three cheap anonymous accounts can hide any fart until App Check (STORY-01-02-05) lands. Keep 3 distinct reporters (ADR-0015), or weight reports (e.g. linked accounts only)?
 - Fart detail sheet shows no author name or avatar yet (needs the public profile read; STORY-01-05-01 Decisions). Owner to confirm it can wait for a later story.
 
 ## Owner actions (external consoles)

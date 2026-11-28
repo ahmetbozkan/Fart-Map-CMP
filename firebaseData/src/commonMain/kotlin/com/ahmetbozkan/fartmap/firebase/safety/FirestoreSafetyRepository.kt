@@ -100,8 +100,9 @@ class FirestoreSafetyRepository(
     }
 
     override fun blockUser(uid: String, blockedUid: String): AppResult<Unit> {
-        invalid(uid, blockedUid)?.let { return AppResult.Failure(it) }
-        if (uid == blockedUid) return AppResult.Failure(AppError.ValidationFailed("blocked_id"))
+        val error = invalid(uid, blockedUid)
+            ?: AppError.ValidationFailed("blocked_id").takeIf { uid == blockedUid }
+        if (error != null) return AppResult.Failure(error)
         val db = firestore.get()
         val ref = db.collection(BLOCKS).document(SafetyDocs.blockId(uid, blockedUid))
         writes.launchWrite(op = "safety.block") {

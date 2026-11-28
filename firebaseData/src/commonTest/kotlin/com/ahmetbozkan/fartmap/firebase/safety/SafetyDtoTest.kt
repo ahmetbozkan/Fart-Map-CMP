@@ -17,7 +17,13 @@ class SafetyDtoTest {
     fun reportFieldsAreExactlyTheRulesCreateSet() {
         assertEquals(
             setOf(
-                "report_id", "reporter_user_id", "target_type", "target_id", "reason_code", "status", "created_at",
+                "report_id",
+                "reporter_user_id",
+                "target_type",
+                "target_id",
+                "reason_code",
+                "status",
+                "created_at",
                 "updated_at",
             ),
             names(ReportDto.serializer().descriptor),

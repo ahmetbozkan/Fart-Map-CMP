@@ -87,12 +87,10 @@ class FartSafetyViewModel(
         setState { FartSafetyState(step = step, fartId = fartId, authorUid = authorUid) }
     }
 
+    /** Sends only from the reason sheet, with a reason picked and an Active session. */
     private fun submitReport() {
-        val current = state.value
-        val reason = current.reason ?: return
-        val fartId = current.fartId ?: return
-        if (current.step != SafetyStep.REPORT_PICK) return
         val uid = currentUid() ?: return
+        val (fartId, reason) = pendingReport() ?: return
         when (val result = safety.reportFart(uid, fartId, reason)) {
             is AppResult.Success -> {
                 setState { copy(step = SafetyStep.REPORT_SENT) }
@@ -102,11 +100,20 @@ class FartSafetyViewModel(
         }
     }
 
+    /** The fart and reason to report, when the reason sheet is open with a reason picked. */
+    private fun pendingReport(): Pair<String, ReportReason>? {
+        val current = state.value
+        val reason = current.reason
+        val fartId = current.fartId
+        return if (current.step == SafetyStep.REPORT_PICK && reason != null && fartId != null) fartId to reason else null
+    }
+
+    /** Blocks only from the confirmation, with an Active session. */
     private fun confirmBlock() {
         val current = state.value
-        val blocked = current.authorUid ?: return
-        if (current.step != SafetyStep.BLOCK_CONFIRM) return
-        val uid = currentUid() ?: return
+        val uid = currentUid()
+        val blocked = current.authorUid
+        if (current.step != SafetyStep.BLOCK_CONFIRM || uid == null || blocked == null) return
         when (val result = safety.blockUser(uid, blocked)) {
             is AppResult.Success -> {
                 setState { FartSafetyState() }

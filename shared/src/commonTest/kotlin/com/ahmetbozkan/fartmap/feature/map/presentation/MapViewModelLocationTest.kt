@@ -11,11 +11,11 @@ import com.ahmetbozkan.fartmap.core.fakes.FakeLocationProvider
 import com.ahmetbozkan.fartmap.core.fakes.FakeMapFartRepository
 import com.ahmetbozkan.fartmap.core.fakes.FakePreferencesRepository
 import com.ahmetbozkan.fartmap.core.fakes.FakeSafetyRepository
-import com.ahmetbozkan.fartmap.feature.map.domain.ObserveVisibleMapFarts
 import com.ahmetbozkan.fartmap.core.fakes.InMemorySessionRepository
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsEvent
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsEvent.LocationPermissionResult.Result
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsTracker
+import com.ahmetbozkan.fartmap.feature.map.domain.ObserveVisibleMapFarts
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

@@ -203,30 +203,13 @@ fun MapScreen(
             DataCard(state = state, onRetry = { onAction(MapAction.Retry) })
         }
         state.selectedFart?.let { fart ->
-            // One reactions ViewModel per open fart (keyed by id); its listener follows the sheet (STORY-01-05-02).
-            val reactions: ReactionsViewModel = koinViewModel(key = fart.id) { parametersOf(fart.id) }
-            val reactionState by reactions.state.collectAsStateWithLifecycle()
-            FartDetailSheet(
-                content = fart.toDetailContent(state.uid, state.nowEpochMs),
-                onRequestDelete = { onAction(MapAction.RequestDeleteFromDetail) },
-                onDismiss = {
-                    onSafetyAction(FartSafetyAction.Dismiss)
-                    onAction(MapAction.DetailDismissed)
-                },
-                own = reactionState.own,
-                reactionBreakdown = fart.reactionBreakdown,
-                onReaction = { reactions.onAction(ReactionsAction.Toggle(it)) },
-                onReport = { onSafetyAction(FartSafetyAction.OpenReport(fart.id, fart.authorUid)) },
-                onBlock = { onSafetyAction(FartSafetyAction.OpenBlock(fart.id, fart.authorUid)) },
+            OpenFartSheet(
+                fart = fart,
+                state = state,
+                safety = safety,
+                onAction = onAction,
+                onSafetyAction = onSafetyAction,
             )
-            if (safety.fartId == fart.id) {
-                when (safety.step) {
-                    SafetyStep.REPORT_PICK, SafetyStep.REPORT_SENT ->
-                        ReportReasonSheet(state = safety, onAction = onSafetyAction)
-                    SafetyStep.BLOCK_CONFIRM -> BlockUserDialog(onAction = onSafetyAction)
-                    SafetyStep.NONE -> Unit
-                }
-            }
         }
         if (state.pendingDeleteId != null) {
             DeleteFartDialog(
@@ -234,6 +217,41 @@ fun MapScreen(
                 onDismiss = { onAction(MapAction.DismissDelete) },
             )
         }
+    }
+}
+
+/**
+ * The detail sheet of the open fart, with its reactions (one ViewModel per fart, keyed by id; STORY-01-05-02) and the
+ * report/block flow drawn over it while that flow belongs to this fart (STORY-01-05-03).
+ */
+@Composable
+private fun OpenFartSheet(
+    fart: MapFart,
+    state: MapState,
+    safety: FartSafetyState,
+    onAction: (MapAction) -> Unit,
+    onSafetyAction: (FartSafetyAction) -> Unit,
+) {
+    val reactions: ReactionsViewModel = koinViewModel(key = fart.id) { parametersOf(fart.id) }
+    val reactionState by reactions.state.collectAsStateWithLifecycle()
+    FartDetailSheet(
+        content = fart.toDetailContent(state.uid, state.nowEpochMs),
+        onRequestDelete = { onAction(MapAction.RequestDeleteFromDetail) },
+        onDismiss = {
+            onSafetyAction(FartSafetyAction.Dismiss)
+            onAction(MapAction.DetailDismissed)
+        },
+        own = reactionState.own,
+        reactionBreakdown = fart.reactionBreakdown,
+        onReaction = { reactions.onAction(ReactionsAction.Toggle(it)) },
+        onReport = { onSafetyAction(FartSafetyAction.OpenReport(fart.id, fart.authorUid)) },
+        onBlock = { onSafetyAction(FartSafetyAction.OpenBlock(fart.id, fart.authorUid)) },
+    )
+    if (safety.fartId != fart.id) return
+    when (safety.step) {
+        SafetyStep.REPORT_PICK, SafetyStep.REPORT_SENT -> ReportReasonSheet(state = safety, onAction = onSafetyAction)
+        SafetyStep.BLOCK_CONFIRM -> BlockUserDialog(onAction = onSafetyAction)
+        SafetyStep.NONE -> Unit
     }
 }
 
