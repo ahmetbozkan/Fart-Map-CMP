@@ -39,8 +39,13 @@ class FakePreferencesRepository : PreferencesRepository {
         return AppResult.Success(Unit)
     }
 
+    var nudgeConsumed = false
+
+    override suspend fun consumeAccountLinkNudge(): Boolean = (!nudgeConsumed).also { nudgeConsumed = true }
+
     override suspend fun clearUserScoped(): AppResult<Unit> {
         userScopedClears++
+        nudgeConsumed = false
         clearError?.let { return AppResult.Failure(it) }
         lastVisibility = null
         return AppResult.Success(Unit)

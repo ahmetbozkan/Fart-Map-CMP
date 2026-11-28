@@ -32,6 +32,17 @@ class DataStorePreferencesRepositoryTest {
     }
 
     @Test
+    fun linkNudgeIsTrueOnceAndResetBySignOutClearing() = runTest {
+        val repo = DataStorePreferencesRepository(newStore(), logger)
+        assertTrue(repo.consumeAccountLinkNudge())
+        assertFalse(repo.consumeAccountLinkNudge())
+
+        repo.clearUserScoped()
+
+        assertTrue(repo.consumeAccountLinkNudge())
+    }
+
+    @Test
     fun visibilityRoundTripsAndUnknownStoredValueReadsPrivate() = runTest {
         val store = newStore()
         val repo = DataStorePreferencesRepository(store, logger)

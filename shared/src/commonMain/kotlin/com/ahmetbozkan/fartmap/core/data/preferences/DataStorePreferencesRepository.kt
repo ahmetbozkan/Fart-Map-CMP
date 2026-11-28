@@ -57,6 +57,15 @@ class DataStorePreferencesRepository(
         store.edit { it[MAP_FILTER_LAST_SELECTED] = filter.wireName }
     }
 
+    override suspend fun consumeAccountLinkNudge(): Boolean = guarded("consume_link_nudge", fallback = false) {
+        var first = false
+        store.edit { prefs ->
+            first = prefs[ACCOUNT_LINK_NUDGE_SHOWN] != true
+            prefs[ACCOUNT_LINK_NUDGE_SHOWN] = true
+        }
+        first
+    }
+
     override suspend fun clearUserScoped(): AppResult<Unit> = write("clear_user_scoped") {
         store.edit { prefs -> USER_SCOPED_KEYS.forEach { prefs.remove(it) } }
     }
@@ -115,7 +124,9 @@ class DataStorePreferencesRepository(
 
         /** The Log Fart draft, read and written by `DataStoreLogDraftRepository` (STORY-01-04-04). */
         internal val LOG_DRAFT = stringPreferencesKey("log_draft")
-        private val USER_SCOPED_KEYS: List<Preferences.Key<*>> = listOf(LAST_VISIBILITY_MODE, LOG_DRAFT)
+        private val ACCOUNT_LINK_NUDGE_SHOWN = booleanPreferencesKey("account_link_nudge_shown_at")
+        private val USER_SCOPED_KEYS: List<Preferences.Key<*>> =
+            listOf(LAST_VISIBILITY_MODE, LOG_DRAFT, ACCOUNT_LINK_NUDGE_SHOWN)
 
         /**
          * Creates the store at [path] (an absolute file path from the platform module). Create once per process.

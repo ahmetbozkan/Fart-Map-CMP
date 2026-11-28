@@ -46,7 +46,7 @@
 | `onboarding_completed` | false |
 | `show_following_list_public` | Mirror of the profile flag for UX (ADR-0012) |
 | `notification_permission_prompted` | false; the prompt shows once, after the first successful log (ADR-0023) |
-| `account_link_nudge_shown_at` | ADR-0018 nudge throttle |
+| `account_link_nudge_shown_at` | ADR-0018 nudge throttle. A boolean flag, user-scoped (wiped by sign-out), set when the dialog is shown; the nudge appears once per user, after an online log of a guest |
 | `ads_consent_status` | UMP outcome mirror (ADR-0017) |
 | `starter_pack_offer_shown` | false; the offer is shown once after the first successful log (ADR-0024) |
 

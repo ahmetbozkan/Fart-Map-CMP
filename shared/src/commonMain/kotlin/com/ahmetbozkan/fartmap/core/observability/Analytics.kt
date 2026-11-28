@@ -101,6 +101,22 @@ sealed interface AnalyticsEvent {
             )
     }
 
+    /** The post-first-log nudge to link an account was shown (ADR-0018 §3). */
+    data class AccountLinkPrompted(val provider: LinkProvider) : AnalyticsEvent {
+        override val name = "account_link_prompted"
+        override val params: Map<String, Any>
+            get() = mapOf("provider" to provider.wireName)
+    }
+
+    /** A guest linked an account from the nudge. */
+    data class AccountLinked(val provider: LinkProvider) : AnalyticsEvent {
+        override val name = "account_linked"
+        override val params: Map<String, Any>
+            get() = mapOf("provider" to provider.wireName)
+    }
+
+    enum class LinkProvider(val wireName: String) { GOOGLE("google") }
+
     companion object {
         private const val FEW = 10
         private const val MANY = 50
