@@ -18,11 +18,11 @@
 ## A. Now: unblocks the current work
 
 - [x] **CI minutes (issue #17).** Done 2026-11-25: the repo is public. GitHub Free gives a private repo 2,000 Actions minutes a month, and the macOS iOS job counts 10x, so about 26 CI runs use it all. Decide: make the repo public (unlimited free minutes), or trim CI and run iOS on your own Mac as a self-hosted runner. Until then, merge a PR whose `scripts/verify.sh --full` is green locally yourself.
-- [ ] **Dev catalog seed.** Profile creation on dev is rejected until the catalog exists (`write_rejected` in logs).
+- [x] **Dev catalog seed.** Profile creation on dev is rejected until the catalog exists (`write_rejected` in logs).
   1. `gcloud auth application-default login` (lets the script act as you, locally);
   2. `npm --prefix backend/functions run seed:catalog -- --project fart-map-dev`;
   3. fresh dev install → check that `users/{uid}` appears in the Firestore console.
-- [ ] **Windows: local dev configs.** Copy the re-downloaded dev configs into `~/.fartmap/` and run `bash scripts/inject-config.sh`, so local builds carry the Google OAuth client. The GitHub secrets only reach CI.
+- [x] **Windows: local dev configs.** Copy the re-downloaded dev configs into `~/.fartmap/` and run `bash scripts/inject-config.sh`, so local builds carry the Google OAuth client. The GitHub secrets only reach CI.
 
 ## B. On the Mac: iOS has only been checked by CI
 
@@ -70,7 +70,7 @@ The prod Firebase project exists but has only the basics. Repeat what dev has.
   3. put it in `androidApp/secrets.properties` as `MAPS_API_KEY_DEV=` (template next to it; never committed).
 
   Without it the map code still builds; tiles are blank.
-- [ ] **Dev test farts for the map (STORY-01-03-01).** Needed before the EPIC-01-03 test plan: there's no Log Fart flow yet (EPIC-01-04), so without these the map has no markers.
+- [x] **Dev test farts for the map (STORY-01-03-01).** Needed before the EPIC-01-03 test plan: there's no Log Fart flow yet (EPIC-01-04), so without these the map has no markers.
   1. Seed the catalog first (section A), because the farts use the starter avatars and sounds;
   2. `gcloud auth application-default login` (once), then `npm --prefix backend/functions run seed:farts -- --project fart-map-dev`;
   3. optional: `--center <lat>,<lng>` (default Istanbul) and `--count <n>` (default 30, max 200). Re-running replaces the same `seed_fart_*` docs, so nothing piles up.
