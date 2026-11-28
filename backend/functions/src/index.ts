@@ -8,6 +8,7 @@ import { REGION } from "./region";
 import { handleFartCreated } from "./triggers/fartCreated";
 import { handleFartRemoved } from "./triggers/fartRemoved";
 import { handleReactionWritten } from "./triggers/reactionWritten";
+import { handleReportCreated } from "./triggers/reportCreated";
 
 initializeApp();
 
@@ -58,6 +59,17 @@ export const onReactionWritten = onDocumentWritten(
       event.data?.before.data(),
       event.data?.after.data(),
     );
+  },
+);
+
+/**
+ * Counts a fart report and hides the fart at three distinct reporters (MOD-02 baseline, triggers/reportCreated.ts).
+ * `retry: true` with `runOnce` keyed on the event, so a redelivery never counts a report twice.
+ */
+export const onReportCreated = onDocumentCreated(
+  { document: "moderation_reports/{reportId}", region: REGION, retry: true },
+  async (event) => {
+    await handleReportCreated(getFirestore(), event.id, event.data?.data());
   },
 );
 

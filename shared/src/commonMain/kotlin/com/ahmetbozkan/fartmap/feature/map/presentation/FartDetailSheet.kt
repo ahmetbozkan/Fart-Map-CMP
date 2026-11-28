@@ -2,6 +2,7 @@ package com.ahmetbozkan.fartmap.feature.map.presentation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -24,9 +25,11 @@ import com.ahmetbozkan.fartmap.resources.log_visibility_followers
 import com.ahmetbozkan.fartmap.resources.log_visibility_private
 import com.ahmetbozkan.fartmap.resources.log_visibility_public
 import com.ahmetbozkan.fartmap.resources.map_detail_area
+import com.ahmetbozkan.fartmap.resources.map_detail_block
 import com.ahmetbozkan.fartmap.resources.map_detail_delete
 import com.ahmetbozkan.fartmap.resources.map_detail_intensity
 import com.ahmetbozkan.fartmap.resources.map_detail_no_words
+import com.ahmetbozkan.fartmap.resources.map_detail_report
 import com.ahmetbozkan.fartmap.resources.map_detail_title
 import com.ahmetbozkan.fartmap.resources.map_detail_title_own
 import com.ahmetbozkan.fartmap.resources.map_detail_when
@@ -37,7 +40,7 @@ import org.jetbrains.compose.resources.stringResource
 /**
  * The marker's detail (`FartDetailSheet.md`, Phase 1 variant): flavor, intensity, the words, when, and the coarse
  * area line. An own fart adds its visibility and a Delete action that asks for confirmation (the dialog is the
- * route's, STORY-01-04-05). Other people's farts get no action yet; Report and Block arrive in STORY-01-05-03.
+ * route's, STORY-01-04-05). Other people's farts get Report and Block instead (STORY-01-05-03).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +52,8 @@ fun FartDetailSheet(
     own: ReactionType? = null,
     reactionBreakdown: Map<ReactionType, Int> = emptyMap(),
     onReaction: (ReactionType) -> Unit = {},
+    onReport: () -> Unit = {},
+    onBlock: () -> Unit = {},
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss, modifier = modifier) {
         Column(
@@ -94,7 +99,22 @@ fun FartDetailSheet(
                 ) {
                     Text(stringResource(Res.string.map_detail_delete))
                 }
+            } else {
+                SafetyActions(onReport = onReport, onBlock = onBlock)
             }
+        }
+    }
+}
+
+/** Report and Block, always present on others' farts (`FartDetailSheet.md`, MOD-01). */
+@Composable
+private fun SafetyActions(onReport: () -> Unit, onBlock: () -> Unit) {
+    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+        TextButton(onClick = onReport, modifier = Modifier.heightIn(min = Spacing.minTouchTarget)) {
+            Text(stringResource(Res.string.map_detail_report))
+        }
+        TextButton(onClick = onBlock, modifier = Modifier.heightIn(min = Spacing.minTouchTarget)) {
+            Text(stringResource(Res.string.map_detail_block))
         }
     }
 }

@@ -4,6 +4,7 @@ import com.ahmetbozkan.fartmap.core.data.write.WriteErrorMapper
 import com.ahmetbozkan.fartmap.core.domain.cosmetics.CosmeticRepository
 import com.ahmetbozkan.fartmap.core.domain.fart.FartRepository
 import com.ahmetbozkan.fartmap.core.domain.profile.ProfileRepository
+import com.ahmetbozkan.fartmap.core.domain.safety.SafetyRepository
 import com.ahmetbozkan.fartmap.core.domain.session.AccountRepository
 import com.ahmetbozkan.fartmap.core.domain.session.AuthGateway
 import com.ahmetbozkan.fartmap.core.domain.session.LocalDataReset
@@ -19,6 +20,7 @@ import com.ahmetbozkan.fartmap.firebase.firestore.FirestoreWriteErrorMapper
 import com.ahmetbozkan.fartmap.firebase.map.FirestoreMapFartRepository
 import com.ahmetbozkan.fartmap.firebase.profile.FirestoreProfileRepository
 import com.ahmetbozkan.fartmap.firebase.reaction.FirestoreReactionRepository
+import com.ahmetbozkan.fartmap.firebase.safety.FirestoreSafetyRepository
 import com.ahmetbozkan.fartmap.firebase.session.FirebaseAuthGateway
 import com.ahmetbozkan.fartmap.firebase.session.FirestoreAccountRepository
 import com.ahmetbozkan.fartmap.firebase.telemetry.CrashlyticsLogSink
@@ -53,4 +55,5 @@ private val firestoreModule = module {
     single<FartRepository> { FirestoreFartRepository(get(), get()) }
     single<ReactionRepository> { FirestoreReactionRepository(get(), get(), get()) }
     single<CosmeticRepository> { FirestoreCosmeticRepository(get(), get()) }
+    single<SafetyRepository> { FirestoreSafetyRepository(get(), get(), get()) }
 }

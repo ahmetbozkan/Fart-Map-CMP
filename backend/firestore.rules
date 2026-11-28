@@ -286,7 +286,8 @@ service cloud.firestore {
         && incoming().reporter_user_id == uid()
         && incoming().target_type in ['FART', 'COMMENT', 'USER']
         && isText(incoming().target_id, 1, 128)
-        && isText(incoming().reason_code, 1, 40)
+        // The ReportReason codes (DataContracts §3.12); free text never reaches moderators through this field.
+        && incoming().reason_code in ['HARASSMENT', 'PRIVATE_INFO', 'MINOR_SAFETY', 'SEXUAL', 'ILLEGAL', 'SPAM', 'OTHER']
         && incoming().status == 'OPEN'
         && isNow('created_at') && isNow('updated_at');
       allow read, update, delete: if false;

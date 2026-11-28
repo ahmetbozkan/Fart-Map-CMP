@@ -24,6 +24,8 @@ import com.ahmetbozkan.fartmap.feature.auth.presentation.AuthViewModel
 import com.ahmetbozkan.fartmap.feature.logfart.data.DataStoreLogDraftRepository
 import com.ahmetbozkan.fartmap.feature.logfart.domain.LogDraftRepository
 import com.ahmetbozkan.fartmap.feature.logfart.presentation.LogFartViewModel
+import com.ahmetbozkan.fartmap.feature.map.domain.ObserveVisibleMapFarts
+import com.ahmetbozkan.fartmap.feature.map.presentation.FartSafetyViewModel
 import com.ahmetbozkan.fartmap.feature.map.presentation.MapViewModel
 import com.ahmetbozkan.fartmap.feature.map.presentation.OwnFartDeleter
 import com.ahmetbozkan.fartmap.feature.map.presentation.ReactionsViewModel
@@ -101,7 +103,10 @@ private val featureModule = module {
     viewModelOf(::AuthViewModel)
     viewModelOf(::AgeGateViewModel)
     viewModelOf(::ProfileViewModel)
+    // A fresh use case per map ViewModel: it remembers the last block list across the map's re-subscriptions.
+    factory { ObserveVisibleMapFarts(get(), get()) }
     viewModel { MapViewModel(get(), get(), get(), get(), get(), clock = Clock.System) }
+    viewModelOf(::FartSafetyViewModel)
     factory { OwnFartDeleter(get(), get(), get(), get()) }
     viewModel { (fartId: String) -> ReactionsViewModel(fartId, get(), get(), get()) }
     viewModelOf(::MainShellViewModel)

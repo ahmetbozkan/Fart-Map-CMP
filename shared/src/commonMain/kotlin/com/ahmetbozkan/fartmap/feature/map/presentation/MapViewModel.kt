@@ -19,10 +19,10 @@ import com.ahmetbozkan.fartmap.core.platform.LocationProvider
 import com.ahmetbozkan.fartmap.core.presentation.StateViewModel
 import com.ahmetbozkan.fartmap.feature.map.domain.MapArea
 import com.ahmetbozkan.fartmap.feature.map.domain.MapFart
-import com.ahmetbozkan.fartmap.feature.map.domain.MapFartRepository
 import com.ahmetbozkan.fartmap.feature.map.domain.MapFartsUpdate
 import com.ahmetbozkan.fartmap.feature.map.domain.MapQuery
 import com.ahmetbozkan.fartmap.feature.map.domain.MapSource
+import com.ahmetbozkan.fartmap.feature.map.domain.ObserveVisibleMapFarts
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,7 +53,7 @@ import kotlin.time.ExperimentalTime
  */
 @OptIn(ExperimentalCoroutinesApi::class, ExperimentalTime::class)
 class MapViewModel(
-    private val repository: MapFartRepository,
+    private val visibleFarts: ObserveVisibleMapFarts,
     sessions: SessionRepository,
     private val preferences: PreferencesRepository,
     private val analytics: AnalyticsTracker,
@@ -256,7 +256,8 @@ class MapViewModel(
             )
             else -> {
                 val source = if (subscription.filter == MapFilter.MINE) MapSource.Mine(uid) else MapSource.Public
-                repository.observeMapFarts(MapQuery(source, area))
+                // Farts by users the caller blocked never reach State (STORY-01-05-03); an open sheet on one closes.
+                visibleFarts(MapQuery(source, area), uid)
             }
         }
     }

@@ -24,6 +24,14 @@
   3. fresh dev install → check that `users/{uid}` appears in the Firestore console.
 - [x] **Windows: local dev configs.** Copy the re-downloaded dev configs into `~/.fartmap/` and run `bash scripts/inject-config.sh`, so local builds carry the Google OAuth client. The GitHub secrets only reach CI.
 
+- [ ] **Review reports (STORY-01-05-03, ongoing once testers or users exist).** Reports are readable only in the Firebase console (Admin path), never in the app (DataContracts §3.12, §5.6). Nobody else looks at them.
+  1. Firebase console → Firestore → `moderation_reports`, filter `status == OPEN`. Check at least weekly, and daily once the app is public.
+  2. Do `reason_code == MINOR_SAFETY` first. Child-safety reports may need legal or authority escalation (`ContentSafety.md` §5).
+  3. Open the target `farts/{target_id}`. A fart with 3 reports already has `is_hidden: true` (gone from the public map).
+     - **Breaks the rules:** set `is_removed: true`, `removed_reason: "MODERATION"` on the fart (this also purges its precise location), then set the reports to `ACTIONED`.
+     - **Fine:** set the reports to `DISMISSED`. If the fart was hidden, set `is_hidden: false` **and** `report_count: 0`, or the next single report hides it again.
+  4. Set `updated_at` on each report you change.
+
 ## B. On the Mac: iOS has only been checked by CI
 
 Windows can't build iOS, so nobody has run the iOS app by hand since the shell. CI proves it compiles, not that it works.
