@@ -55,6 +55,19 @@ describe("reactions", () => {
     await assertFails(user(env, BOB).doc(`farts/priv/reactions/${BOB}`).set(reaction("priv", BOB)));
   });
 
+  it("lets a user read their own reaction doc, and no one else's", async () => {
+    await seed(env, { [`farts/pub/reactions/${BOB}`]: reaction("pub", BOB) });
+    await assertSucceeds(user(env, BOB).doc(`farts/pub/reactions/${BOB}`).get());
+    await assertFails(user(env, ALICE).doc(`farts/pub/reactions/${BOB}`).get());
+    await assertFails(signedOut(env).doc(`farts/pub/reactions/${BOB}`).get());
+  });
+
+  it("denies listing the reactors of a fart, even to a reader of a public fart", async () => {
+    await seed(env, { [`farts/pub/reactions/${BOB}`]: reaction("pub", BOB) });
+    await assertFails(user(env, ALICE).collection("farts/pub/reactions").get());
+    await assertFails(user(env, BOB).collection("farts/pub/reactions").get());
+  });
+
   it("denies deleting someone else's reaction", async () => {
     await seed(env, { [`farts/pub/reactions/${ALICE}`]: reaction("pub", ALICE) });
     await assertFails(user(env, BOB).doc(`farts/pub/reactions/${ALICE}`).delete());

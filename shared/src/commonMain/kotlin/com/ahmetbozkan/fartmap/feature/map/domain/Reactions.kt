@@ -20,13 +20,23 @@ enum class ReactionType(val wireName: String) {
     }
 }
 
+/** What the caller's reaction is, as far as the app knows: [Known] (a type, or null for none) or [Unknown] (the read failed). */
+sealed interface ObservedReaction {
+    data class Known(val type: ReactionType?) : ObservedReaction
+
+    data object Unknown : ObservedReaction
+}
+
 /**
  * The caller's own reaction to one fart (`farts/{id}/reactions/{uid}`, one per user per fart). Writes are launched
  * in the app write scope and never awaited; a rejected write reverts [observeOwnReaction] to the stored value.
  */
 interface ReactionRepository {
-    /** The caller's reaction on [fartId]: a type, or null when none. Emits from the local cache first, then the server. */
-    fun observeOwnReaction(uid: String, fartId: String): Flow<ReactionType?>
+    /**
+     * The caller's reaction on [fartId]. Emits from the local cache first, then the server. A failed read emits
+     * [ObservedReaction.Unknown] rather than "no reaction", so the UI can't act on a guess.
+     */
+    fun observeOwnReaction(uid: String, fartId: String): Flow<ObservedReaction>
 
     /** Sets [type] as the caller's reaction (replacing any other), or removes it when [type] is null. */
     fun setReaction(uid: String, fartId: String, type: ReactionType?): AppResult<Unit>

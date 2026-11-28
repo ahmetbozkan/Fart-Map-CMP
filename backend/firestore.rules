@@ -247,7 +247,9 @@ service cloud.firestore {
             && isNow('created_at');
         }
 
-        allow read: if canReadFart(get(fartPath(fartId)).data);
+        // Own reaction only, by document read: the client never lists reactions, so the reactor ids of a fart stay
+        // hidden from everyone else (a list rule would expose every reactor's uid to any reader of a public fart).
+        allow get: if isUser(userId) && canReadFart(get(fartPath(fartId)).data);
         // No reacting across a block in either direction (a blocked user can't reach the blocker's counters).
         allow create, update: if isUser(userId) && validReaction()
           && canReadFart(get(fartPath(fartId)).data)

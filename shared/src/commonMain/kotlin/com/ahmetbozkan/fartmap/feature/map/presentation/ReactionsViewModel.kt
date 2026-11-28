@@ -6,6 +6,7 @@ import com.ahmetbozkan.fartmap.core.domain.session.SessionState
 import com.ahmetbozkan.fartmap.core.observability.AppResult
 import com.ahmetbozkan.fartmap.core.observability.Logger
 import com.ahmetbozkan.fartmap.core.presentation.StateViewModel
+import com.ahmetbozkan.fartmap.feature.map.domain.ObservedReaction
 import com.ahmetbozkan.fartmap.feature.map.domain.ReactionRepository
 import com.ahmetbozkan.fartmap.feature.map.domain.ReactionType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -15,8 +16,11 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-/** The caller's own reaction on one fart: [own] is null when none (SOCIAL-01, STORY-01-05-02). */
-data class ReactionsState(val own: ReactionType? = null)
+/**
+ * The caller's own reaction on one fart: [own] is null when none (SOCIAL-01, STORY-01-05-02). [isKnown] is false while
+ * the read has failed; taps are ignored then, so a guess is never written (fail closed).
+ */
+data class ReactionsState(val own: ReactionType? = null, val isKnown: Boolean = true)
 
 sealed interface ReactionsAction {
     /** A reaction chip was tapped: the active one removes it, another one replaces it. */
@@ -45,8 +49,18 @@ class ReactionsViewModel(
     init {
         viewModelScope.launch {
             uid.distinctUntilChanged()
-                .flatMapLatest { uid -> uid?.let { repository.observeOwnReaction(it, fartId) } ?: flowOf(null) }
-                .collect { observed -> setState { copy(own = observed) } }
+                .flatMapLatest { uid ->
+                    uid?.let { repository.observeOwnReaction(it, fartId) }
+                        ?: flowOf(ObservedReaction.Known(null))
+                }
+                .collect { observed ->
+                    setState {
+                        when (observed) {
+                            is ObservedReaction.Known -> copy(own = observed.type, isKnown = true)
+                            ObservedReaction.Unknown -> copy(own = null, isKnown = false)
+                        }
+                    }
+                }
         }
     }
 
@@ -58,6 +72,8 @@ class ReactionsViewModel(
 
     private fun toggle(type: ReactionType) {
         val user = (sessions.session.value as? SessionState.Active)?.uid ?: return
+        // Unknown state: the tap would be a guess (remove or replace?), so it is not sent.
+        if (!state.value.isKnown) return
         val previous = state.value.own
         val next = if (previous == type) null else type
         setState { copy(own = next) }

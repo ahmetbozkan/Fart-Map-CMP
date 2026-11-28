@@ -19,6 +19,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -99,6 +100,19 @@ class ReactionsViewModelTest {
 
         assertEquals(ReactionType.TOXIC, vm.state.value.own)
         assertEquals(listOf("reaction_rejected_locally"), logs.map { it.eventName })
+    }
+
+    @Test
+    fun aFailedReadIgnoresTapsRatherThanGuessingRemoveOrReplace() {
+        repository.observe(ReactionType.DEAD)
+        val vm = viewModel()
+        repository.observeFailure()
+        assertFalse(vm.state.value.isKnown)
+
+        vm.onAction(ReactionsAction.Toggle(ReactionType.DEAD))
+
+        assertEquals(emptyList<Pair<String, ReactionType?>>(), repository.writes)
+        assertFalse(vm.state.value.isKnown)
     }
 
     @Test

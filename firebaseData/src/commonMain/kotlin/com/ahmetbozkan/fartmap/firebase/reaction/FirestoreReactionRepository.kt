@@ -4,6 +4,7 @@ import com.ahmetbozkan.fartmap.core.domain.write.AppWriteScope
 import com.ahmetbozkan.fartmap.core.observability.AppError
 import com.ahmetbozkan.fartmap.core.observability.AppResult
 import com.ahmetbozkan.fartmap.core.observability.Logger
+import com.ahmetbozkan.fartmap.feature.map.domain.ObservedReaction
 import com.ahmetbozkan.fartmap.feature.map.domain.ReactionRepository
 import com.ahmetbozkan.fartmap.feature.map.domain.ReactionType
 import com.ahmetbozkan.fartmap.firebase.firestore.FirestoreProvider
@@ -44,26 +45,29 @@ class FirestoreReactionRepository(
     private val logger: Logger,
 ) : ReactionRepository {
 
-    override fun observeOwnReaction(uid: String, fartId: String): Flow<ReactionType?> =
-        ownRef(uid, fartId).snapshots.map { snapshot ->
-            if (!snapshot.exists) {
-                null
-            } else {
-                // A malformed or unknown type reads as no reaction; it is never counted or shown as one.
-                try {
-                    ReactionType.fromWire(snapshot.data(ReactionReadDto.serializer()).type)
-                } catch (failure: SerializationException) {
-                    logger.warn(
-                        feature = FEATURE,
-                        operation = "observe_reaction",
-                        event = "reaction_doc_skipped",
-                        error = AppError.ValidationFailed("reaction"),
-                        attributes = mapOf("exception" to (failure::class.simpleName ?: "unknown")),
-                    )
+    override fun observeOwnReaction(uid: String, fartId: String): Flow<ObservedReaction> {
+        val known: Flow<ObservedReaction> = ownRef(uid, fartId).snapshots.map { snapshot ->
+            ObservedReaction.Known(
+                if (!snapshot.exists) {
                     null
-                }
-            }
-        }.catch { failure ->
+                } else {
+                    // A malformed or unknown type reads as no reaction; it is never counted or shown as one.
+                    try {
+                        ReactionType.fromWire(snapshot.data(ReactionReadDto.serializer()).type)
+                    } catch (failure: SerializationException) {
+                        logger.warn(
+                            feature = FEATURE,
+                            operation = "observe_reaction",
+                            event = "reaction_doc_skipped",
+                            error = AppError.ValidationFailed("reaction"),
+                            attributes = mapOf("exception" to (failure::class.simpleName ?: "unknown")),
+                        )
+                        null
+                    }
+                },
+            )
+        }
+        return known.catch { failure ->
             if (failure is CancellationException) throw failure
             logger.error(
                 feature = FEATURE,
@@ -72,8 +76,9 @@ class FirestoreReactionRepository(
                 error = FirestoreWriteErrorMapper.map(failure),
                 throwable = failure,
             )
-            emit(null)
+            emit(ObservedReaction.Unknown)
         }
+    }
 
     override fun setReaction(uid: String, fartId: String, type: ReactionType?): AppResult<Unit> {
         val invalid = when {
