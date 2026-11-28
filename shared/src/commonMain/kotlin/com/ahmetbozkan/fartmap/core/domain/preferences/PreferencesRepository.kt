@@ -24,6 +24,13 @@ interface PreferencesRepository {
 
     suspend fun setMapFilter(filter: MapFilter): AppResult<Unit>
 
+    /**
+     * True exactly once per signed-in user: the first call records that the account-link nudge was shown and returns
+     * true, every later call returns false (`account_link_nudge_shown_at`, user-scoped, cleared by [clearUserScoped]).
+     * A storage error reads as false: never nag when the store is broken.
+     */
+    suspend fun consumeAccountLinkNudge(): Boolean
+
     /** Removes everything tied to the signed-in user (sign-out, account switch). */
     suspend fun clearUserScoped(): AppResult<Unit>
 
