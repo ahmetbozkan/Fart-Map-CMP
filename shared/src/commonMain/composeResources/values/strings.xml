@@ -84,6 +84,15 @@
         <item quantity="other">%1$d days ago</item>
     </plurals>
 
+    <string name="map_detail_title">A level-%1$d fart</string>
+    <string name="map_detail_title_own">Your level-%1$d fart</string>
+    <string name="map_detail_when">Logged %1$s</string>
+    <string name="map_detail_when_recent">Logged less than an hour ago</string>
+    <string name="map_detail_intensity">Intensity %1$d%%</string>
+    <string name="map_detail_no_words">No words. Just vibes.</string>
+    <string name="map_detail_area">Approximate area. The blur is on purpose.</string>
+    <string name="map_detail_delete">Take this one back</string>
+
     <string name="log_title">Log a fart</string>
     <string name="log_close">Close</string>
     <string name="log_where_title">Where did it happen?</string>

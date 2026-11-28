@@ -18,6 +18,10 @@ data class MapFart(
     val timestampEpochMs: Long,
     val visibility: VisibilityMode,
     val isPending: Boolean = false,
+    /** The author's words (`description_text`), null when none were written (STORY-01-05-01). */
+    val description: String? = null,
+    /** Author-declared magnitude, 0.0..1.0 (`intensity_value`). */
+    val intensity: Double = 0.0,
 )
 
 /** Whose farts a map query reads: the public, visible ones, or the caller's own (the two shapes the rules allow). */

@@ -83,17 +83,53 @@ class MapViewModelDeleteTest {
     }
 
     @Test
-    fun anOwnMarkerOpensTheDeleteConfirmation() = runTest {
+    fun anOwnMarkerOpensTheSheetWithoutDeleting() = runTest {
         val vm = viewModel()
         val events = events(vm)
         loaded(vm, mine, theirs)
 
         vm.onAction(MapAction.MarkerTapped("mine"))
 
-        assertEquals("mine", vm.state.value.pendingDeleteId)
+        assertNull(vm.state.value.pendingDeleteId, "the tap opens the sheet, not the dialog")
         assertEquals("mine", vm.state.value.selectedMarkerId)
         assertEquals(1, tracked.filterIsInstance<AnalyticsEvent.MarkerOpened>().size)
-        assertTrue(events.none { it is MapEvent.DeleteFart }, "opening the dialog deletes nothing")
+        assertTrue(events.none { it is MapEvent.DeleteFart }, "opening the sheet deletes nothing")
+    }
+
+    @Test
+    fun deleteInTheSheetOpensTheConfirmationForOwnFarts() = runTest {
+        val vm = viewModel()
+        loaded(vm, mine, theirs)
+        vm.onAction(MapAction.MarkerTapped("mine"))
+
+        vm.onAction(MapAction.RequestDeleteFromDetail)
+
+        assertEquals("mine", vm.state.value.pendingDeleteId)
+        assertEquals("mine", vm.state.value.selectedMarkerId, "the sheet stays under the dialog")
+    }
+
+    @Test
+    fun deleteInTheSheetIsIgnoredForSomeoneElsesFart() = runTest {
+        val vm = viewModel()
+        loaded(vm, mine, theirs)
+        vm.onAction(MapAction.MarkerTapped("theirs"))
+
+        vm.onAction(MapAction.RequestDeleteFromDetail)
+
+        assertNull(vm.state.value.pendingDeleteId)
+    }
+
+    @Test
+    fun detailDismissedClosesTheSheetOnly() = runTest {
+        val vm = viewModel()
+        val events = events(vm)
+        loaded(vm, mine)
+        vm.onAction(MapAction.MarkerTapped("mine"))
+
+        vm.onAction(MapAction.DetailDismissed)
+
+        assertNull(vm.state.value.selectedMarkerId)
+        assertTrue(events.isEmpty())
     }
 
     @Test
@@ -108,16 +144,18 @@ class MapViewModelDeleteTest {
     }
 
     @Test
-    fun confirmingClosesTheDialogAndSendsTheDeleteOnce() = runTest {
+    fun confirmingClosesTheDialogAndTheSheetAndSendsTheDeleteOnce() = runTest {
         val vm = viewModel()
         val events = events(vm)
         loaded(vm, mine)
         vm.onAction(MapAction.MarkerTapped("mine"))
+        vm.onAction(MapAction.RequestDeleteFromDetail)
 
         vm.onAction(MapAction.ConfirmDelete)
         vm.onAction(MapAction.ConfirmDelete)
 
         assertNull(vm.state.value.pendingDeleteId)
+        assertNull(vm.state.value.selectedMarkerId)
         assertEquals(listOf<MapEvent>(MapEvent.DeleteFart("mine")), events.filterIsInstance<MapEvent.DeleteFart>())
     }
 
@@ -133,15 +171,17 @@ class MapViewModelDeleteTest {
     }
 
     @Test
-    fun dismissingKeepsTheFartAndSendsNothing() = runTest {
+    fun dismissingKeepsTheFartAndTheSheetAndSendsNothing() = runTest {
         val vm = viewModel()
         val events = events(vm)
         loaded(vm, mine)
         vm.onAction(MapAction.MarkerTapped("mine"))
+        vm.onAction(MapAction.RequestDeleteFromDetail)
 
         vm.onAction(MapAction.DismissDelete)
 
         assertNull(vm.state.value.pendingDeleteId)
+        assertEquals("mine", vm.state.value.selectedMarkerId)
         assertTrue(events.isEmpty())
     }
 
@@ -150,10 +190,12 @@ class MapViewModelDeleteTest {
         val vm = viewModel()
         loaded(vm, mine, theirs)
         vm.onAction(MapAction.MarkerTapped("mine"))
+        vm.onAction(MapAction.RequestDeleteFromDetail)
 
         maps.emit(MapFartsUpdate.Loaded(listOf(theirs), isFromCache = false))
 
         assertNull(vm.state.value.pendingDeleteId)
+        assertNull(vm.state.value.selectedMarkerId, "the sheet of a fart that left the data closes too")
     }
 
     @Test
@@ -161,21 +203,25 @@ class MapViewModelDeleteTest {
         val vm = viewModel()
         loaded(vm, mine, theirs)
         vm.onAction(MapAction.MarkerTapped("mine"))
+        vm.onAction(MapAction.RequestDeleteFromDetail)
 
         maps.emit(MapFartsUpdate.Loaded(listOf(mine), isFromCache = false))
 
         assertEquals("mine", vm.state.value.pendingDeleteId)
+        assertEquals("mine", vm.state.value.selectedMarkerId)
     }
 
     @Test
-    fun switchingTheFilterClosesTheDialog() = runTest {
+    fun switchingTheFilterClosesTheDialogAndTheSheet() = runTest {
         val vm = viewModel()
         loaded(vm, mine)
         vm.onAction(MapAction.MarkerTapped("mine"))
+        vm.onAction(MapAction.RequestDeleteFromDetail)
 
         vm.onAction(MapAction.FilterSelected(MapFilter.MINE))
 
         assertNull(vm.state.value.pendingDeleteId)
+        assertNull(vm.state.value.selectedMarkerId)
     }
 
     private companion object {

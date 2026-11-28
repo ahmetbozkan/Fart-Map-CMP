@@ -19,6 +19,11 @@ data class MapState(
     val camera: MapCamera = DEFAULT_CAMERA,
     val viewport: MapViewport? = null,
     val selectedMarkerId: String? = null,
+    /**
+     * The open fart's snapshot for the detail sheet, taken from the loaded list so panning the map away doesn't
+     * close the sheet. Always matches [selectedMarkerId] (STORY-01-05-01).
+     */
+    val selectedFart: MapFart? = null,
     val filter: MapFilter = MapFilter.DEFAULT,
     val farts: List<MapFart> = emptyList(),
     val status: MapDataStatus = MapDataStatus.Loading,
@@ -86,6 +91,12 @@ sealed interface MapAction {
     data object DismissLocationNotice : MapAction
 
     data object OpenLocationSettings : MapAction
+
+    /** The detail sheet was closed (drag, back or scrim); clears the selection only. */
+    data object DetailDismissed : MapAction
+
+    /** "Delete" in the detail sheet of the user's own fart: opens the confirmation (STORY-01-05-01). */
+    data object RequestDeleteFromDetail : MapAction
 
     /** "Delete" confirmed in the own-marker dialog (STORY-01-04-05). */
     data object ConfirmDelete : MapAction

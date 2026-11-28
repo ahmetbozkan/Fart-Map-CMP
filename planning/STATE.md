@@ -24,11 +24,13 @@
 
 - STORY-01-04-06 Done: one-time account-link nudge. After a guest's first online log the shell shows "Keep this one forever?" (Link Google / Not now), once per user (`account_link_nudge_shown_at`, user-scoped); an offline log defers it. `account_link_prompted` / `account_linked`. **EPIC-01-04 complete**; test plan `planning/testing/EPIC-01-04.md`.
 
+- EPIC-01-05 (reactions, detail sheet, safety) split into -01..-04 (ROADMAP). STORY-01-05-01 in review: marker tap opens the fart detail sheet (flavor, intensity, words, hour-granular age for others, coarse-area line, own-fart Delete). Report and Block (-03) must land before EPIC-01-05 is released; the sheet has no safety actions until then.
+
 ## Next
 1. Owner: run the EPIC-01-04 test plan (`planning/testing/EPIC-01-04.md`, Android + iOS) and file failures as `bug` issues.
 2. Owner: run the EPIC-01-03 test plan (`planning/testing/EPIC-01-03.md`, Android + iOS) and file failures as `bug` issues. Seed the dev catalog and dev test farts first (`OwnerTodo.md` A, D).
 3. Owner: run the EPIC-01-02 test plan (`planning/testing/EPIC-01-02.md`) if not done yet.
-4. EPIC-01-05 (reactions, detail sheet, safety) is next. Owner: decide ADR-0026 (location precision; -02 shipped with today's permissions and the hint). Owner: `.claude/rules/ios-shell.md` wording update suggested in `stories/STORY-01-03-02.md` Evidence (autopilot can't edit `.claude/`).
+4. EPIC-01-05 is next (-02 reactions, -03 report/block/auto-hide, -04 marker sound). Owner: decide ADR-0026 (location precision; -02 shipped with today's permissions and the hint). Owner: `.claude/rules/ios-shell.md` wording update suggested in `stories/STORY-01-03-02.md` Evidence (autopilot can't edit `.claude/`).
 5. On the Mac: commit the `Package.resolved` Xcode updates (GoogleSignIn + FirebaseFunctions pins).
 
 ## Pending owner decisions
@@ -37,6 +39,7 @@
 - Launch catalog prices (RevenueCat Offerings) and the owned domain for App Links / Universal Links (ADR-0023/0024).
 - Minimum iOS version (the template uses 18.2).
 - Open items in `planning/product/Scope.md` §7a marked "Phase 1 launch": push preferences, sensitive zones.
+- Fart detail sheet shows no author name or avatar yet (needs the public profile read; STORY-01-05-01 Decisions). Owner to confirm it can wait for a later story.
 
 ## Owner actions (external consoles)
 The full checklist, with instructions, is `planning/OwnerTodo.md`: A now (CI minutes, dev catalog seed), B the Mac/iOS manual check, C prod parity, D the Maps key, E the paid Apple account (Apple sign-in, App Check), F monetization and launch consoles.
