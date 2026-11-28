@@ -77,8 +77,11 @@ Subagents are not a "team of roles" handing work to each other. Each one starts 
 scripts/autopilot.sh                     # up to 5 stories, stop at the epic boundary
 scripts/autopilot.sh --max 2 --hold-sensitive
 scripts/autopilot.sh --cross-epics       # also split and start the next epic
+scripts/autopilot.sh --model claude-opus-5-5   # a harder story (default claude-sonnet-5-5)
 scripts/autopilot.sh --help              # all options
 ```
+
+**Model.** The driver passes `--model` (default `claude-sonnet-5-5`), so the agent never inherits whatever you last chose with `/model` in an interactive session. Each session logs its model on the "model:" line and on the viewer's session line. The review agents keep their own model from their frontmatter (Sonnet; `spec-scout` uses Haiku).
 
 It stops on `epic-boundary` (the notification points to the epic's manual test plan in `planning/testing/`), `roadmap-done`, the story cap, an escalation you didn't answer in time, a sign-in problem, or two failed sessions in a row. Everything it keeps is in `.autopilot/` (gitignored). Keep the PC awake and plugged in while it runs.
 

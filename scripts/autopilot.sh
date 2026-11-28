@@ -3,6 +3,8 @@
 # Usage: scripts/autopilot.sh [options]
 #   --max N             stop after N merged stories (default 5)
 #   --max-turns N       turn cap per session (default 400)
+#   --model ID          model for the agent sessions (default claude-sonnet-5-5; e.g. claude-opus-5-5 for a hard
+#                       story). Pinned so your interactive /model choice never changes the autopilot.
 #   --cross-epics       let the agent open the next epic (default: stop at each epic boundary)
 #   --hold-sensitive    don't merge PRs touching rules, functions, entitlements or location; escalate instead
 #   --story ID          start with this story instead of "next"
@@ -15,18 +17,19 @@
 set -uo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-max=5; max_turns=400; flags=""; story="next"; fresh=0; wait=1; max_wait_hours=8
+max=5; max_turns=400; flags=""; story="next"; fresh=0; wait=1; max_wait_hours=8; model="claude-sonnet-5-5"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --max) max="$2"; shift 2 ;;
     --max-turns) max_turns="$2"; shift 2 ;;
+    --model) model="$2"; shift 2 ;;
     --cross-epics) flags="$flags --cross-epics"; shift ;;
     --hold-sensitive) flags="$flags --hold-sensitive"; shift ;;
     --story) story="$2"; shift 2 ;;
     --fresh) fresh=1; shift ;;
     --no-wait) wait=0; shift ;;
     --max-wait-hours) max_wait_hours="$2"; shift 2 ;;
-    -h|--help) sed -n '2,15p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,17p' "$0"; exit 0 ;;
     *) echo "Unknown option: $1" >&2; exit 2 ;;
   esac
 done
@@ -131,12 +134,13 @@ while [[ $merged -lt $max ]]; do
     resume_args=()
     log "session $i: $prompt"
   fi
-  log "live log: $live_log   raw: $raw"
+  log "model: $model   live log: $live_log   raw: $raw"
 
   # Git Bash (MSYS) rewrites any argument starting with "/" when it starts a native Windows .exe, so
   # "/autopilot-story ..." would reach claude.exe as "C:/Program Files/Git/autopilot-story ..." and the skill
   # would never load. Both variables turn that conversion off for this call; they are ignored elsewhere.
   MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' claude -p "$prompt" "${resume_args[@]}" \
+    --model "$model" \
     --permission-mode acceptEdits \
     --settings .claude/autopilot.settings.json \
     --max-turns "$max_turns" \
