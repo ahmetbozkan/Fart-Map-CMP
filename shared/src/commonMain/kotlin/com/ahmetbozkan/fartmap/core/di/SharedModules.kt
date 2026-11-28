@@ -26,6 +26,7 @@ import com.ahmetbozkan.fartmap.feature.logfart.domain.LogDraftRepository
 import com.ahmetbozkan.fartmap.feature.logfart.presentation.LogFartViewModel
 import com.ahmetbozkan.fartmap.feature.map.presentation.MapViewModel
 import com.ahmetbozkan.fartmap.feature.map.presentation.OwnFartDeleter
+import com.ahmetbozkan.fartmap.feature.map.presentation.ReactionsViewModel
 import com.ahmetbozkan.fartmap.feature.onboarding.presentation.AgeGateViewModel
 import com.ahmetbozkan.fartmap.feature.profile.presentation.ProfileViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -102,6 +103,7 @@ private val featureModule = module {
     viewModelOf(::ProfileViewModel)
     viewModel { MapViewModel(get(), get(), get(), get(), get(), clock = Clock.System) }
     factory { OwnFartDeleter(get(), get(), get(), get()) }
+    viewModel { (fartId: String) -> ReactionsViewModel(fartId, get(), get(), get()) }
     viewModelOf(::MainShellViewModel)
     viewModel { (startCamera: MapCamera) ->
         LogFartViewModel(

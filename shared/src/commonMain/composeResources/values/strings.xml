@@ -93,6 +93,16 @@
     <string name="map_detail_area">Approximate area. The blur is on purpose.</string>
     <string name="map_detail_delete">Delete</string>
 
+    <string name="reaction_dead">Dead</string>
+    <string name="reaction_toxic">Toxic</string>
+    <string name="reaction_rip">RIP</string>
+    <string name="reaction_smelled">Smelled it</string>
+    <string name="reaction_legend">Legend</string>
+    <string name="reaction_chip">%1$s %2$d</string>
+    <string name="reaction_chip_description">%1$s, %2$d reactions, %3$s</string>
+    <string name="reaction_selected">your reaction</string>
+    <string name="reaction_not_selected">not yours</string>
+
     <string name="log_title">Log a fart</string>
     <string name="log_close">Close</string>
     <string name="log_where_title">Where did it happen?</string>

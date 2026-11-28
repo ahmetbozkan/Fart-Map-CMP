@@ -2,11 +2,12 @@ import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import { onCall, onRequest } from "firebase-functions/v2/https";
-import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/firestore";
+import { onDocumentCreated, onDocumentUpdated, onDocumentWritten } from "firebase-functions/v2/firestore";
 import { handleSyncAccountProviders, syncAccountProviders as writeAccountProviders } from "./callables/syncAccountProviders";
 import { REGION } from "./region";
 import { handleFartCreated } from "./triggers/fartCreated";
 import { handleFartRemoved } from "./triggers/fartRemoved";
+import { handleReactionWritten } from "./triggers/reactionWritten";
 
 initializeApp();
 
@@ -34,6 +35,23 @@ export const onFartRemoved = onDocumentUpdated(
   { document: "farts/{fartId}", region: REGION, retry: true },
   async (event) => {
     await handleFartRemoved(
+      getFirestore(),
+      event.id,
+      event.params.fartId,
+      event.data?.before.data(),
+      event.data?.after.data(),
+    );
+  },
+);
+
+/**
+ * Keeps a fart's `reaction_count` / `reaction_breakdown` equal to its reaction docs (SOCIAL-01, triggers/reactionWritten.ts).
+ * `retry: true` with `runOnce` keyed on the event, so a redelivery never applies a delta twice.
+ */
+export const onReactionWritten = onDocumentWritten(
+  { document: "farts/{fartId}/reactions/{userId}", region: REGION, retry: true },
+  async (event) => {
+    await handleReactionWritten(
       getFirestore(),
       event.id,
       event.params.fartId,

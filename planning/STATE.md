@@ -24,7 +24,7 @@
 
 - STORY-01-04-06 Done: one-time account-link nudge. After a guest's first online log the shell shows "Keep this one forever?" (Link Google / Not now), once per user (`account_link_nudge_shown_at`, user-scoped); an offline log defers it. `account_link_prompted` / `account_linked`. **EPIC-01-04 complete**; test plan `planning/testing/EPIC-01-04.md`.
 
-- EPIC-01-05 (reactions, detail sheet, safety) split into -01..-04 (ROADMAP). STORY-01-05-01 in review: marker tap opens the fart detail sheet (flavor, intensity, words, hour-granular age for others, coarse-area line, own-fart Delete). Report and Block (-03) must land before EPIC-01-05 is released; the sheet has no safety actions until then.
+- EPIC-01-05 (reactions, detail sheet, safety) split into -01..-04 (ROADMAP). STORY-01-05-01 Done (PR #34): marker tap opens the fart detail sheet (flavor, intensity, words, hour-granular age for others, coarse-area line, own-fart Delete). STORY-01-05-02 in review (PR open): five reactions on the sheet, one per user, toggle and replace, optimistic chip; `onReactionWritten` keeps the parent counts. Report and Block (-03) must land before EPIC-01-05 is released; the sheet has no safety actions until then.
 
 ## Next
 1. Owner: run the EPIC-01-04 test plan (`planning/testing/EPIC-01-04.md`, Android + iOS) and file failures as `bug` issues.

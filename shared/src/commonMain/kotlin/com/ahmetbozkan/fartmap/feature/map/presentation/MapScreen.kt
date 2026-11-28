@@ -90,6 +90,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 /**
  * The Map tab, the launch screen (MAP-01): the native map via [MapHost], the filter row and the data states.
@@ -187,10 +188,16 @@ fun MapScreen(
             DataCard(state = state, onRetry = { onAction(MapAction.Retry) })
         }
         state.selectedFart?.let { fart ->
+            // One reactions ViewModel per open fart (keyed by id); its listener follows the sheet (STORY-01-05-02).
+            val reactions: ReactionsViewModel = koinViewModel(key = fart.id) { parametersOf(fart.id) }
+            val reactionState by reactions.state.collectAsStateWithLifecycle()
             FartDetailSheet(
                 content = fart.toDetailContent(state.uid, state.nowEpochMs),
                 onRequestDelete = { onAction(MapAction.RequestDeleteFromDetail) },
                 onDismiss = { onAction(MapAction.DetailDismissed) },
+                own = reactionState.own,
+                reactionBreakdown = fart.reactionBreakdown,
+                onReaction = { reactions.onAction(ReactionsAction.Toggle(it)) },
             )
         }
         if (state.pendingDeleteId != null) {
