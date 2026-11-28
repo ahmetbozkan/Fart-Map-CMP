@@ -28,6 +28,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -112,7 +113,7 @@ class MainShellViewModelTest {
             vm.onAction(MainShellAction.LogHandedOff(queuedOffline = false))
             assertEquals(LinkNudge.HIDDEN, vm.state.value.linkNudge, "state $state")
         }
-        assertEquals(false, prefs.nudgeConsumed)
+        assertFalse(prefs.nudgeConsumed)
     }
 
     @Test
@@ -161,25 +162,41 @@ class MainShellViewModelTest {
         assertEquals(1, tracked.size, "only the prompt was tracked")
     }
 
-    @Test
-    fun aConflictAndOtherFailuresAreTypedEvents() = runTest {
+    private fun TestScope.failedLink(error: AppError, expected: MainShellEvent) {
         val vm = viewModel()
         val events = collect(vm)
+        vm.onAction(MainShellAction.LogHandedOff(queuedOffline = false))
+        sessions.linkResult = AppResult.Failure(error)
+
+        vm.onAction(MainShellAction.AcceptLinkNudge)
+        vm.onAction(MainShellAction.LogHandedOff(queuedOffline = false))
+
+        assertEquals(listOf(expected), events)
+        assertEquals(LinkNudge.HIDDEN, vm.state.value.linkNudge, "never re-shown")
+    }
+
+    @Test
+    fun aConflictIsATypedEventAndTheNudgeStaysGone() = runTest {
+        failedLink(AppError.Conflict, MainShellEvent.LinkNudgeConflict)
+    }
+
+    @Test
+    fun anotherFailureIsATypedEventAndTheNudgeStaysGone() = runTest {
+        failedLink(AppError.Unknown, MainShellEvent.LinkNudgeFailed(AppError.Unknown))
+    }
+
+    @Test
+    fun aSessionThatLeavesGuestWhileTheKeyIsBeingSpentShowsNothing() = runTest {
+        val vm = viewModel()
+        val gate = CompletableDeferred<Unit>()
+        prefs.nudgeGate = gate
 
         vm.onAction(MainShellAction.LogHandedOff(queuedOffline = false))
-        sessions.linkResult = AppResult.Failure(AppError.Conflict)
-        vm.onAction(MainShellAction.AcceptLinkNudge)
+        sessions.set(SessionState.SignedOut)
+        gate.complete(Unit)
 
-        prefs.nudgeConsumed = false
-        vm.onAction(MainShellAction.LogHandedOff(queuedOffline = false))
-        sessions.linkResult = AppResult.Failure(AppError.Unknown)
-        vm.onAction(MainShellAction.AcceptLinkNudge)
-
-        assertEquals(
-            listOf(MainShellEvent.LinkNudgeConflict, MainShellEvent.LinkNudgeFailed(AppError.Unknown)),
-            events,
-        )
         assertEquals(LinkNudge.HIDDEN, vm.state.value.linkNudge)
+        assertTrue(tracked.isEmpty())
     }
 
     @Test

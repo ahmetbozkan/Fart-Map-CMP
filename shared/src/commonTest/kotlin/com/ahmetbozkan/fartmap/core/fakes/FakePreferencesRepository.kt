@@ -41,7 +41,13 @@ class FakePreferencesRepository : PreferencesRepository {
 
     var nudgeConsumed = false
 
-    override suspend fun consumeAccountLinkNudge(): Boolean = (!nudgeConsumed).also { nudgeConsumed = true }
+    /** Set to hold `consumeAccountLinkNudge` until the test completes it. */
+    var nudgeGate: CompletableDeferred<Unit>? = null
+
+    override suspend fun consumeAccountLinkNudge(): Boolean {
+        nudgeGate?.await()
+        return (!nudgeConsumed).also { nudgeConsumed = true }
+    }
 
     override suspend fun clearUserScoped(): AppResult<Unit> {
         userScopedClears++

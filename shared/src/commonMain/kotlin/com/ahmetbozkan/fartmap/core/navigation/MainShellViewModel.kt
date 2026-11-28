@@ -105,16 +105,14 @@ class MainShellViewModel(
                     analytics.track(AnalyticsEvent.AccountLinked(AnalyticsEvent.LinkProvider.GOOGLE))
                     sendEvent(MainShellEvent.LinkNudgeLinked)
                 }
-                is AppResult.Failure -> sendEvent(
-                    if (result.error == AppError.Conflict) {
-                        MainShellEvent.LinkNudgeConflict
-                    } else {
-                        MainShellEvent.LinkNudgeFailed(result.error)
-                    },
-                )
+                // A failure for a session that is gone is not the next session's news.
+                is AppResult.Failure -> if (sessions.session.value.isGuest()) sendEvent(failureEvent(result.error))
             }
         }
     }
+
+    private fun failureEvent(error: AppError): MainShellEvent =
+        if (error == AppError.Conflict) MainShellEvent.LinkNudgeConflict else MainShellEvent.LinkNudgeFailed(error)
 
     private fun SessionState.isGuest() = this is SessionState.Active && kind == SessionState.Kind.ANONYMOUS
 
