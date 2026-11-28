@@ -37,6 +37,9 @@ backend/functions/lib/
 **/firebase-debug.log
 **/ui-debug.log
 **/firestore-debug.log
+# JVM crash dumps (host paths, username, environment)
+hs_err_pid*.log
+replay_pid*.log
 .firebase/
 
 # Claude Code personal overrides

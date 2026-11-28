@@ -118,13 +118,14 @@ class FirestoreSafetyRepository(
             .map { snapshot -> SafetyDocs.blockedUids(snapshot.documents.map { it.toBlockRead() }) }
             .catch { failure ->
                 if (failure is CancellationException) throw failure
-                // Ends the flow; callers keep the last set they saw (ObserveVisibleMapFarts).
+                // Ends the flow; callers keep the last set they saw (ObserveVisibleMapFarts). The exception itself isn't
+                // passed on: its message could name the caller's block docs (blocker and blocked uids).
                 logger.error(
                     feature = FEATURE,
                     operation = "observe_blocks",
                     event = "blocks_listen_failed",
                     error = FirestoreWriteErrorMapper.map(failure),
-                    throwable = failure,
+                    attributes = mapOf("exception" to (failure::class.simpleName ?: "unknown")),
                 )
             }
 

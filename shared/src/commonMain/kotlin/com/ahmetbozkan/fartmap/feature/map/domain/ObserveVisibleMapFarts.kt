@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlin.concurrent.Volatile
 
 /**
  * The map's farts minus those by users the caller blocked (MOD-01, STORY-01-05-03). Rules don't filter PUBLIC reads
@@ -19,6 +20,9 @@ class ObserveVisibleMapFarts(
     private val farts: MapFartRepository,
     private val safety: SafetyRepository,
 ) {
+    // One instance per map ViewModel (Koin factory). Last write wins; each value is a complete set, so a race between
+    // two quick re-subscriptions can only pick one of two valid sets.
+    @Volatile
     private var lastKnown: Pair<String, Set<String>>? = null
 
     operator fun invoke(query: MapQuery, uid: String): Flow<MapFartsUpdate> {

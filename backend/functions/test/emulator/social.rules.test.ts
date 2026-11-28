@@ -127,7 +127,14 @@ describe("moderation reports (DataContracts §5.6)", () => {
     await assertFails(user(env, BOB).doc(`moderation_reports/${bob.id}`).set(bob.data));
   });
 
-  it("denies free-form ids, spoofed reporters, non-OPEN status, unknown targets and signed-out users", async () => {
+  it("allows every ReportReason code", async () => {
+    for (const code of ["HARASSMENT", "PRIVATE_INFO", "MINOR_SAFETY", "SEXUAL", "ILLEGAL", "SPAM", "OTHER"]) {
+      const r = report(BOB, { reason_code: code, target_id: `pub-${code}` });
+      await assertSucceeds(user(env, BOB).doc(`moderation_reports/${r.id}`).set(r.data));
+    }
+  });
+
+  it("denies free-form ids, spoofed reporters, non-OPEN status, unknown targets, free-text reasons and signed-out users", async () => {
     const bob = report(BOB);
     await assertFails(user(env, BOB).doc("moderation_reports/r1").set({ ...bob.data, report_id: "r1" }));
     const spoof = report(ALICE);
@@ -136,6 +143,8 @@ describe("moderation reports (DataContracts §5.6)", () => {
     await assertFails(user(env, BOB).doc(`moderation_reports/${actioned.id}`).set(actioned.data));
     const planet = report(BOB, { target_type: "PLANET" });
     await assertFails(user(env, BOB).doc(`moderation_reports/${planet.id}`).set(planet.data));
+    const freeText = report(BOB, { reason_code: "he smells, ban him" });
+    await assertFails(user(env, BOB).doc(`moderation_reports/${freeText.id}`).set(freeText.data));
     await assertFails(signedOut(env).doc(`moderation_reports/${bob.id}`).set(bob.data));
   });
 

@@ -24,6 +24,7 @@ export type ReportOutcome =
   | "skipped_missing"
   | "skipped_removed"
   | "skipped_self"
+  | "skipped_private"
   | "skipped_duplicate";
 
 /**
@@ -33,7 +34,7 @@ export type ReportOutcome =
  *   report is one distinct reporter; `runOnce` keyed on the event keeps a redelivery from counting twice.
  * - The fart is read and updated in one transaction, so concurrent reports can't lose a count.
  * - Skipped (logged): a non-FART target (comments and users have no counter yet), a malformed report, a missing or
- *   removed fart, and the author reporting their own fart.
+ *   removed fart, the author reporting their own fart, and a PRIVATE fart (no one else can read it).
  * - Logs carry the fart id and outcome only: never the reporter (Security.md §7) or coordinates.
  */
 export async function handleReportCreated(
@@ -57,6 +58,8 @@ export async function handleReportCreated(
       const fart = snap.data() ?? {};
       if (fart.is_removed === true) return "skipped_removed";
       if (fart.author_user_id === reporter) return "skipped_self";
+      // Only the author can read a PRIVATE fart, so anyone else reporting it got the id some other way: not counted.
+      if (fart.visibility_mode === "PRIVATE") return "skipped_private";
       const count = typeof fart.report_count === "number" ? fart.report_count : 0;
       const update = moderationUpdate(count, fart.is_hidden === true);
       tx.update(fartRef, update.hide

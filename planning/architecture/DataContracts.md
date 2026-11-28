@@ -282,7 +282,7 @@ Restricted moderation collection. The document id is `{reporter_user_id}_{target
 | `created_at` | Timestamp | Yes |
 | `updated_at` | Timestamp | Yes |
 
-**Auto-hide (`onReportCreated`, ADR-0015):** each created FART report increments the fart's `report_count`; at 3 the fart gets `is_hidden = true` and leaves public reads (its author still sees it). Reports by the fart's author, and reports on removed or missing farts, aren't counted. Only moderation (Admin SDK) un-hides, and then also resets `report_count` to 0, or the next report hides it again.
+**Auto-hide (`onReportCreated`, ADR-0015):** each created FART report increments the fart's `report_count`; at 3 the fart gets `is_hidden = true` and leaves public reads (its author still sees it). Reports by the fart's author, and reports on PRIVATE, removed or missing farts, aren't counted. The rules accept only the listed `reason_code` values. Only moderation (Admin SDK) un-hides, and then also resets `report_count` to 0, or the next report hides it again.
 
 ---
 

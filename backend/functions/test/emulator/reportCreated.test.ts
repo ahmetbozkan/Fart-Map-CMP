@@ -69,7 +69,7 @@ describe("onReportCreated: count reports, hide at three distinct reporters (MOD-
     expect(await fart("f2")).toMatchObject({ report_count: 1 });
   });
 
-  it("skips the author's own report, a removed fart and a missing fart", async () => {
+  it("skips the author's own report, a removed, private or missing fart", async () => {
     await seedFart("f3");
     expect(await handleReportCreated(db, "evt-self", report("alice", "f3"))).toBe("skipped_self");
     expect(await fart("f3")).toMatchObject({ report_count: 0, is_hidden: false });
@@ -77,6 +77,10 @@ describe("onReportCreated: count reports, hide at three distinct reporters (MOD-
     await seedFart("f4", { is_removed: true });
     expect(await handleReportCreated(db, "evt-removed", report("bob", "f4"))).toBe("skipped_removed");
     expect(await fart("f4")).toMatchObject({ report_count: 0 });
+
+    await seedFart("f7", { visibility_mode: "PRIVATE" });
+    expect(await handleReportCreated(db, "evt-private", report("bob", "f7"))).toBe("skipped_private");
+    expect(await fart("f7")).toMatchObject({ report_count: 0, is_hidden: false });
 
     expect(await handleReportCreated(db, "evt-missing", report("bob", "gone"))).toBe("skipped_missing");
     expect((await db.doc("farts/gone").get()).exists).toBe(false);

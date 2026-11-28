@@ -128,10 +128,11 @@ fun MapRoute(
             }
         }
     }
-    // A sheet closed any other way (its fart left the map, a filter change) takes the report/block flow with it.
+    // A sheet closed or switched any other way (its fart left the map, a filter change, another fart opened) takes the
+    // report/block flow with it, so reopening a fart never resurrects an old flow.
     val openFartId = state.selectedFart?.id
-    LaunchedEffect(openFartId) {
-        if (openFartId == null) safetyViewModel.onAction(FartSafetyAction.Dismiss)
+    LaunchedEffect(openFartId, safety.fartId) {
+        if (safety.fartId != null && safety.fartId != openFartId) safetyViewModel.onAction(FartSafetyAction.Dismiss)
     }
     LaunchedEffect(logged) {
         if (logged != null) {
