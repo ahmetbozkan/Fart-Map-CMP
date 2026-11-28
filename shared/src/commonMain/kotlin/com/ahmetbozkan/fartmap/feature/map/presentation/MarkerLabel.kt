@@ -50,13 +50,16 @@ fun MapFart.toMarker(label: String, postingSuffix: String): MapMarker = MapMarke
  */
 @Composable
 fun MapFart.markerLabel(uid: String?, nowEpochMs: Long): String {
-    val age = fartAge(nowEpochMs, timestampEpochMs)
-    val agoText = when (age.unit) {
-        AgeUnit.JUST_NOW -> stringResource(Res.string.map_age_just_now)
-        AgeUnit.MINUTES -> pluralStringResource(Res.plurals.map_age_minutes, age.count, age.count)
-        AgeUnit.HOURS -> pluralStringResource(Res.plurals.map_age_hours, age.count, age.count)
-        AgeUnit.DAYS -> pluralStringResource(Res.plurals.map_age_days, age.count, age.count)
-    }
+    val agoText = fartAge(nowEpochMs, timestampEpochMs).agoText()
     val label = if (uid != null && authorUid == uid) Res.string.map_marker_label_own else Res.string.map_marker_label
     return stringResource(label, flavorLevel, agoText)
+}
+
+/** The age as words ("just now", "2 hours ago"), shared by the marker label and the detail sheet. */
+@Composable
+fun FartAge.agoText(): String = when (unit) {
+    AgeUnit.JUST_NOW -> stringResource(Res.string.map_age_just_now)
+    AgeUnit.MINUTES -> pluralStringResource(Res.plurals.map_age_minutes, count, count)
+    AgeUnit.HOURS -> pluralStringResource(Res.plurals.map_age_hours, count, count)
+    AgeUnit.DAYS -> pluralStringResource(Res.plurals.map_age_days, count, count)
 }

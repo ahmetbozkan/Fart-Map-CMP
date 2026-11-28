@@ -37,6 +37,8 @@ internal data class MapFartDto(
     @SerialName("flavor_level") val flavorLevel: Int = 1,
     @SerialName("timestamp_epoch_ms") val timestampEpochMs: Long = 0,
     @SerialName("visibility_mode") val visibilityMode: String = "",
+    @SerialName("description_text") val descriptionText: String? = null,
+    @SerialName("intensity_value") val intensityValue: Double = 0.0,
 )
 
 /** One cell listener's latest snapshot; [isTruncated] when it returned as many docs as its limit. */
@@ -55,6 +57,8 @@ internal fun MapFartDto.toDomain(id: String, isPending: Boolean = false) = MapFa
     timestampEpochMs = timestampEpochMs,
     visibility = VisibilityMode.fromWire(visibilityMode),
     isPending = isPending,
+    description = descriptionText?.takeIf { it.isNotBlank() },
+    intensity = intensityValue.coerceIn(0.0, 1.0),
 )
 
 /**

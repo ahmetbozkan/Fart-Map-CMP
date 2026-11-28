@@ -6,6 +6,7 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class MapFartDtoTest {
@@ -55,6 +56,27 @@ class MapFartDtoTest {
         // Mandatory regression (LocalData.md §6): unknown enum values decode to the safe value.
         assertEquals(VisibilityMode.PRIVATE, decode("""{"visibility_mode": "FRIENDS"}""").toDomain("f").visibility)
         assertEquals(VisibilityMode.FOLLOWERS, decode("""{"visibility_mode": "FOLLOWERS"}""").toDomain("f").visibility)
+    }
+
+    @Test
+    fun descriptionAndIntensityMapToTheSheetFields() {
+        val fart = decode("""{"description_text": "Bean soup, again", "intensity_value": 0.7}""").toDomain("f")
+
+        assertEquals("Bean soup, again", fart.description)
+        assertEquals(0.7, fart.intensity)
+    }
+
+    @Test
+    fun aBlankOrMissingDescriptionIsNull() {
+        assertNull(decode("""{"description_text": "   "}""").toDomain("f").description)
+        assertNull(decode("{}").toDomain("f").description)
+    }
+
+    @Test
+    fun intensityIsClampedToTheContractRange() {
+        assertEquals(1.0, decode("""{"intensity_value": 7.5}""").toDomain("f").intensity)
+        assertEquals(0.0, decode("""{"intensity_value": -2}""").toDomain("f").intensity)
+        assertEquals(0.0, decode("{}").toDomain("f").intensity)
     }
 
     @Test

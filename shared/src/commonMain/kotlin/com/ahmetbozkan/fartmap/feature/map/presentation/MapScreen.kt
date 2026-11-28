@@ -186,6 +186,13 @@ fun MapScreen(
             }
             DataCard(state = state, onRetry = { onAction(MapAction.Retry) })
         }
+        state.selectedFart?.let { fart ->
+            FartDetailSheet(
+                content = fart.toDetailContent(state.uid, state.nowEpochMs),
+                onRequestDelete = { onAction(MapAction.RequestDeleteFromDetail) },
+                onDismiss = { onAction(MapAction.DetailDismissed) },
+            )
+        }
         if (state.pendingDeleteId != null) {
             DeleteFartDialog(
                 onConfirm = { onAction(MapAction.ConfirmDelete) },
@@ -195,7 +202,7 @@ fun MapScreen(
     }
 }
 
-/** The own-marker action (CREATE-09): delete behind a confirmation. Replaced by the detail sheet in EPIC-01-05. */
+/** The own-fart delete (CREATE-09), opened from the detail sheet, behind a confirmation. */
 @Composable
 private fun DeleteFartDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(

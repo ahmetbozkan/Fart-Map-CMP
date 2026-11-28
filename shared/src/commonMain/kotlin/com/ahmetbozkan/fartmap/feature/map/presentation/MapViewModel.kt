@@ -113,7 +113,8 @@ class MapViewModel(
             MapAction.LogFartTapped -> sendEvent(MapEvent.OpenLogFart(state.value.camera))
             is MapAction.FocusLogged -> onFocusLogged(action.logged)
             MapAction.ConfirmDelete -> onConfirmDelete()
-            MapAction.DismissDelete -> setState { copy(pendingDeleteId = null) }
+            MapAction.DismissDelete, MapAction.DetailDismissed -> onDismissed(action)
+            MapAction.RequestDeleteFromDetail -> onRequestDeleteFromDetail()
         }
     }
 
@@ -123,8 +124,29 @@ class MapViewModel(
      */
     private fun onConfirmDelete() {
         val id = state.value.pendingDeleteId ?: return
-        setState { copy(pendingDeleteId = null) }
+        // A confirmed delete also closes the sheet: the fart it showed is leaving the map (STORY-01-05-01).
+        setState { copy(pendingDeleteId = null, selectedMarkerId = null, selectedFart = null) }
         sendEvent(MapEvent.DeleteFart(id))
+    }
+
+    /**
+     * Closing the delete dialog keeps the sheet under it; closing the sheet also drops a dialog over it, so no
+     * confirmation outlives the fart's sheet.
+     */
+    private fun onDismissed(action: MapAction) = setState {
+        if (action == MapAction.DetailDismissed) {
+            copy(selectedMarkerId = null, selectedFart = null, pendingDeleteId = null)
+        } else {
+            copy(pendingDeleteId = null)
+        }
+    }
+
+    /** Only the user's own open fart can be deleted from its sheet; anything else is ignored. */
+    private fun onRequestDeleteFromDetail() {
+        // The open fart comes from `selectedFart`, not the viewport slice: a pan must not disable the sheet's Delete.
+        val current = state.value
+        val fart = current.selectedFart?.takeIf { it.id == current.selectedMarkerId } ?: return
+        if (current.uid == fart.authorUid) setState { copy(pendingDeleteId = fart.id) }
     }
 
     /**
@@ -215,6 +237,7 @@ class MapViewModel(
                 copy(
                     farts = emptyList(),
                     selectedMarkerId = null,
+                    selectedFart = null,
                     pendingDeleteId = null,
                     status = MapDataStatus.Loading,
                     uid = subscription.uid
@@ -245,6 +268,10 @@ class MapViewModel(
                 setState {
                     copy(
                         farts = visible(loaded, viewport),
+                        // A fart that left the data (deleted elsewhere, filtered out) takes its sheet and dialog with it.
+                        // Panning doesn't touch this: the sheet reads `loaded`, not the viewport slice.
+                        selectedFart = selectedMarkerId?.let { id -> loaded.firstOrNull { it.id == id } },
+                        selectedMarkerId = selectedMarkerId?.takeIf { id -> loaded.any { it.id == id } },
                         pendingDeleteId = pendingDeleteId?.takeIf { id -> loaded.any { it.id == id } },
                         status = MapDataStatus.Ready(update.isFromCache, update.isTruncated),
                         nowEpochMs = clock.now().toEpochMilliseconds(),
@@ -286,8 +313,8 @@ class MapViewModel(
         val current = state.value
         val fart = current.farts.firstOrNull { it.id == markerId } ?: return
         val isOwn = fart.authorUid == current.uid
-        // An own marker opens the delete confirmation; the detail sheet replaces it in EPIC-01-05.
-        setState { copy(selectedMarkerId = markerId, pendingDeleteId = markerId.takeIf { isOwn }) }
+        // The tap opens the detail sheet (STORY-01-05-01); delete is an action inside it, not a direct dialog.
+        setState { copy(selectedMarkerId = markerId, selectedFart = fart) }
         analytics.track(
             AnalyticsEvent.MarkerOpened(
                 isOwn = isOwn,
