@@ -129,7 +129,7 @@ Readable by the author only (ADR-0019). The author writes it exactly once, in th
 | `type` | String enum | Yes — DEAD / TOXIC / RIP / SMELLED / LEGEND (`SocialSystems.md` §2) |
 | `created_at` | Timestamp | Yes |
 
-Document identity enforces one reaction per user per fart. `reaction_count` and `reaction_breakdown` on the parent are maintained by a Cloud Function trigger (ADR-0015).
+Document identity enforces one reaction per user per fart. `reaction_count` and `reaction_breakdown` on the parent are maintained by a Cloud Function trigger (ADR-0015). Read: the reacting user's own doc only (by document `get`, for the fart's readers); the reactor list is never readable, so reactor ids stay hidden.
 
 ---
 

@@ -55,15 +55,23 @@ describe("reactions", () => {
     await assertFails(user(env, BOB).doc(`farts/priv/reactions/${BOB}`).set(reaction("priv", BOB)));
   });
 
+  it("lets a user read their own reaction doc, and no one else's", async () => {
+    await seed(env, { [`farts/pub/reactions/${BOB}`]: reaction("pub", BOB) });
+    await assertSucceeds(user(env, BOB).doc(`farts/pub/reactions/${BOB}`).get());
+    await assertFails(user(env, ALICE).doc(`farts/pub/reactions/${BOB}`).get());
+    await assertFails(signedOut(env).doc(`farts/pub/reactions/${BOB}`).get());
+  });
+
   it("denies deleting someone else's reaction", async () => {
     await seed(env, { [`farts/pub/reactions/${ALICE}`]: reaction("pub", ALICE) });
     await assertFails(user(env, BOB).doc(`farts/pub/reactions/${ALICE}`).delete());
   });
 
-  it("reactions are readable exactly when the fart is", async () => {
-    await assertSucceeds(user(env, BOB).collection("farts/pub/reactions").get());
-    await assertFails(user(env, BOB).collection("farts/priv/reactions").get());
-    await assertSucceeds(user(env, ALICE).collection("farts/priv/reactions").get());
+  it("reactor lists are never readable, so reactor ids stay hidden (own doc only, see below)", async () => {
+    await seed(env, { [`farts/pub/reactions/${BOB}`]: reaction("pub", BOB) });
+    await assertFails(user(env, BOB).collection("farts/pub/reactions").get());
+    await assertFails(user(env, ALICE).collection("farts/pub/reactions").get());
+    await assertFails(user(env, ALICE).collection("farts/priv/reactions").get());
   });
 });
 

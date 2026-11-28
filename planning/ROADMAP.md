@@ -66,7 +66,7 @@
   - [x] STORY-01-04-06: One-time account-link nudge after a guest's first successful log (ADR-0018 §3). Manual test plan: `testing/EPIC-01-04.md`.
 - **EPIC-01-05:** Reactions, detail sheet and safety: report, block, auto-hide at 3. Also the marker sound on tap, the sound preview in the Log Fart picker and the "Play sounds on tap" toggle (CREATE-03.1 step 7; moved from STORY-01-04-03, which ships the picker without playback). Split in `stories/STORY-01-05-01.md` §Decisions.
   - [x] STORY-01-05-01 (`stories/STORY-01-05-01.md`): Fart detail sheet: marker tap opens it (own and others'), content and coarse area, no coordinates; own farts delete from the sheet (CREATE-09 confirmation kept)
-  - [ ] STORY-01-05-02: Reactions: the five types (SOCIAL-01), one per user per fart, toggle and replace, optimistic with silent rollback, counts from the parent doc, reaction limits server-side
+  - [x] STORY-01-05-02 (`stories/STORY-01-05-02.md`): Reactions: the five types (SOCIAL-01), one per user per fart, toggle and replace, optimistic with silent rollback, counts from the parent doc (`onReactionWritten`); numeric rate limit deferred (story Decisions)
   - [ ] STORY-01-05-03: Safety: report (reason sheet, `moderation_reports`), block (confirmation, feed and map hidden both ways), auto-hide at 3 distinct reporters (backend)
   - [ ] STORY-01-05-04: Marker sound on tap, sound preview in the Log Fart picker, "Play sounds on tap" toggle (CREATE-03.1 step 7)
 - **EPIC-01-06:** Cosmetics monetization: launch catalog, Wardrobe shop, starter pack offer, RevenueCat purchases + Offerings, AdMob rewarded (single-use) with server-side verification and Remote Config cap, entitlements mirror (ADR-0016/0017/0024).

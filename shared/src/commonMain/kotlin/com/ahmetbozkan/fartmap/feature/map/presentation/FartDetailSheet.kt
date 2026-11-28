@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.ahmetbozkan.fartmap.core.design.FartMapTheme
 import com.ahmetbozkan.fartmap.core.design.Spacing
 import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
+import com.ahmetbozkan.fartmap.feature.map.domain.ReactionType
 import com.ahmetbozkan.fartmap.resources.Res
 import com.ahmetbozkan.fartmap.resources.log_visibility_followers
 import com.ahmetbozkan.fartmap.resources.log_visibility_private
@@ -45,6 +46,9 @@ fun FartDetailSheet(
     onRequestDelete: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    own: ReactionType? = null,
+    reactionBreakdown: Map<ReactionType, Int> = emptyMap(),
+    onReaction: (ReactionType) -> Unit = {},
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss, modifier = modifier) {
         Column(
@@ -77,6 +81,7 @@ fun FartDetailSheet(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            ReactionBar(own = own, breakdown = reactionBreakdown, onToggle = onReaction)
             if (content.isOwn) {
                 Text(
                     text = stringResource(visibilityLabel(content.visibility)),

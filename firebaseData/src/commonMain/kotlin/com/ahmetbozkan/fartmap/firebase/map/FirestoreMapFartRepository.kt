@@ -9,6 +9,7 @@ import com.ahmetbozkan.fartmap.feature.map.domain.MapFartRepository
 import com.ahmetbozkan.fartmap.feature.map.domain.MapFartsUpdate
 import com.ahmetbozkan.fartmap.feature.map.domain.MapQuery
 import com.ahmetbozkan.fartmap.feature.map.domain.MapSource
+import com.ahmetbozkan.fartmap.feature.map.domain.ReactionType
 import com.ahmetbozkan.fartmap.firebase.firestore.FirestoreProvider
 import com.ahmetbozkan.fartmap.firebase.firestore.FirestoreWriteErrorMapper
 import dev.gitlive.firebase.firestore.DocumentSnapshot
@@ -39,6 +40,8 @@ internal data class MapFartDto(
     @SerialName("visibility_mode") val visibilityMode: String = "",
     @SerialName("description_text") val descriptionText: String? = null,
     @SerialName("intensity_value") val intensityValue: Double = 0.0,
+    @SerialName("reaction_count") val reactionCount: Int = 0,
+    @SerialName("reaction_breakdown") val reactionBreakdown: Map<String, Int> = emptyMap(),
 )
 
 /** One cell listener's latest snapshot; [isTruncated] when it returned as many docs as its limit. */
@@ -59,6 +62,11 @@ internal fun MapFartDto.toDomain(id: String, isPending: Boolean = false) = MapFa
     isPending = isPending,
     description = descriptionText?.takeIf { it.isNotBlank() },
     intensity = intensityValue.coerceIn(0.0, 1.0),
+    reactionCount = reactionCount.coerceAtLeast(0),
+    reactionBreakdown = reactionBreakdown.mapNotNull { (key, count) ->
+        val type = ReactionType.fromWire(key) ?: return@mapNotNull null
+        type to count.coerceAtLeast(0)
+    }.toMap(),
 )
 
 /**

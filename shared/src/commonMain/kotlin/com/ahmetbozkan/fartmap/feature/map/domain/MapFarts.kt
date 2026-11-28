@@ -22,6 +22,10 @@ data class MapFart(
     val description: String? = null,
     /** Author-declared magnitude, 0.0..1.0 (`intensity_value`). */
     val intensity: Double = 0.0,
+    /** All reactions on the fart, from the parent doc's `reaction_count` (maintained by the trigger, never the client). */
+    val reactionCount: Int = 0,
+    /** Per-type counts from `reaction_breakdown`; unknown keys are dropped by the mapper. */
+    val reactionBreakdown: Map<ReactionType, Int> = emptyMap(),
 )
 
 /** Whose farts a map query reads: the public, visible ones, or the caller's own (the two shapes the rules allow). */

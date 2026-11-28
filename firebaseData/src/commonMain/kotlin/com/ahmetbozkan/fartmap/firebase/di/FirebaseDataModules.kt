@@ -10,6 +10,7 @@ import com.ahmetbozkan.fartmap.core.domain.session.LocalDataReset
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsTracker
 import com.ahmetbozkan.fartmap.core.observability.LogSink
 import com.ahmetbozkan.fartmap.feature.map.domain.MapFartRepository
+import com.ahmetbozkan.fartmap.feature.map.domain.ReactionRepository
 import com.ahmetbozkan.fartmap.firebase.cosmetics.FirestoreCosmeticRepository
 import com.ahmetbozkan.fartmap.firebase.fart.FirestoreFartRepository
 import com.ahmetbozkan.fartmap.firebase.firestore.FirestoreLocalDataReset
@@ -17,6 +18,7 @@ import com.ahmetbozkan.fartmap.firebase.firestore.FirestoreProvider
 import com.ahmetbozkan.fartmap.firebase.firestore.FirestoreWriteErrorMapper
 import com.ahmetbozkan.fartmap.firebase.map.FirestoreMapFartRepository
 import com.ahmetbozkan.fartmap.firebase.profile.FirestoreProfileRepository
+import com.ahmetbozkan.fartmap.firebase.reaction.FirestoreReactionRepository
 import com.ahmetbozkan.fartmap.firebase.session.FirebaseAuthGateway
 import com.ahmetbozkan.fartmap.firebase.session.FirestoreAccountRepository
 import com.ahmetbozkan.fartmap.firebase.telemetry.CrashlyticsLogSink
@@ -49,5 +51,6 @@ private val firestoreModule = module {
     single<LocalDataReset> { FirestoreLocalDataReset(get(), get()) }
     single<MapFartRepository> { FirestoreMapFartRepository(get(), get()) }
     single<FartRepository> { FirestoreFartRepository(get(), get()) }
+    single<ReactionRepository> { FirestoreReactionRepository(get(), get(), get()) }
     single<CosmeticRepository> { FirestoreCosmeticRepository(get(), get()) }
 }
