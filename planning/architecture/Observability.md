@@ -172,7 +172,7 @@ The minimum event set that makes `Metrics.md` §4–§8 measurable in Phase 1. N
 | `reaction_given` / `reaction_removed` | reaction tapped | `type`, `is_own_fart` | First social touch, L2 |
 | `reaction_received` | server-side, on fan-out | `type` | L2 reciprocity |
 | `fart_deleted` | delete confirmed by the user (intent: the write isn't awaited, so a rare server rejection is still counted) | `age_bucket` (`13_17` / `18_plus`) | Trust |
-| `report_submitted` / `block_applied` | safety action | `target_type`, `reason_code` | Counter-metrics (§8) |
+| `report_submitted` / `block_applied` | report submitted (intent: the write isn't awaited) / block confirmed | `target_type` (`fart`/`user`); `report_submitted` also `reason_code` (the lowercase DataContracts §3.12 code). Never the reporter, the target id or who blocked whom | Counter-metrics (§8) |
 | `account_link_prompted` / `account_linked` | nudge shown / link success (Phase 1: from the post-first-log nudge only; the Profile card joins in EPIC-01-11) | `provider` (`google`) | Identity, retention |
 | `notification_permission_prompted` / `notification_permission_result` | in-context prompt | `granted` | Notification trust |
 | `location_permission_result` | a foreground location request ("center on me") ended with a decision; not sent when already granted, already blocked, or undecided | `result` (granted/denied/blocked) | Location trust, map activation |

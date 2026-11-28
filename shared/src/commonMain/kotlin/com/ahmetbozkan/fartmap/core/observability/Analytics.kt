@@ -1,6 +1,7 @@
 package com.ahmetbozkan.fartmap.core.observability
 
 import com.ahmetbozkan.fartmap.core.domain.map.MapFilter
+import com.ahmetbozkan.fartmap.core.domain.safety.ReportReason
 import com.ahmetbozkan.fartmap.core.domain.visibility.AgeBand
 import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
 
@@ -116,6 +117,22 @@ sealed interface AnalyticsEvent {
     }
 
     enum class LinkProvider(val wireName: String) { GOOGLE("google") }
+
+    /** A report was submitted (counter-metric, Metrics.md §8). Never the reporter, the target id or any text. */
+    data class ReportSubmitted(val targetType: SafetyTarget, val reason: ReportReason) : AnalyticsEvent {
+        override val name = "report_submitted"
+        override val params: Map<String, Any>
+            get() = mapOf("target_type" to targetType.wireName, "reason_code" to reason.wireName.lowercase())
+    }
+
+    /** A block was confirmed (counter-metric). Never who blocked whom. */
+    data class BlockApplied(val targetType: SafetyTarget) : AnalyticsEvent {
+        override val name = "block_applied"
+        override val params: Map<String, Any>
+            get() = mapOf("target_type" to targetType.wireName)
+    }
+
+    enum class SafetyTarget(val wireName: String) { FART("fart"), USER("user") }
 
     companion object {
         private const val FEW = 10

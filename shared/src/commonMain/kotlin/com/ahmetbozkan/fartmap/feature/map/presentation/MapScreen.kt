@@ -106,8 +106,10 @@ fun MapRoute(
     viewModel: MapViewModel = koinViewModel(),
     mapHost: MapHost = koinInject(),
     deleter: OwnFartDeleter = koinInject(),
+    safetyViewModel: FartSafetyViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val safety by safetyViewModel.state.collectAsStateWithLifecycle()
     val currentDeleter by rememberUpdatedState(deleter)
     val currentOnOpenLogFart by rememberUpdatedState(onOpenLogFart)
     val currentOnLoggedConsume by rememberUpdatedState(onLoggedConsume)
@@ -126,6 +128,11 @@ fun MapRoute(
             }
         }
     }
+    // A sheet closed any other way (its fart left the map, a filter change) takes the report/block flow with it.
+    val openFartId = state.selectedFart?.id
+    LaunchedEffect(openFartId) {
+        if (openFartId == null) safetyViewModel.onAction(FartSafetyAction.Dismiss)
+    }
     LaunchedEffect(logged) {
         if (logged != null) {
             viewModel.onAction(MapAction.FocusLogged(logged))
@@ -138,9 +145,15 @@ fun MapRoute(
         onAction = viewModel::onAction,
         modifier = modifier,
         cameraMoves = remember(cameraMoves) { cameraMoves.receiveAsFlow() },
+        safety = safety,
+        onSafetyAction = safetyViewModel::onAction,
     )
 }
 
+/**
+ * [safety] is the report/block flow (STORY-01-05-03); it is drawn only over the sheet of the fart it was opened on,
+ * and closing that sheet closes the flow too.
+ */
 @Composable
 fun MapScreen(
     state: MapState,
@@ -148,6 +161,8 @@ fun MapScreen(
     onAction: (MapAction) -> Unit,
     modifier: Modifier = Modifier,
     cameraMoves: Flow<MapCamera> = emptyFlow(),
+    safety: FartSafetyState = FartSafetyState(),
+    onSafetyAction: (FartSafetyAction) -> Unit = {},
 ) {
     val posting = stringResource(Res.string.map_marker_posting)
     val markers = state.farts.map { fart ->
@@ -194,11 +209,24 @@ fun MapScreen(
             FartDetailSheet(
                 content = fart.toDetailContent(state.uid, state.nowEpochMs),
                 onRequestDelete = { onAction(MapAction.RequestDeleteFromDetail) },
-                onDismiss = { onAction(MapAction.DetailDismissed) },
+                onDismiss = {
+                    onSafetyAction(FartSafetyAction.Dismiss)
+                    onAction(MapAction.DetailDismissed)
+                },
                 own = reactionState.own,
                 reactionBreakdown = fart.reactionBreakdown,
                 onReaction = { reactions.onAction(ReactionsAction.Toggle(it)) },
+                onReport = { onSafetyAction(FartSafetyAction.OpenReport(fart.id, fart.authorUid)) },
+                onBlock = { onSafetyAction(FartSafetyAction.OpenBlock(fart.id, fart.authorUid)) },
             )
+            if (safety.fartId == fart.id) {
+                when (safety.step) {
+                    SafetyStep.REPORT_PICK, SafetyStep.REPORT_SENT ->
+                        ReportReasonSheet(state = safety, onAction = onSafetyAction)
+                    SafetyStep.BLOCK_CONFIRM -> BlockUserDialog(onAction = onSafetyAction)
+                    SafetyStep.NONE -> Unit
+                }
+            }
         }
         if (state.pendingDeleteId != null) {
             DeleteFartDialog(

@@ -275,12 +275,14 @@ Restricted moderation collection. The document id is `{reporter_user_id}_{target
 |---|---|---|
 | `report_id` | String | Yes |
 | `reporter_user_id` | String | Yes |
-| `target_type` | String enum | Yes |
+| `target_type` | String enum | Yes | FART / COMMENT / USER (Phase 1 clients file FART only; profiles join with EPIC-01-07) |
 | `target_id` | String | Yes |
-| `reason_code` | String | Yes |
+| `reason_code` | String | Yes | HARASSMENT / PRIVATE_INFO / MINOR_SAFETY / SEXUAL / ILLEGAL / SPAM / OTHER (`ReportReason`, STORY-01-05-03). Review MINOR_SAFETY first (`ContentSafety.md` §5) |
 | `status` | String enum | Yes | OPEN / UNDER_REVIEW / ACTIONED / DISMISSED |
 | `created_at` | Timestamp | Yes |
 | `updated_at` | Timestamp | Yes |
+
+**Auto-hide (`onReportCreated`, ADR-0015):** each created FART report increments the fart's `report_count`; at 3 the fart gets `is_hidden = true` and leaves public reads (its author still sees it). Reports by the fart's author, and reports on removed or missing farts, aren't counted. Only moderation (Admin SDK) un-hides, and then also resets `report_count` to 0, or the next report hides it again.
 
 ---
 

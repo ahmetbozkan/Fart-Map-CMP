@@ -92,6 +92,26 @@
     <string name="map_detail_no_words">No words. Just vibes.</string>
     <string name="map_detail_area">Approximate area. The blur is on purpose.</string>
     <string name="map_detail_delete">Delete</string>
+    <string name="map_detail_report">Report</string>
+    <string name="map_detail_block">Block</string>
+
+    <string name="safety_report_title">What's wrong with this one?</string>
+    <string name="safety_report_body">Crude is fine. Hurting people isn't. Pick what fits.</string>
+    <string name="safety_reason_harassment">Harassment, threats or hate</string>
+    <string name="safety_reason_private_info">Shares someone's private info or location</string>
+    <string name="safety_reason_minor_safety">Puts a minor at risk</string>
+    <string name="safety_reason_sexual">Sexual content</string>
+    <string name="safety_reason_illegal">Illegal stuff</string>
+    <string name="safety_reason_spam">Spam</string>
+    <string name="safety_reason_other">Something else</string>
+    <string name="safety_report_submit">Send report</string>
+    <string name="safety_report_thanks_title">Thanks. We'll take a sniff.</string>
+    <string name="safety_report_thanks_body">Your report is private. The author won't know it was you.</string>
+    <string name="safety_report_done">Done</string>
+    <string name="safety_block_title">Block this person?</string>
+    <string name="safety_block_body">You won't see their farts and they can't react to yours. They won't be told. Unblocking comes later in Settings, so be sure.</string>
+    <string name="safety_block_confirm">Block</string>
+    <string name="safety_block_cancel">Never mind</string>
 
     <string name="reaction_dead">Dead</string>
     <string name="reaction_toxic">Toxic</string>

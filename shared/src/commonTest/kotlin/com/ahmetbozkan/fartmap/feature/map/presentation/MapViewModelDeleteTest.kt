@@ -9,11 +9,13 @@ import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
 import com.ahmetbozkan.fartmap.core.fakes.FakeLocationProvider
 import com.ahmetbozkan.fartmap.core.fakes.FakeMapFartRepository
 import com.ahmetbozkan.fartmap.core.fakes.FakePreferencesRepository
+import com.ahmetbozkan.fartmap.core.fakes.FakeSafetyRepository
 import com.ahmetbozkan.fartmap.core.fakes.InMemorySessionRepository
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsEvent
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsTracker
 import com.ahmetbozkan.fartmap.feature.map.domain.MapFart
 import com.ahmetbozkan.fartmap.feature.map.domain.MapFartsUpdate
+import com.ahmetbozkan.fartmap.feature.map.domain.ObserveVisibleMapFarts
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
@@ -65,7 +67,7 @@ class MapViewModelDeleteTest {
     )
 
     private fun viewModel() = MapViewModel(
-        repository = maps,
+        visibleFarts = ObserveVisibleMapFarts(maps, FakeSafetyRepository()),
         sessions = InMemorySessionRepository(SessionState.Active("me", SessionState.Kind.ANONYMOUS, AgeBand.ADULT)),
         preferences = FakePreferencesRepository(),
         analytics = AnalyticsTracker { tracked += it },

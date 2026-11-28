@@ -10,6 +10,7 @@ import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
 import com.ahmetbozkan.fartmap.core.fakes.FakeLocationProvider
 import com.ahmetbozkan.fartmap.core.fakes.FakeMapFartRepository
 import com.ahmetbozkan.fartmap.core.fakes.FakePreferencesRepository
+import com.ahmetbozkan.fartmap.core.fakes.FakeSafetyRepository
 import com.ahmetbozkan.fartmap.core.fakes.InMemorySessionRepository
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsEvent
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsTracker
@@ -19,6 +20,7 @@ import com.ahmetbozkan.fartmap.feature.map.domain.MapFart
 import com.ahmetbozkan.fartmap.feature.map.domain.MapFartsUpdate
 import com.ahmetbozkan.fartmap.feature.map.domain.MapQuery
 import com.ahmetbozkan.fartmap.feature.map.domain.MapSource
+import com.ahmetbozkan.fartmap.feature.map.domain.ObserveVisibleMapFarts
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -49,6 +51,7 @@ class MapViewModelTest {
     private val tokyo = MapViewport(south = 35.60, west = 139.60, north = 35.75, east = 139.85)
 
     private val repository = FakeMapFartRepository()
+    private val safety = FakeSafetyRepository()
     private val sessions =
         InMemorySessionRepository(SessionState.Active("me", SessionState.Kind.ANONYMOUS, AgeBand.ADULT))
     private val preferences = FakePreferencesRepository()
@@ -75,7 +78,14 @@ class MapViewModelTest {
         )
 
     private fun viewModel() =
-        MapViewModel(repository, sessions, preferences, analytics, FakeLocationProvider(), clock)
+        MapViewModel(
+            ObserveVisibleMapFarts(repository, safety),
+            sessions,
+            preferences,
+            analytics,
+            FakeLocationProvider(),
+            clock,
+        )
 
     private fun MapViewModel.idle(viewport: MapViewport = istanbul, cam: MapCamera = camera) =
         onAction(MapAction.CameraIdle(viewport, cam))
@@ -150,6 +160,21 @@ class MapViewModelTest {
         assertEquals(MapDataStatus.Ready(isFromCache = false), state.status)
         assertEquals(now, state.nowEpochMs)
         assertEquals("me", state.uid)
+    }
+
+    @Test
+    fun aBlockDropsTheAuthorsFartsAndClosesTheirOpenSheet() = runTest {
+        val vm = viewModel()
+        vm.idle()
+        repository.emit(MapFartsUpdate.Loaded(listOf(inside, mine), isFromCache = false))
+        vm.onAction(MapAction.MarkerTapped("in"))
+        assertEquals("in", vm.state.value.selectedMarkerId)
+
+        safety.emitBlocked("other")
+
+        assertEquals(listOf(mine), vm.state.value.farts)
+        assertNull(vm.state.value.selectedMarkerId)
+        assertNull(vm.state.value.selectedFart)
     }
 
     @Test

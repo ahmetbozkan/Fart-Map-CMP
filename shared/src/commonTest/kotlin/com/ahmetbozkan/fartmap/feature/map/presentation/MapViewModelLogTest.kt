@@ -10,9 +10,11 @@ import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
 import com.ahmetbozkan.fartmap.core.fakes.FakeLocationProvider
 import com.ahmetbozkan.fartmap.core.fakes.FakeMapFartRepository
 import com.ahmetbozkan.fartmap.core.fakes.FakePreferencesRepository
+import com.ahmetbozkan.fartmap.core.fakes.FakeSafetyRepository
 import com.ahmetbozkan.fartmap.core.fakes.InMemorySessionRepository
 import com.ahmetbozkan.fartmap.core.observability.AnalyticsTracker
 import com.ahmetbozkan.fartmap.feature.map.domain.MapSource
+import com.ahmetbozkan.fartmap.feature.map.domain.ObserveVisibleMapFarts
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
@@ -46,7 +48,7 @@ class MapViewModelLogTest {
     @AfterTest fun tearDown() = Dispatchers.resetMain()
 
     private fun viewModel() = MapViewModel(
-        repository = repository,
+        visibleFarts = ObserveVisibleMapFarts(repository, FakeSafetyRepository()),
         sessions = InMemorySessionRepository(SessionState.Active("me", SessionState.Kind.ANONYMOUS, AgeBand.ADULT)),
         preferences = preferences,
         analytics = AnalyticsTracker { },
