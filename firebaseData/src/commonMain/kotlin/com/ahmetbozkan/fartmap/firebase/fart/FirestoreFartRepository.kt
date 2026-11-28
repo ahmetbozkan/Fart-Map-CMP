@@ -5,6 +5,7 @@ import com.ahmetbozkan.fartmap.core.domain.fart.NewFart
 import com.ahmetbozkan.fartmap.core.domain.fart.validateNewFart
 import com.ahmetbozkan.fartmap.core.domain.location.LocationFuzzer
 import com.ahmetbozkan.fartmap.core.domain.write.AppWriteScope
+import com.ahmetbozkan.fartmap.core.observability.AppError
 import com.ahmetbozkan.fartmap.core.observability.AppResult
 import com.ahmetbozkan.fartmap.firebase.firestore.FirestoreProvider
 import dev.gitlive.firebase.firestore.BaseTimestamp
@@ -90,6 +91,19 @@ internal fun buildFartWrite(fartId: String, uid: String, fart: NewFart): FartWri
 }
 
 /**
+ * The author's soft delete (DataContracts.md §5.8): exactly the fields the rules' update rule allows for a removal.
+ * Pure, so a test pins the key set.
+ */
+internal fun buildFartDeleteFields() = FartDeleteFields(
+    isRemoved = true,
+    removedReason = "USER_DELETED",
+    updatedAt = Timestamp.ServerTimestamp,
+)
+
+/** The three fields of a removal, written as `is_removed`, `removed_reason` and `updated_at`. */
+internal data class FartDeleteFields(val isRemoved: Boolean, val removedReason: String, val updatedAt: BaseTimestamp)
+
+/**
  * Fart writes through the single write path (LocalData.md §3): client id, one batch, launched in [AppWriteScope] and
  * never awaited, so a create works offline and shows at once from the cache with `hasPendingWrites`.
  */
@@ -111,5 +125,28 @@ class FirestoreFartRepository(
                 .commit()
         }
         return AppResult.Success(fartRef.id)
+    }
+
+    override fun deleteFart(uid: String, fartId: String): AppResult<Unit> {
+        val invalid = when {
+            uid.isBlank() -> "uid"
+            fartId.isBlank() -> "fart_id"
+            else -> null
+        }
+        if (invalid != null) return AppResult.Failure(AppError.ValidationFailed(invalid))
+        val db = firestore.get()
+        val fartRef = db.collection("farts").document(fartId)
+        val fields = buildFartDeleteFields()
+        writes.launchWrite(op = "fart.delete") {
+            db.batch()
+                .update(
+                    fartRef,
+                    "is_removed" to fields.isRemoved,
+                    "removed_reason" to fields.removedReason,
+                    "updated_at" to fields.updatedAt,
+                )
+                .commit()
+        }
+        return AppResult.Success(Unit)
     }
 }

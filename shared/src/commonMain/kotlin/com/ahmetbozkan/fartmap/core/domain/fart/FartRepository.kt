@@ -11,4 +11,13 @@ interface FartRepository {
      * `Failure(ValidationFailed)` and nothing is written.
      */
     fun createFart(uid: String, fart: NewFart): AppResult<String>
+
+    /**
+     * Soft-deletes the caller's own fart (`is_removed`, `USER_DELETED`) in one batch handed to the app write scope,
+     * never awaited, so it works offline and the marker leaves the map at once. The server purges the precise
+     * location (`onFartRemoved`). [uid] is only validated, not written: the rules compare it to the fart's author. A
+     * blank id returns `Failure(ValidationFailed)` and nothing is written; the rules
+     * decide whose fart it is, and a rejection arrives through `PendingWriteMonitor`.
+     */
+    fun deleteFart(uid: String, fartId: String): AppResult<Unit>
 }

@@ -20,11 +20,12 @@
 - STORY-01-04-02 Done (PR #29): quick log from the map FAB: location step (fix / "Use my location" / centre-pin picker, approximate hint), ADR-0023 visibility default, "Let It Rip" with success / offline / failed, pending markers at half opacity, `NetworkStatus` capability, fart rejections in a shell snackbar, `log_started` / `log_submitted`.
 - STORY-01-04-03 Done: detailed fields on Log Fart (date/time pickers, avatar and sound chips from `cosmetic_items` + `user_entitlements` with a bundled starter fallback, flavor stepper, intensity slider, caption with a 280 stop, locked voice row + info sheet). Locked items are drawn but inert until EPIC-01-06; sound playback, preview and the sound toggle moved to EPIC-01-05.
 - STORY-01-04-04 Done: Log Fart drafts. A changed form autosaves to `log_draft` (user-scoped; never coordinates; the time only if picked), is restored on the next open with a note, is cleared on hand-off and saved at once on failure. Back on a changed form asks Keep / Discard. `log_abandoned` with `step_reached`.
+- STORY-01-04-05 Done: delete own fart. Tapping an own marker asks "Take this one back?"; Delete soft-deletes (`USER_DELETED`, never awaited, so the marker leaves at once, offline too). New `onFartRemoved` function purges `private/location` (in `PROD_FUNCTIONS`), and `onFartCreated` now skips a removed fart quietly. `fart_deleted` with `age_bucket`.
 
 ## Next
 1. Owner: run the EPIC-01-03 test plan (`planning/testing/EPIC-01-03.md`, Android + iOS) and file failures as `bug` issues. Seed the dev catalog and dev test farts first (`OwnerTodo.md` A, D).
 2. Owner: run the EPIC-01-02 test plan (`planning/testing/EPIC-01-02.md`) if not done yet.
-3. STORY-01-04-05 (delete own fart) is next. Owner: decide ADR-0026 (location precision; -02 shipped with today's permissions and the hint). Owner: `.claude/rules/ios-shell.md` wording update suggested in `stories/STORY-01-03-02.md` Evidence (autopilot can't edit `.claude/`).
+3. STORY-01-04-06 (account-link nudge) is next. Owner: decide ADR-0026 (location precision; -02 shipped with today's permissions and the hint). Owner: `.claude/rules/ios-shell.md` wording update suggested in `stories/STORY-01-03-02.md` Evidence (autopilot can't edit `.claude/`).
 4. On the Mac: commit the `Package.resolved` Xcode updates (GoogleSignIn + FirebaseFunctions pins).
 
 ## Pending owner decisions

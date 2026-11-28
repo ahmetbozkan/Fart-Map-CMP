@@ -2,10 +2,11 @@ import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import { onCall, onRequest } from "firebase-functions/v2/https";
-import { onDocumentCreated } from "firebase-functions/v2/firestore";
+import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { handleSyncAccountProviders, syncAccountProviders as writeAccountProviders } from "./callables/syncAccountProviders";
 import { REGION } from "./region";
 import { handleFartCreated } from "./triggers/fartCreated";
+import { handleFartRemoved } from "./triggers/fartRemoved";
 
 initializeApp();
 
@@ -22,6 +23,23 @@ export const onFartCreated = onDocumentCreated(
   { document: "farts/{fartId}", region: REGION, retry: true },
   async (event) => {
     await handleFartCreated(getFirestore(), event.id, event.params.fartId);
+  },
+);
+
+/**
+ * Deletes a removed fart's owner-only precise location (ADR-0019, triggers/fartRemoved.ts). `retry: true` so a
+ * transient failure is retried; the handler ignores updates that don't flip `is_removed`.
+ */
+export const onFartRemoved = onDocumentUpdated(
+  { document: "farts/{fartId}", region: REGION, retry: true },
+  async (event) => {
+    await handleFartRemoved(
+      getFirestore(),
+      event.id,
+      event.params.fartId,
+      event.data?.before.data(),
+      event.data?.after.data(),
+    );
   },
 );
 

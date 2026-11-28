@@ -32,6 +32,9 @@ export async function handleFartCreated(db: Firestore, eventId: string, fartId: 
 
     const skip = (reason: SkipReason) => logError("fart_projection_skipped", { fartId, reason });
     if (!fart.exists) return skip("fart_missing");
+    // Log then delete while offline syncs both batches together: onFartRemoved may already have purged the location.
+    // A removed fart is no longer shown anywhere, so there is nothing to re-validate (not an error).
+    if (fart.data()?.is_removed === true) return logInfo("fart_projection_removed", { fartId });
     if (!location.exists) return skip("location_missing");
     const point = location.data() ?? {};
     if (!validPoint(point)) return skip("location_invalid");

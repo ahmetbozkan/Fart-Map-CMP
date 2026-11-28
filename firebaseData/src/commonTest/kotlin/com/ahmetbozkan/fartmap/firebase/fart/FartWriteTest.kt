@@ -108,6 +108,16 @@ class FartWriteTest {
         }
     }
 
+    /** The rules' update rule allows a removal to change exactly these fields and no others. */
+    @Test
+    fun deleteChangesExactlyTheRemovalFields() {
+        val fields = buildFartDeleteFields()
+
+        assertEquals(true, fields.isRemoved)
+        assertEquals("USER_DELETED", fields.removedReason)
+        assertEquals(Timestamp.ServerTimestamp, fields.updatedAt)
+    }
+
     @Test
     fun optionalFieldsAreSentAsNullAndABlankCaptionBecomesNull() {
         val dto = buildFartWrite("f", "u", fart.copy(descriptionText = "   ", soundId = null)).public

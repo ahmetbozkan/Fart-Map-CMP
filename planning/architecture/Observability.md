@@ -171,7 +171,7 @@ The minimum event set that makes `Metrics.md` §4–§8 measurable in Phase 1. N
 | `marker_opened` | marker tapped / detail sheet opened (the same tap once the sheet exists, EPIC-01-05; tracked once) | `is_own`, `source` (map/social_tab/push) | L2/L3 |
 | `reaction_given` / `reaction_removed` | reaction tapped | `type`, `is_own_fart` | First social touch, L2 |
 | `reaction_received` | server-side, on fan-out | `type` | L2 reciprocity |
-| `fart_deleted` | delete confirmed | `age_bucket` | Trust |
+| `fart_deleted` | delete confirmed by the user (intent: the write isn't awaited, so a rare server rejection is still counted) | `age_bucket` (`13_17` / `18_plus`) | Trust |
 | `report_submitted` / `block_applied` | safety action | `target_type`, `reason_code` | Counter-metrics (§8) |
 | `account_link_prompted` / `account_linked` | nudge shown / link success | `provider` | Identity, retention |
 | `notification_permission_prompted` / `notification_permission_result` | in-context prompt | `granted` | Notification trust |

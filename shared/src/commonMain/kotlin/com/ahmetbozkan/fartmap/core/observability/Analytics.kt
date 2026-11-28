@@ -1,6 +1,7 @@
 package com.ahmetbozkan.fartmap.core.observability
 
 import com.ahmetbozkan.fartmap.core.domain.map.MapFilter
+import com.ahmetbozkan.fartmap.core.domain.visibility.AgeBand
 import com.ahmetbozkan.fartmap.core.domain.visibility.VisibilityMode
 
 /**
@@ -84,6 +85,19 @@ sealed interface AnalyticsEvent {
                 "has_sound" to hasSound,
                 "avatar_is_free" to avatarIsFree,
                 "offline" to offline,
+            )
+    }
+
+    /** The user confirmed deleting their own fart (a band, never a date of birth). */
+    data class FartDeleted(val ageBand: AgeBand) : AnalyticsEvent {
+        override val name = "fart_deleted"
+        override val params: Map<String, Any>
+            get() = mapOf(
+                "age_bucket" to when (ageBand) {
+                    AgeBand.ADULT -> "18_plus"
+                    AgeBand.TEEN -> "13_17"
+                    AgeBand.UNKNOWN -> "unknown"
+                },
             )
     }
 
