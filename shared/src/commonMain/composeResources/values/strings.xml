@@ -91,7 +91,7 @@
     <string name="map_detail_intensity">Intensity %1$d%%</string>
     <string name="map_detail_no_words">No words. Just vibes.</string>
     <string name="map_detail_area">Approximate area. The blur is on purpose.</string>
-    <string name="map_detail_delete">Take this one back</string>
+    <string name="map_detail_delete">Delete</string>
 
     <string name="log_title">Log a fart</string>
     <string name="log_close">Close</string>

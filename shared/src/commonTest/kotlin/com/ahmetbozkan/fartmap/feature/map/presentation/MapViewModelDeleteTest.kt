@@ -41,6 +41,8 @@ class MapViewModelDeleteTest {
     }
     private val viewport = MapViewport(south = 40.92, west = 28.80, north = 41.10, east = 29.15)
     private val camera = MapCamera(lat = 41.0, lng = 29.0, zoom = 12f)
+    private val farViewport = MapViewport(south = 35.0, west = 20.0, north = 36.0, east = 21.0)
+    private val farCamera = MapCamera(lat = 35.5, lng = 20.5, zoom = 12f)
 
     private val maps = FakeMapFartRepository()
     private val tracked = mutableListOf<AnalyticsEvent>()
@@ -120,16 +122,45 @@ class MapViewModelDeleteTest {
     }
 
     @Test
-    fun detailDismissedClosesTheSheetOnly() = runTest {
+    fun detailDismissedClosesTheSheetAndAnyDialogOverIt() = runTest {
         val vm = viewModel()
         val events = events(vm)
         loaded(vm, mine)
         vm.onAction(MapAction.MarkerTapped("mine"))
+        vm.onAction(MapAction.RequestDeleteFromDetail)
 
         vm.onAction(MapAction.DetailDismissed)
 
         assertNull(vm.state.value.selectedMarkerId)
+        assertNull(vm.state.value.selectedFart)
+        assertNull(vm.state.value.pendingDeleteId)
         assertTrue(events.isEmpty())
+    }
+
+    @Test
+    fun panningAwayKeepsTheSheetAndItsDeleteWorking() = runTest {
+        val vm = viewModel()
+        loaded(vm, mine)
+        vm.onAction(MapAction.MarkerTapped("mine"))
+
+        // A camera far from the fart: the viewport slice drops it, the open sheet must not.
+        vm.onAction(MapAction.CameraIdle(farViewport, farCamera))
+        vm.onAction(MapAction.RequestDeleteFromDetail)
+
+        assertEquals("mine", vm.state.value.selectedMarkerId)
+        assertEquals("mine", vm.state.value.selectedFart?.id)
+        assertEquals("mine", vm.state.value.pendingDeleteId)
+    }
+
+    @Test
+    fun aFartThatLeavesTheDataClearsTheSheetSnapshot() = runTest {
+        val vm = viewModel()
+        loaded(vm, mine, theirs)
+        vm.onAction(MapAction.MarkerTapped("mine"))
+
+        maps.emit(MapFartsUpdate.Loaded(listOf(theirs), isFromCache = false))
+
+        assertNull(vm.state.value.selectedFart)
     }
 
     @Test

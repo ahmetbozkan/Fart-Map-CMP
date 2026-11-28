@@ -143,8 +143,9 @@ class MapViewModel(
 
     /** Only the user's own open fart can be deleted from its sheet; anything else is ignored. */
     private fun onRequestDeleteFromDetail() {
+        // The open fart comes from `selectedFart`, not the viewport slice: a pan must not disable the sheet's Delete.
         val current = state.value
-        val fart = current.farts.firstOrNull { it.id == current.selectedMarkerId } ?: return
+        val fart = current.selectedFart?.takeIf { it.id == current.selectedMarkerId } ?: return
         if (current.uid == fart.authorUid) setState { copy(pendingDeleteId = fart.id) }
     }
 
